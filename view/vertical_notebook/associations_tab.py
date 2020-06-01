@@ -1,8 +1,8 @@
 from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
 
-TAB_NAME = 'Constraints'
+TAB_NAME = 'Associacions'
 
 
-class ConstraintsTab(VerticalNotebookTab):
+class AssociationsTab(VerticalNotebookTab):
     def __init__(self, parent):
         VerticalNotebookTab.__init__(self, parent, TAB_NAME)

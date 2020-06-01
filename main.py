@@ -6,18 +6,25 @@ from style import CustomTheme
   
 
 WINDOW_TITLE = 'Benchmark Generator'
-WINDOW_SIZE = '1080x720'
+
+
+class Root:
+    def __init__(self, hierarchy=None):
+        self.hierarchy = hierarchy
 
 
 class MainApplication(tk.Frame):
-    def __init__(self, frame, *args, **kwargs):
-        tk.Frame.__init__(self, frame, *args, **kwargs)
-        self.frame = frame
+    def __init__(self, window, *args, **kwargs):
+        tk.Frame.__init__(self, window, *args, **kwargs)
+        self.frame = window
+
+        self.root = Root()
+
 
         CustomTheme().use()
 
         self.frame.title(WINDOW_TITLE)
-        self.frame.geometry(WINDOW_SIZE)
+        #self.frame.geometry(WINDOW_SIZE)
 
         # main_notebook
         self.menu = Menu(self)
@@ -25,6 +32,6 @@ class MainApplication(tk.Frame):
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    MainApplication(root).grid(row=0, column=0, sticky='nswe')
-    root.mainloop()
+    window = tk.Tk()
+    MainApplication(window).grid(row=0, column=0, sticky='nswe')
+    window.mainloop()

@@ -1,12 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
+from view.r_frame import RFrame
 
 
-class Menu(tk.Frame):
-    def __init__(self, parent):
-        tk.Frame.__init__(self, parent)
-        self.parent = parent
-        self._menu = tk.Menu(self.parent.frame)
+class Menu(RFrame):
+    def __init__(self, parent, *args, **kwargs):
+        RFrame.__init__(self, parent, *args, **kwargs)
+
+        self._menu = tk.Menu(self.parent.frame, *args, **kwargs)
+
         file_menu = tk.Menu(tearoff=0)
         file_menu.add_command(label='New')
         file_menu.add_separator()

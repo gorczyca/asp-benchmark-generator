@@ -1,7 +1,8 @@
-from view.tab import Tab
+from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
 
 TAB_NAME = 'Ports'
 
-class PortsTab(Tab):
+
+class PortsTab(VerticalNotebookTab):
     def __init__(self, parent):
-        Tab.__init__(self, parent, TAB_NAME)
+        VerticalNotebookTab.__init__(self, parent, TAB_NAME)

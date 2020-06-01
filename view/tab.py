@@ -2,11 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 
 import tkinter as tk
+from view.r_frame import RFrame
 
-class Tab(tk.Frame):
+
+class Tab(RFrame):
     def __init__(self, parent, tab_name, *args, **kwargs):
-        tk.Frame.__init__(self, parent, *args, **kwargs)
-        self.parent = parent
-        self._frame = tk.Frame(self.parent._notebook, width=100, height=100, *args, **kwargs)
+        RFrame.__init__(self, parent, *args, **kwargs)
+
+        self._frame = tk.Frame(self.parent._notebook, *args, **kwargs)
         self.parent._notebook.add(self._frame, text=tab_name)
 
