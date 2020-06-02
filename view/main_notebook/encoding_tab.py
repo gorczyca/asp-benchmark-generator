@@ -1,14 +1,13 @@
 from view.vertical_notebook.vertical_notebook import VerticalNotebook
-from view.tab import Tab
+from view.c_tab import CTab
 
 TAB_NAME = 'Encoding'
 
 
-class EncodingTab(Tab):
-    def __init__(self, parent, *args, **kwargs):
-        Tab.__init__(self, parent, TAB_NAME, *args, **kwargs)
+class EncodingTab(CTab):
+    def __init__(self, parent, parent_notebook, *args, **kwargs):
+        CTab.__init__(self, parent, parent_notebook, TAB_NAME, *args, **kwargs)
 
-        # main_notebook
-        self.vertical_notebook = VerticalNotebook(self)
+
 
 

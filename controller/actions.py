@@ -1,1 +1,1 @@
-BUTTON_CLICK = 'ButtonClick'
+HIERARCHY_EDITED = 'hierarchy_edited'

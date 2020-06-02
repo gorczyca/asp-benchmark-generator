@@ -4,5 +4,5 @@ TAB_NAME = 'Associacions'
 
 
 class AssociationsTab(VerticalNotebookTab):
-    def __init__(self, parent):
-        VerticalNotebookTab.__init__(self, parent, TAB_NAME)
+    def __init__(self, parent, parent_notebook, *args, **kwargs):
+        VerticalNotebookTab.__init__(self, parent, parent_notebook, TAB_NAME, *args, **kwargs)

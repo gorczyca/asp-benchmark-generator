@@ -1,13 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
-from view.r_frame import RFrame
+from view.c_frame import CFrame
 
 
-class Menu(RFrame):
-    def __init__(self, parent, *args, **kwargs):
-        RFrame.__init__(self, parent, *args, **kwargs)
+class Menu(CFrame):
+    def __init__(self, parent, parent_frame, *args, **kwargs):
+        CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
 
-        self.menu = tk.Menu(self.parent.frame, *args, **kwargs)
+        self.menu = tk.Menu(parent_frame, *args, **kwargs)
 
         file_menu = tk.Menu(tearoff=0)
         file_menu.add_command(label='New')
@@ -25,5 +25,6 @@ class Menu(RFrame):
         self.menu.add_cascade(label='Edit', menu=edit_menu)
         self.menu.add_cascade(label='Help', menu=help_menu)
         self.menu.add_cascade(label='About', menu=about_menu)
-        self.parent.frame.config(menu=self.menu)
+
+        self.parent_frame.config(menu=self.menu)
 

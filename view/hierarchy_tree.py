@@ -1,6 +1,6 @@
 from tkinter import ttk
 import tkinter as tk
-from view.r_frame import RFrame
+from view.c_frame import CFrame
 
 
 COL_ID_COMPONENT = '#0'
@@ -10,26 +10,28 @@ NONE_STRING = ''
 BOOL_TO_STRING = {True: 'yes', False: 'no'}
 
 
-class HierarchyTree(ttk.Treeview, RFrame):
-    def __init__(self, parent, columns=None, *args, **kwargs): # TODO: column is a tuple (id, name, width, minwidth, stretch, anchor)
-        ttk.Treeview.__init__(self, parent, **kwargs)
-        RFrame.__init__(self, parent, *args, **kwargs)
+class HierarchyTree(ttk.Treeview):
+    def __init__(self, parent_frame, hierarchy, columns=None, **kwargs): # TODO: column is a tuple (id, name, width, minwidth, stretch, anchor)
+        ttk.Treeview.__init__(self, parent_frame, **kwargs)
+        # CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
 
-        self.__tree = ttk.Treeview(self.parent._frame, **kwargs)
+        self.parent_frame = parent_frame
 
-        self.__tree.column(COL_ID_COMPONENT, width=270, minwidth=270)  # TODO: find values for width, minwidth
+        self.__tree = ttk.Treeview(self.parent_frame, **kwargs)
+
+        self.__tree.column(COL_ID_COMPONENT, stretch=tk.YES)  # TODO: find values for width, minwidth
         self.__tree.heading(COL_ID_COMPONENT, text=COL_NAME_COMPONENT, anchor=tk.W)
 
         self.__column_ids = []
         if columns:
-            column_ids = [col[0] for col in columns]
+            column_ids = [col.id for col in columns]
             self.__column_ids = column_ids
             self.__tree['columns'] = column_ids
             for col in columns:
-                self.__tree.column(col[0], width=col[2], minwidth=col[3], stretch=col[4])
-                self.__tree.heading(col[0], text=col[1], anchor=col[5])    # TODO: lepiej to
+                self.__tree.column(col.id, stretch=col.stretch)
+                self.__tree.heading(col.id, text=col.name, anchor=col.anchor)    # TODO: lepiej to
 
-        self.__add_to_treeview('', self.root.hierarchy)
+        self.__add_to_treeview('', hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
     def __add_to_treeview(self, ancestor, children):

@@ -15,8 +15,8 @@ COL_NAME_COUNT = 'Count'
 
 
 class HierarchyTab(VerticalNotebookTab):
-    def __init__(self, parent, *args, **kwargs):
-        VerticalNotebookTab.__init__(self, parent, TAB_NAME, *args, **kwargs)
+    def __init__(self, parent, parent_notebook, *args, **kwargs):
+        VerticalNotebookTab.__init__(self, parent, parent_notebook, TAB_NAME, *args, **kwargs)
 
         self.hierarchy_tree = None
 
@@ -26,20 +26,13 @@ class HierarchyTab(VerticalNotebookTab):
         self.button = ttk.Button(self.frame, text="Edit hierarchy", command=self.__edit_hierarchy)
         self.button.grid(row=1, column=0)
 
-    def __build_tree(self):  # TODO: zamiast tupli obiekty
-        columns = [('count', 'Count', 150, 150, tk.NO, tk.W), ('symmetry_breaking', 'Symmetry breaking?', 150, 150, tk.NO, tk.W)]
-        self.hierarchy_tree = HierarchyTree(self, columns=columns)
-        # TO JEST MEGA ZLE, NAPRAWIC!!
-        self.parent.parent.parent.instances_tab.build_tree()
-
-    def callback(self, text):
-        print('asdf' + text)
+    def __hierarchy_edited(self, hierarchy):
+        self.controller.model.set_hierarchy(hierarchy)
+        self.hierarchy_tree = HierarchyTree(self.frame, hierarchy)
+        pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __edit_hierarchy(self):
-        #pub.sendMessage(actions.BUTTON_CLICK, callback=self.__callback)
-        pub.sendMessage(actions.BUTTON_CLICK, callback=self.callback)
-
-        # self._window = EditHierarchyWindow(self, self.__build_tree)
+        self.__window = EditHierarchyWindow(self, self.frame, self.__hierarchy_edited)
 
 
 
