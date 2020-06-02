@@ -14,7 +14,7 @@ class VerticalNotebook(RFrame):
     def __init__(self, parent, *args, **kwargs):
         RFrame.__init__(self, parent, *args, **kwargs)
 
-        self._notebook = ttk.Notebook(self.parent._frame, style='Vertical.TNotebook')
+        self.notebook = ttk.Notebook(self.parent.frame, style='Vertical.TNotebook')
 
         self.hierarchy_tab = HierarchyTab(self)
         self.associations_tab = AssociationsTab(self)
@@ -22,4 +22,4 @@ class VerticalNotebook(RFrame):
         self.resources_tab = ResourcesTab(self)
         self.constraints_tab = ConstraintsTab(self)
 
-        self._notebook.grid(row=0, column=0, sticky='nw')
+        self.notebook.grid(row=0, column=0, sticky='nw')

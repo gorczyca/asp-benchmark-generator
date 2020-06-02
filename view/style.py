@@ -1,4 +1,3 @@
-import tkinter as tk
 from tkinter import ttk
 
 STYLE_NAME = 'CUSTOM_STYLE'
@@ -8,6 +7,7 @@ class CustomTheme(ttk.Style):
     def __init__(self, master=None, *args, **kwargs):
         ttk.Style.__init__(self, master,  *args, **kwargs)
 
+        # font=('URW Gothic L','40','bold')
         self.style = ttk.Style(master)
         self.style.theme_create(STYLE_NAME, parent='alt', settings={
             "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns'}},

@@ -3,6 +3,8 @@ from tkinter import ttk
 from view.vertical_notebook.edit_hierarchy_window import EditHierarchyWindow
 from view.hierarchy_tree import HierarchyTree
 from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
+from pubsub import pub
+from controller import actions
 
 TAB_NAME = 'Hierarchy'
 
@@ -18,10 +20,10 @@ class HierarchyTab(VerticalNotebookTab):
 
         self.hierarchy_tree = None
 
-        self._frame.rowconfigure(0, weight=1)
-        self._frame.columnconfigure(0, weight=1)
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1)
 
-        self.button = ttk.Button(self._frame, text="Edit hierarchy", command=self.__edit_hierarchy)
+        self.button = ttk.Button(self.frame, text="Edit hierarchy", command=self.__edit_hierarchy)
         self.button.grid(row=1, column=0)
 
     def __build_tree(self):  # TODO: zamiast tupli obiekty
@@ -30,8 +32,14 @@ class HierarchyTab(VerticalNotebookTab):
         # TO JEST MEGA ZLE, NAPRAWIC!!
         self.parent.parent.parent.instances_tab.build_tree()
 
+    def callback(self, text):
+        print('asdf' + text)
+
     def __edit_hierarchy(self):
-        self._window = EditHierarchyWindow(self, self.__build_tree)
+        #pub.sendMessage(actions.BUTTON_CLICK, callback=self.__callback)
+        pub.sendMessage(actions.BUTTON_CLICK, callback=self.callback)
+
+        # self._window = EditHierarchyWindow(self, self.__build_tree)
 
 
 

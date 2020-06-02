@@ -2,7 +2,7 @@
 .vscode/
 Diagram1.dia
 __pycache__/
-data/__pycache__/
+model/__pycache__/
 environment/
 junk/
 tests.py/

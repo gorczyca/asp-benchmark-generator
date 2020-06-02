@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from data.component import Component
+from model.component import Component
 from view.r_frame import RFrame
 
 EDIT_HIERARCHY_WINDOW_NAME = 'Edit hierarchy'
@@ -20,7 +20,7 @@ class EditHierarchyWindow(RFrame):
 
         self.__callback = callback
 
-        self._window = tk.Toplevel(self.parent._frame)
+        self._window = tk.Toplevel(self.parent.frame)
 
         self._window.grab_set()
 
@@ -45,6 +45,7 @@ class EditHierarchyWindow(RFrame):
         self.__text.focus()
         self.__text.mark_set(tk.INSERT, 1.0)
         self.__text.bind('<Control-a>', EditHierarchyWindow.select_all)
+
 
         if self.root.hierarchy:
             hierarchy_string = EditHierarchyWindow.hierarchy_to_string(self.root.hierarchy)
