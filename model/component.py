@@ -1,5 +1,5 @@
 class Component:
-    def __init__(self, name, level, symmetry_breaking=True, count=None, is_leaf=False, children=None):
+    def __init__(self, name, level, symmetry_breaking=None, count=None, is_leaf=False, children=None):
         self.name = name
         self.is_leaf = is_leaf
         self.level = level

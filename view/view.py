@@ -7,7 +7,7 @@ from view.vertical_notebook.vertical_notebook import VerticalNotebook, Hierarchy
 
 WINDOW_TITLE = 'Benchmark Generator'
 
-# TODO: wszystkie komponenty tu upchnąc wieksze ??
+
 class View(tk.Frame):
     def __init__(self, controller, main_window, *args, **kwargs):
         tk.Frame.__init__(self, main_window, *args, **kwargs)
@@ -20,7 +20,6 @@ class View(tk.Frame):
     def __setup_layout(self):
         CustomTheme().use()
 
-        # TODO: jako pierwszy argument przekazać selfa a w klasie abstrakcyjnej z tego wydobywać kontroler
         self.__menu = Menu(self, self.frame)
         self.__main_notebook = MainNotebook(self, self.frame)
 

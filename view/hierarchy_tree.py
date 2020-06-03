@@ -11,13 +11,17 @@ BOOL_TO_STRING = {True: 'yes', False: 'no'}
 
 
 class HierarchyTree(ttk.Treeview):
-    def __init__(self, parent_frame, hierarchy, columns=None, **kwargs): # TODO: column is a tuple (id, name, width, minwidth, stretch, anchor)
+    def __init__(self, parent_frame, hierarchy, columns=None, on_select_callback=None, **kwargs): # TODO: column is a tuple (id, name, width, minwidth, stretch, anchor)
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
         # CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
 
         self.parent_frame = parent_frame
 
-        self.__tree = ttk.Treeview(self.parent_frame, **kwargs)
+        self.__tree = ttk.Treeview(self.parent_frame, style='Custom.Treeview', selectmode='extended', **kwargs)
+
+        if on_select_callback:
+            self.__tree.bind('<ButtonRelease-1>', self.__item_selected)
+            self.__on_select_callback = on_select_callback
 
         self.__tree.column(COL_ID_COMPONENT, stretch=tk.YES)  # TODO: find values for width, minwidth
         self.__tree.heading(COL_ID_COMPONENT, text=COL_NAME_COMPONENT, anchor=tk.W)
@@ -33,6 +37,10 @@ class HierarchyTree(ttk.Treeview):
 
         self.__add_to_treeview('', hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
+
+    def __item_selected(self, _):
+        selected_item_name = self.__tree.item(self.__tree.focus())['text']
+        self.__on_select_callback(selected_item_name)
 
     def __add_to_treeview(self, ancestor, children):
         for cmp in children:
