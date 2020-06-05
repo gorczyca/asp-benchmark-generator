@@ -1,9 +1,10 @@
 class Component:
-    def __init__(self, name, level, symmetry_breaking=None, count=None, is_leaf=False, children=None):
+    def __init__(self, id_, name, level, parent_id=None, is_leaf=False, symmetry_breaking=None, count=None):
+        self.id_ = id_
         self.name = name
         self.is_leaf = is_leaf
         self.level = level
-        self.children = children if children is not None else []
+        self.parent_id = parent_id
         self.count = count
         self.symmetry_breaking = symmetry_breaking
 
@@ -12,6 +13,7 @@ class Component:
     def set_leaf(self):
         self.is_leaf = True
 
+    # TODO: rename
     def get_by_name(self, name):
         return self.__getattribute__(name)
 

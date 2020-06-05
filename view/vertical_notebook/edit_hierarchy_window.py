@@ -35,9 +35,8 @@ class EditHierarchyWindow(CFrame):
         self.y_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.VERTICAL)
         self.y_scrollbar.grid(row=0, column=1, sticky='nse')
 
-        self.text = tk.Text(self.text_frame, wrap=tk.NONE,
-                              xscrollcommand=self.x_scrollbar.set,
-                              yscrollcommand=self.y_scrollbar.set)
+        self.text = tk.Text(self.text_frame, wrap=tk.NONE, xscrollcommand=self.x_scrollbar.set,
+                            yscrollcommand=self.y_scrollbar.set)
 
         self.text.grid(column=0, row=0, sticky='nswe')
         self.text.focus()
@@ -74,20 +73,21 @@ class EditHierarchyWindow(CFrame):
     def __ok(self):
         self.window.grab_release()
         hierarchy_string = self.text.get(1.0, tk.END)
-        try:
-            hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
-            self.window.destroy()
-            self.__callback(hierarchy)
-        except Exception as e: # TODO: lepiej tam
-            messagebox.showerror('Error', str(e))
+        #try:
+        hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
+        self.window.destroy()
+        self.__callback(hierarchy)
+        #except Exception as e: # TODO: lepiej tam
+        #messagebox.showerror('Error', str(e))
 
     @staticmethod
     def set_leaves(hierarchy):
+        parents_ids = [cmp.parent_id for cmp in hierarchy if cmp.parent_id]
+        parents_ids = set(parents_ids)
+
         for cmp in hierarchy:
-            if not cmp.children:
-                cmp.set_leaf()
-            else:
-                EditHierarchyWindow.set_leaves(cmp.children)
+            if cmp.name not in parents_ids:
+                cmp.is_leaf = True
 
     @staticmethod
     def extract_tabs(line):
@@ -105,6 +105,7 @@ class EditHierarchyWindow(CFrame):
                                                     CHILD_SYMBOL)  # make sure N spaces are converted to '\t'
         hierarchy = []
         _last_on_level = []
+        id_ = 0
         for line in hierarchy_string.split('\n'):
             if not line or line.isspace():  # if entire line contains only spaces, ignore it
                 continue
@@ -113,31 +114,30 @@ class EditHierarchyWindow(CFrame):
                 raise Exception(f'Cannot create a child of non-existing component.\n'
                                 f'Check number of tabs in component: "{component_name}" and its ancestor.')
 
-            component = Component(component_name, level)
+            component = Component(id_, component_name, level)
 
             if len(_last_on_level) > level:
-                _last_on_level[level] = component  # there already exists a level
+                _last_on_level[level] = id_  # there already exists a level
             else:
-                _last_on_level.append(component)  # add level above
+                _last_on_level.append(id_)  # add level above
 
             if level != 0:
-                _last_on_level[level - 1].children.append(component)
-            else:
-                hierarchy.append(component)
+                component.parent_id = _last_on_level[level - 1]
+
+            hierarchy.append(component)
+            id_ += 1
         EditHierarchyWindow.set_leaves(hierarchy)
         return hierarchy
 
+
     @staticmethod
     def hierarchy_to_string(hierarchy):
-        def __hierarchy_to_string(_hierarchy, _string, _level):
-            for cmp in _hierarchy:
-                _string += _level * CHILD_SYMBOL + cmp.name + NEWLINE_SYMBOL
-                if cmp.children:
-                    _string = __hierarchy_to_string(cmp.children, _string, _level + 1)
-            return _string
         string = ''
-        level = 0
-        return __hierarchy_to_string(hierarchy, string, level)
+        hierarchy.sort(key=lambda cmp: cmp.id_)
+        for cmp in hierarchy:
+            string += cmp.level * CHILD_SYMBOL + cmp.name + NEWLINE_SYMBOL
+
+        return string
 
     # TODO: move somewhere global
     @staticmethod

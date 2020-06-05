@@ -35,15 +35,17 @@ class HierarchyTree(ttk.Treeview):
                 self.__tree.column(col.id, stretch=col.stretch)
                 self.__tree.heading(col.id, text=col.name, anchor=col.anchor)    # TODO: lepiej to
 
-        self.__add_to_treeview('', hierarchy)
+        # self.__add_to_treeview('', hierarchy)
+        self.__build_tree(hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
     def __item_selected(self, _):
         selected_item_name = self.__tree.item(self.__tree.focus())['text']
         self.__on_select_callback(selected_item_name)
 
-    def __add_to_treeview(self, ancestor, children):
-        for cmp in children:
+    def __build_tree(self, hierarchy):
+        branches = {}
+        for cmp in hierarchy:
             values = []
             for col_id in self.__column_ids:
                 value = cmp.get_by_name(col_id)
@@ -52,5 +54,5 @@ class HierarchyTree(ttk.Treeview):
                 elif not value:
                     value = NONE_STRING
                 values.append(value)
-            cmp_in_tree = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
-            self.__add_to_treeview(cmp_in_tree, cmp.children)
+            ancestor = '' if cmp.parent_id is None else branches[cmp.parent_id]  # TODO: do poprawy to
+            branches[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
