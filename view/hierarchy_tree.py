@@ -17,6 +17,8 @@ class HierarchyTree(ttk.Treeview):
 
         self.parent_frame = parent_frame
 
+        self.items = {}
+
         self.__tree = ttk.Treeview(self.parent_frame, style='Custom.Treeview', selectmode='extended', **kwargs)
 
         if on_select_callback:
@@ -38,6 +40,14 @@ class HierarchyTree(ttk.Treeview):
         self.__build_tree(hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
+    def update_values(self, cmps):
+        for cmp in cmps:
+            self.__update_value(cmp)
+
+    def __update_value(self, cmp):
+        values = self.__create_values(cmp)
+        self.__tree.item(self.items[cmp.id_], values=values)
+
     def __item_selected(self, _):
         selected_item_name = self.__tree.item(self.__tree.focus())['text']
         self.__on_select_callback(selected_item_name)
@@ -45,16 +55,19 @@ class HierarchyTree(ttk.Treeview):
     def destroy(self):
         self.__tree.destroy()
 
+    def __create_values(self, cmp):
+        values = []
+        for col_id in self.__column_ids:
+            value = cmp.get_by_name(col_id)
+            if type(value) is bool:
+                value = BOOL_TO_STRING[value]
+            elif not value:
+                value = NONE_STRING
+            values.append(value)
+        return values
+
     def __build_tree(self, hierarchy):
-        branches = {}
         for cmp in hierarchy:
-            values = []
-            for col_id in self.__column_ids:
-                value = cmp.get_by_name(col_id)
-                if type(value) is bool:
-                    value = BOOL_TO_STRING[value]
-                elif not value:
-                    value = NONE_STRING
-                values.append(value)
-            ancestor = '' if cmp.parent_id is None else branches[cmp.parent_id]  # TODO: do poprawy to
-            branches[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
+            values = self.__create_values(cmp)
+            ancestor = '' if cmp.parent_id is None else self.items[cmp.parent_id]  # TODO: do poprawy to
+            self.items[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)

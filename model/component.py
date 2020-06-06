@@ -13,6 +13,9 @@ class Component:
     def set_leaf(self):
         self.is_leaf = True
 
+    def set_symmetry_breaking(self):
+        self.symmetry_breaking = True
+
     # TODO: rename
     def get_by_name(self, name):
         return self.__getattribute__(name)
