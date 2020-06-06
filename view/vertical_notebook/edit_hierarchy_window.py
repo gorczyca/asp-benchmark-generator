@@ -91,7 +91,8 @@ class EditHierarchyWindow(CFrame):
 
         for cmp in hierarchy:
             if cmp.id_ not in parents_ids:
-                cmp.is_leaf = True
+                cmp.set_leaf()
+                cmp.set_symmetry_breaking()
 
     @staticmethod
     def extract_tabs(line):
