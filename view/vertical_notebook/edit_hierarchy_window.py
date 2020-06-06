@@ -73,20 +73,20 @@ class EditHierarchyWindow(CFrame):
     def __ok(self):
         self.window.grab_release()
         hierarchy_string = self.text.get(1.0, tk.END)
-        #try:
-        hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
-        self.window.destroy()
-        self.__callback(hierarchy)
-        #except Exception as e: # TODO: lepiej tam
-        #messagebox.showerror('Error', str(e))
+        try:
+            hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
+            self.window.destroy()
+            self.__callback(hierarchy)
+        except Exception as e: # TODO: lepiej tam
+            messagebox.showerror('Error', str(e))
 
     @staticmethod
     def set_leaves(hierarchy):
-        parents_ids = [cmp.parent_id for cmp in hierarchy if cmp.parent_id]
+        parents_ids = [cmp.parent_id for cmp in hierarchy if cmp.parent_id is not None]
         parents_ids = set(parents_ids)
 
         for cmp in hierarchy:
-            if cmp.name not in parents_ids:
+            if cmp.id_ not in parents_ids:
                 cmp.is_leaf = True
 
     @staticmethod

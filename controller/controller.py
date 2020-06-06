@@ -6,6 +6,7 @@ class Controller:
     def __init__(self, main_window):
         self.model = Model()
         self.view = View(self, main_window)
+        self.file = None
 
     def __get_hierarchy(self, callback):
         callback(self.model.get_hierarchy())

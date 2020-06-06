@@ -30,6 +30,7 @@ class HierarchyTab(VerticalNotebookTab):
         self.controller.model.set_hierarchy(hierarchy)
         self.hierarchy_tree = HierarchyTree(self.frame, hierarchy)
         pub.sendMessage(actions.HIERARCHY_EDITED)
+        pub.sendMessage(actions.MODEL_CHANGED)
 
     def __edit_hierarchy(self):
         self.__window = EditHierarchyWindow(self, self.frame, self.__hierarchy_edited)
