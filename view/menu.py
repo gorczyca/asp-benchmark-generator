@@ -16,7 +16,7 @@ class Menu(CFrame):
         self.menu = tk.Menu(parent_frame, *args, **kwargs)
 
         file_menu = tk.Menu(tearoff=0)
-        file_menu.add_command(label='New')
+        file_menu.add_command(label='New', command=self.__new)
         file_menu.add_separator()
         file_menu.add_command(label='Open')
         file_menu.add_command(label='Save', command=self.__save)
@@ -35,7 +35,22 @@ class Menu(CFrame):
         self.parent_frame.config(menu=self.menu)
 
     def __new(self):
-        pass
+        hierarchy = self.controller.model.get_hierarchy()
+        if not hierarchy:  # TODO: not hierarchy but model
+            return
+        if not self.controller.saved:
+            answer = messagebox.askyesnocancel('New', 'You have some unsaved changes, '
+                                             'would you like to save them?')
+            if answer is None:
+                return
+            elif answer:
+                self.__save_as()
+            self.__new_()
+
+    def __new_(self):
+        self.controller.model.clear()
+        pub.sendMessage(actions.RESET)
+
 
     def __open(self):
         pass
@@ -64,6 +79,7 @@ class Menu(CFrame):
         file.close()
         file_name = Menu.__extract_file_name(file.name)
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
+        self.controller.saved = True
 
     @staticmethod
     def __extract_file_name(path):

@@ -8,6 +8,9 @@ class Model:
     def get_hierarchy(self):
         return self.__hierarchy
 
+    def clear(self):
+        self.__hierarchy = None
+
     def get_component_by_name(self, name):
         for cmp in self.__hierarchy:
             if cmp.name == name:

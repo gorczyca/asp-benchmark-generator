@@ -17,16 +17,15 @@ class View(tk.Frame):
         tk.Frame.__init__(self, main_window, *args, **kwargs)
         self.controller = controller
         self.frame = main_window
-        window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'
-        self.frame.title(window_title)
-        self.window_title = window_title
+
+        self.window_title = None
+        self.__init_title()
         # self.frame.geometry(WINDOW_SIZE)
         self.__setup_layout()
 
-
-        pub.subscribe(self.___on_model_changed, actions.MODEL_CHANGED)
+        pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
         pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
-
+        pub.subscribe(self.__init_title, actions.RESET)
 
     def __setup_layout(self):
         CustomTheme().use()
@@ -45,7 +44,12 @@ class View(tk.Frame):
         self.__resources_tab = ResourcesTab(self, self.__vertical_notebook.notebook)
         self.__constraints_tab = ConstraintsTab(self, self.__vertical_notebook.notebook)
 
-    def ___on_model_changed(self):
+    def __init_title(self):
+        window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'
+        self.frame.title(window_title)
+        self.window_title = window_title
+
+    def __on_model_changed(self):
         self.frame.title(f'{UNSAVED_CHANGES_SYMBOL} {self.window_title}')
 
     def __on_model_saved(self, file_name):

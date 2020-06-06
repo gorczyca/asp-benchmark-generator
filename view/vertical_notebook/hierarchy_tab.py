@@ -26,6 +26,13 @@ class HierarchyTab(VerticalNotebookTab):
         self.button = ttk.Button(self.frame, text="Edit hierarchy", command=self.__edit_hierarchy)
         self.button.grid(row=1, column=0)
 
+        pub.subscribe(self.__reset, actions.RESET)
+
+    def __reset(self):
+        if self.hierarchy_tree:
+            self.hierarchy_tree.destroy()
+            self.hierarchy_tree = None
+
     def __hierarchy_edited(self, hierarchy):
         self.controller.model.set_hierarchy(hierarchy)
         self.hierarchy_tree = HierarchyTree(self.frame, hierarchy)

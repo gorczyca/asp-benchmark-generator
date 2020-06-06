@@ -36,6 +36,7 @@ class InstancesTab(CTab):
             self.__build_tree()
 
         pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
+        pub.subscribe(self.__reset, actions.RESET)
 
         self.frame.columnconfigure(0, weight=2, uniform='fred')
         self.frame.columnconfigure(1, weight=1, uniform='fred')
@@ -55,6 +56,10 @@ class InstancesTab(CTab):
             Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
         self.hierarchy_tree = HierarchyTree(self.frame, hierarchy, columns=columns, on_select_callback=self.__on_select)
 
+    def __reset(self):  # TODO: czy z tym do jakiejs klasy? (albo jakis wzorzec)
+        if self.hierarchy_tree:
+            self.hierarchy_tree.destroy()
+            self.hierarchy_tree = None
 
 
 
