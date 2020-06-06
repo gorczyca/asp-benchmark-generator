@@ -27,17 +27,16 @@ class HierarchyTab(VerticalNotebookTab):
         self.button.grid(row=1, column=0)
 
         pub.subscribe(self.__reset, actions.RESET)
+        pub.subscribe(self.__hierarchy_edited, actions.HIERARCHY_EDITED)
 
     def __reset(self):
         if self.hierarchy_tree:
             self.hierarchy_tree.destroy()
             self.hierarchy_tree = None
 
-    def __hierarchy_edited(self, hierarchy):
-        self.controller.model.set_hierarchy(hierarchy)
+    def __hierarchy_edited(self):
+        hierarchy = self.controller.model.get_hierarchy()
         self.hierarchy_tree = HierarchyTree(self.frame, hierarchy)
-        pub.sendMessage(actions.HIERARCHY_EDITED)
-        pub.sendMessage(actions.MODEL_CHANGED)
 
     def __edit_hierarchy(self):
         self.__window = EditHierarchyWindow(self, self.frame, self.__hierarchy_edited)

@@ -17,6 +17,10 @@ class Component:
     def get_by_name(self, name):
         return self.__getattribute__(name)
 
+    @classmethod
+    def from_json(cls, data):
+        return cls(**data)
+
     # TODO: for development only
     def __str__(self):
         return self.name

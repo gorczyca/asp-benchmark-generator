@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from model.component import Component
 from view.c_frame import CFrame
+from pubsub import pub
+from controller import actions
 
 EDIT_HIERARCHY_WINDOW_NAME = 'Edit hierarchy'
 EDIT_HIERARCHY_WINDOW_SIZE = '800x800'
@@ -75,8 +77,10 @@ class EditHierarchyWindow(CFrame):
         hierarchy_string = self.text.get(1.0, tk.END)
         try:
             hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
+            self.controller.model.set_hierarchy(hierarchy)
+            pub.sendMessage(actions.HIERARCHY_EDITED)
+            pub.sendMessage(actions.MODEL_CHANGED)
             self.window.destroy()
-            self.__callback(hierarchy)
         except Exception as e: # TODO: lepiej tam
             messagebox.showerror('Error', str(e))
 

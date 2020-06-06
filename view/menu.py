@@ -18,7 +18,7 @@ class Menu(CFrame):
         file_menu = tk.Menu(tearoff=0)
         file_menu.add_command(label='New', command=self.__new)
         file_menu.add_separator()
-        file_menu.add_command(label='Open')
+        file_menu.add_command(label='Open', command=self.__open)
         file_menu.add_command(label='Save', command=self.__save)
         file_menu.add_command(label='Save as...', command=self.__save_as)
 
@@ -45,15 +45,37 @@ class Menu(CFrame):
                 return
             elif answer:
                 self.__save_as()
-            self.__new_()
+        self.__new_()
 
     def __new_(self):
         self.controller.model.clear()
+        self.controller.saved = True
         pub.sendMessage(actions.RESET)
 
-
     def __open(self):
-        pass
+        hierarchy = self.controller.model.get_hierarchy()
+        if not hierarchy:
+            pass
+        elif not self.controller.saved:
+            answer = messagebox.askyesnocancel('Open', 'You have some unsaved changes, '
+                                             'would you like to save them?')
+            if answer is None:
+                return
+            elif answer:
+                self.__save_as()
+        self.__open_()
+
+    def __open_(self):
+        file = filedialog.askopenfile(mode='r', defaultextension=DEFAULT_FILE_EXTENSION)
+        if file is not None:
+            self.controller.file = file
+            json = file.read()
+            hierarchy = json_converter.json_to_hierarchy(json)
+            self.controller.model.set_hierarchy(hierarchy)
+            file_name = Menu.__extract_file_name(file.name)
+            pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
+            pub.sendMessage(actions.HIERARCHY_EDITED)
+
 
     def __save(self):
         hierarchy = self.controller.model.get_hierarchy()
