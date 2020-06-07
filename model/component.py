@@ -20,13 +20,6 @@ class Component:
 
     def set_symmetry_breaking(self):
         self.symmetry_breaking = True
-<<<<<<< HEAD
-=======
-
-    # TODO: rename
-    def get_by_name(self, name):
-        return self.__getattribute__(name)
->>>>>>> 9876b2e0adbef3a439877f45174691c6a64bf0f0
 
     @classmethod
     def from_json(cls, data):

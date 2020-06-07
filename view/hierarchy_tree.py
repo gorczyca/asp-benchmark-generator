@@ -48,11 +48,7 @@ class HierarchyTree(ttk.Treeview):
             self.__update_value(cmp)
 
     def __update_value(self, cmp):
-<<<<<<< HEAD
         values = self.__extract_values(cmp)
-=======
-        values = self.__create_values(cmp)
->>>>>>> 9876b2e0adbef3a439877f45174691c6a64bf0f0
         self.__tree.item(self.items[cmp.id_], values=values)
 
     def __item_selected(self, _):
@@ -75,10 +71,6 @@ class HierarchyTree(ttk.Treeview):
 
     def __build_tree(self, hierarchy):
         for cmp in hierarchy:
-<<<<<<< HEAD
             values = self.__extract_values(cmp)
-=======
-            values = self.__create_values(cmp)
->>>>>>> 9876b2e0adbef3a439877f45174691c6a64bf0f0
             ancestor = '' if cmp.parent_id is None else self.items[cmp.parent_id]  # TODO: do poprawy to
             self.items[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
