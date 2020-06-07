@@ -6,9 +6,6 @@ from view.c_frame import CFrame
 COL_ID_COMPONENT = '#0'
 COL_NAME_COMPONENT = 'Component'
 
-NONE_STRING = ''
-BOOL_TO_STRING = {True: 'yes', False: 'no'}
-
 
 class HierarchyTree(ttk.Treeview):
     def __init__(self, parent_frame, hierarchy, columns=None, on_select_callback=None, extract_values=lambda cmp: [],
@@ -43,6 +40,24 @@ class HierarchyTree(ttk.Treeview):
         self.__build_tree(hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
+    def add_item(self, parent, cmp):
+        pass
+
+    def rename_item(self, cmp):
+        self.__tree.item(self.items[cmp.id_], text=cmp.get_name())
+
+    def remove_items_recursively(self, root, cmps_to_remove):
+        self.__tree.delete(self.items[root.id_])
+        for c in cmps_to_remove:
+            self.items.pop(c.id_)
+
+    def remove_item_preserve_children(self, item, children):
+        cmp_parent = self.__tree.parent(self.items[item.id_])
+        children_count = len(children)
+        for c in children:
+            self.__tree.move(self.items[c.id_], cmp_parent, children_count)
+        self.__tree.delete(self.items[item.id_])
+
     def update_values(self, cmps):
         for cmp in cmps:
             self.__update_value(cmp)
@@ -53,21 +68,11 @@ class HierarchyTree(ttk.Treeview):
 
     def __item_selected(self, _):
         selected_item_name = self.__tree.item(self.__tree.focus())['text']
-        self.__on_select_callback(selected_item_name)
+        if selected_item_name is not '':
+            self.__on_select_callback(selected_item_name)
 
     def destroy(self):
         self.__tree.destroy()
-
-    def __create_values(self, cmp):
-        values = []
-        for col_id in self.__column_ids:
-            value = cmp.get_by_name(col_id)
-            if type(value) is bool:
-                value = BOOL_TO_STRING[value]
-            elif not value:
-                value = NONE_STRING
-            values.append(value)
-        return values
 
     def __build_tree(self, hierarchy):
         for cmp in hierarchy:

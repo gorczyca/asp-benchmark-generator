@@ -74,7 +74,7 @@ class Menu(CFrame):
             self.controller.model.set_hierarchy(hierarchy)
             file_name = Menu.__extract_file_name(file.name)
             pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
+            pub.sendMessage(actions.HIERARCHY_CREATED)
 
 
     def __save(self):

@@ -78,7 +78,7 @@ class CreateHierarchyWindow(CFrame):
         try: # TODO: too general
             hierarchy = CreateHierarchyWindow.string_to_hierarchy(hierarchy_string)
             self.controller.model.set_hierarchy(hierarchy)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
+            pub.sendMessage(actions.HIERARCHY_CREATED)
             pub.sendMessage(actions.MODEL_CHANGED)
             self.window.destroy()
         except Exception as e: # TODO: lepiej tam

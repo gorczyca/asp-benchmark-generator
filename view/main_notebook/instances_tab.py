@@ -58,6 +58,7 @@ class InstancesTab(CTab):
         if hierarchy:
             self.__build_tree()
 
+        pub.subscribe(self.__build_tree, actions.HIERARCHY_CREATED)
         pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
         pub.subscribe(self.__reset, actions.RESET)
 

@@ -1,3 +1,4 @@
+HIERARCHY_CREATED = 'hierarchy_created'
 HIERARCHY_EDITED = 'hierarchy_edited'
 
 RESET = 'reset'

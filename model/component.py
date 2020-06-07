@@ -15,6 +15,12 @@ class Component:
         self.count = count
         self.symmetry_breaking = symmetry_breaking
 
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
     def set_leaf(self):
         self.is_leaf = True
 
