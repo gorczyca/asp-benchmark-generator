@@ -16,7 +16,7 @@ NUMBER_OF_SPACES_EQUAL_TO_TAB = 4
 
 # TODO: 1 czy na pewno potrzebuję, żeby wszystko było 'self'
 
-class EditHierarchyWindow(CFrame):
+class CreateHierarchyWindow(CFrame):
     def __init__(self, parent, parent_frame, callback, *args, **kwargs):
         CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
 
@@ -43,12 +43,12 @@ class EditHierarchyWindow(CFrame):
         self.text.grid(column=0, row=0, sticky='nswe')
         self.text.focus()
         self.text.mark_set(tk.INSERT, 1.0)
-        self.text.bind('<Control-a>', EditHierarchyWindow.select_all)
+        self.text.bind('<Control-a>', CreateHierarchyWindow.select_all)
 
         hierarchy = self.controller.model.get_hierarchy()
 
         if hierarchy:
-            hierarchy_string = EditHierarchyWindow.hierarchy_to_string(hierarchy)
+            hierarchy_string = CreateHierarchyWindow.hierarchy_to_string(hierarchy)
             self.text.insert(1.0, hierarchy_string)
 
         self.text_frame.columnconfigure(0, weight=1)
@@ -75,8 +75,8 @@ class EditHierarchyWindow(CFrame):
     def __ok(self):
         self.window.grab_release()
         hierarchy_string = self.text.get(1.0, tk.END)
-        try:
-            hierarchy = EditHierarchyWindow.string_to_hierarchy(hierarchy_string)
+        try: # TODO: too general
+            hierarchy = CreateHierarchyWindow.string_to_hierarchy(hierarchy_string)
             self.controller.model.set_hierarchy(hierarchy)
             pub.sendMessage(actions.HIERARCHY_EDITED)
             pub.sendMessage(actions.MODEL_CHANGED)
@@ -114,7 +114,7 @@ class EditHierarchyWindow(CFrame):
         for line in hierarchy_string.split('\n'):
             if not line or line.isspace():  # if entire line contains only spaces, ignore it
                 continue
-            level, component_name = EditHierarchyWindow.extract_tabs(line)
+            level, component_name = CreateHierarchyWindow.extract_tabs(line)
             if len(_last_on_level) < level:
                 raise Exception(f'Cannot create a child of non-existing component.\n'
                                 f'Check number of tabs in component: "{component_name}" and its ancestor.')
@@ -131,7 +131,7 @@ class EditHierarchyWindow(CFrame):
 
             hierarchy.append(component)
             id_ += 1
-        EditHierarchyWindow.set_leaves(hierarchy)
+        CreateHierarchyWindow.set_leaves(hierarchy)
         return hierarchy
 
 

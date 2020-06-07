@@ -102,7 +102,9 @@ class InstancesTab(CTab):
         columns = [
             Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
             Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
-        self.hierarchy_tree = HierarchyTree(self.frame, hierarchy, columns=columns, on_select_callback=self.__on_select)
+        self.hierarchy_tree = HierarchyTree(self.frame, hierarchy, columns=columns, on_select_callback=self.__on_select,
+                                            extract_values=lambda cmp:
+                                            (cmp.to_view_item().get_count(), cmp.to_view_item().get_symmetry_breaking()))
         self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky='nswe')  # show global checkbox
 
     def __reset(self):  # TODO: czy z tym do jakiejs klasy? (albo jakis wzorzec)
