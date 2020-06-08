@@ -40,8 +40,10 @@ class HierarchyTree(ttk.Treeview):
         self.__build_tree(hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
-    def add_item(self, parent, cmp):
-        pass
+    def add_item(self, cmp):
+        ancestor = '' if cmp.parent_id is None else self.items[cmp.parent_id]  # TODO: do poprawy to
+        values = self.__extract_values(cmp)
+        self.items[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
 
     def rename_item(self, cmp):
         self.__tree.item(self.items[cmp.id_], text=cmp.get_name())
@@ -71,8 +73,10 @@ class HierarchyTree(ttk.Treeview):
         if selected_item_name is not '':
             self.__on_select_callback(selected_item_name)
 
-    def destroy(self):
+    def destroy_(self):
         self.__tree.destroy()
+        self.__tree = None
+        self.items = {}
 
     def __build_tree(self, hierarchy):
         for cmp in hierarchy:
