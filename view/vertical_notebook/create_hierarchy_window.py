@@ -4,10 +4,11 @@ from model.component import Component
 from view.c_frame import CFrame
 from pubsub import pub
 from controller import actions
+from view import style
 
 EDIT_HIERARCHY_WINDOW_NAME = 'Edit hierarchy'
 EDIT_HIERARCHY_WINDOW_SIZE = '800x800'
-EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view. \n"Tab" means subcomponent of component above.'
+EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view. \n("Tab" means subcomponent of component above.)'
 
 CHILD_SYMBOL = '\t'
 NEWLINE_SYMBOL = '\n'
@@ -27,8 +28,8 @@ class CreateHierarchyWindow(CFrame):
         self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
         self.window.geometry(EDIT_HIERARCHY_WINDOW_SIZE)
 
-        self.label = tk.Label(self.window, text=EDIT_HIERARCHY_LABEL_TEXT)
-        self.label.grid(row=0, column=0)
+        self.label = ttk.Label(self.window, text=EDIT_HIERARCHY_LABEL_TEXT, anchor=tk.W)
+        self.label.grid(row=0, column=0, sticky='nswe', padx=5, pady=5)
 
         self.text_frame = tk.Frame(self.window)
         self.x_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.HORIZONTAL)
@@ -37,8 +38,8 @@ class CreateHierarchyWindow(CFrame):
         self.y_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.VERTICAL)
         self.y_scrollbar.grid(row=0, column=1, sticky='nse')
 
-        self.text = tk.Text(self.text_frame, wrap=tk.NONE, xscrollcommand=self.x_scrollbar.set,
-                            yscrollcommand=self.y_scrollbar.set)
+        self.text = tk.Text(self.text_frame, wrap=tk.NONE, font=style.FONT_BOLD,
+                            xscrollcommand=self.x_scrollbar.set, yscrollcommand=self.y_scrollbar.set)
 
         self.text.grid(column=0, row=0, sticky='nswe')
         self.text.focus()
@@ -61,9 +62,9 @@ class CreateHierarchyWindow(CFrame):
 
         self.buttons_frame = tk.Frame(self.window)
         self.ok_button = ttk.Button(self.buttons_frame, text='Ok', command=self.__ok)
-        self.ok_button.grid(row=0, column=0, sticky='e')
+        self.ok_button.grid(row=0, column=0, sticky='e', pady=5)
         self.cancel_button = ttk.Button(self.buttons_frame, text='Cancel', command=self.window.destroy)
-        self.cancel_button.grid(row=0, column=1, sticky='w')
+        self.cancel_button.grid(row=0, column=1, sticky='w', pady=5)
 
         self.buttons_frame.grid(row=2, column=0, columnspan=2, sticky='nswe')
         self.buttons_frame.columnconfigure(0, weight=1)
