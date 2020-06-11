@@ -59,9 +59,9 @@ def string_to_hierarchy(hierarchy_string: str) -> Hierarchy:
         component = Component(component_name, level)
 
         if len(last_on_level) > level:
-            last_on_level[level] = component.id  # there already exists a level
+            last_on_level[level] = component.id_  # there already exists a level
         else:
-            last_on_level.append(component.id)  # add level above
+            last_on_level.append(component.id_)  # add level above
         if level != 0:
             component.parent_id = last_on_level[level - 1]
 
@@ -90,6 +90,6 @@ def hierarchy_to_string(hierarchy: Hierarchy) -> str:
             if cmp.parent_id == parent_id:
                 string_ += cmp.level * CHILD_SYMBOL + cmp.name + NEWLINE_SYMBOL     # Add children string
                 # Recursively add children of added children
-                string_ = __hierarchy_to_string(hierarchy_list_, string_, cmp.id)
+                string_ = __hierarchy_to_string(hierarchy_list_, string_, cmp.id_)
         return string_
     return __hierarchy_to_string(hierarchy.hierarchy_list, '', None)

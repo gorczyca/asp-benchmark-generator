@@ -7,18 +7,12 @@ class Model:
     Gathers in one place all configuration's problem instance information.
 
     Attributes:
-        __hierarchy:    Hierarchy of components.
+        hierarchy:    Hierarchy of components.
     """
     def __init__(self, hierarchy: Hierarchy = None):
-        self.__hierarchy: Hierarchy = hierarchy
-
-    @property
-    def hierarchy(self): return self.__hierarchy
-
-    @hierarchy.setter
-    def hierarchy(self, value): self.__hierarchy = value
+        self.hierarchy: Hierarchy = hierarchy
 
     def clear(self):
         """Destroys all Model's attributes"""
-        self.__hierarchy = None
+        self.hierarchy = None
 

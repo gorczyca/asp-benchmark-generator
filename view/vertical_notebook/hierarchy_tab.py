@@ -81,8 +81,8 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
         child_name = simpledialog.askstring('Add child', f'Enter name of child of the "'
                                                          f'{self.__selected_component.name}" component.')
         if child_name:
-            new_item = self.controller.model.hierarchy.add(child_name, self.__selected_component.level+1,
-                                                           self.__selected_component.id, is_leaf=True)
+            new_item = self.controller.model.hierarchy.add(child_name, self.__selected_component.level + 1,
+                                                           self.__selected_component.id_, is_leaf=True)
             self.__hierarchy_tree.add_item(new_item)
             pub.sendMessage(actions.HIERARCHY_EDITED)
 
