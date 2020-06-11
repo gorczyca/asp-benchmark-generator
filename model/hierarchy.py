@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from exceptions import HierarchyStringError
-from model import Component
+from model.component import Component
 
 
 class Hierarchy:
@@ -40,6 +40,9 @@ class Hierarchy:
         :param is_leaf: True if component is a leaf-component; False otherwise.
         :returns: Created component
         """
+        cmps_names = [c.name for c in self.hierarchy_list]
+        if cmp_name in cmps_names:
+            raise HierarchyStringError(message=f'Component with name: "{cmp_name}" already exists in the hierarchy.')
         symmetry_breaking = True if is_leaf else None
         cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=is_leaf,
                         symmetry_breaking=symmetry_breaking)

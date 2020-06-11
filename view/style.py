@@ -1,8 +1,8 @@
-from tkinter import ttk
 import tkinter as tk
+from tkinter import ttk
 
 # ('clam', 'alt', 'default', 'classic'
-PARENT_THEME = 'clam'
+PARENT_THEME = 'alt'
 # PARENT_THEME = 'radiance'
 STYLE_NAME = 'CUSTOM_STYLE'
 
@@ -17,8 +17,8 @@ BIG_FONT_BOLD = (FONT_TYPE, 18, 'bold')
 
 
 class CustomTheme(ttk.Style):
-    def __init__(self, master=None, *args, **kwargs):
-        ttk.Style.__init__(self, master,  *args, **kwargs)
+    def __init__(self, master=None):
+        ttk.Style.__init__(self, master)
 
         # font=('URW Gothic L','40','bold')
         self.style = ttk.Style(master)

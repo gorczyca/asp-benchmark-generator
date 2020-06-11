@@ -1,8 +1,9 @@
 import tkinter as tk
-from typing import List, Callable, Any
 from tkinter import ttk
+from typing import List, Callable, Any
 
-from model import Hierarchy, Component
+from model.hierarchy import Hierarchy
+from model.component import Component
 
 COL_ID_COMPONENT = '#0'
 COL_NAME_COMPONENT = 'Component'

@@ -12,4 +12,4 @@ def get_count(self):
 def get_symmetry_breaking(self):
     return BOOLEAN_TO_STRING_DICT[self.symmetry_breaking]
 
-# TODO: zamiast tego lambdy!!!
+# TODO: lambdas instead of this?

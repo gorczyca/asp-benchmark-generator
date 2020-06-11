@@ -6,12 +6,12 @@ from typing import Optional
 from pubsub import pub
 
 import actions
-from model import Component
-from view.tab import Tab
+import view.tree_view_item as tv_item
+from model.component import Component
 from view.c_frame import CFrame
 from view.hierarchy_tree import HierarchyTree
 from view.hierarchy_tree_column import Column
-import view.tree_view_item as tv_item
+from view.tab import Tab
 
 TAB_NAME = 'Instances'
 LABEL_PAD_X = 25
@@ -25,18 +25,14 @@ class InstancesTab(Tab, CFrame):
         self.__hierarchy_tree: Optional[HierarchyTree] = None
         self.__selected_component: Optional[Component] = None
 
+        # TODO: isn't it pointless?
+        if self.controller.model.hierarchy:
+            self.__build_tree()
+
+    def _create_widgets(self):
         self.__right_frame = tk.Frame(self.frame)
-        self.__right_frame.grid(row=0, column=1, sticky='nswe')
-        self.__right_frame.rowconfigure(0, weight=1, uniform='fred')
-        self.__right_frame.rowconfigure(1, weight=2, uniform='fred')
-
         self.__set_instances_frame = tk.Frame(self.__right_frame)
-        # self.__set_instances_frame.grid(row=0, column=0, sticky='nswe')
-        # self.__set_instances_frame.grid_forget()
-
         self.__set_global_symmetry_breaking_frame = tk.Frame(self.__right_frame)
-        # self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky='nswe')
-        # self.__set_global_symmetry_breaking_frame.grid_forget()
 
         self.__global_symmetry_breaking_checkbox_var = tk.BooleanVar(value=True)
         self.__global_symmetry_breaking_checkbox_var.trace('w', self.__on_global_symmetry_breaking_toggled)
@@ -44,8 +40,6 @@ class InstancesTab(Tab, CFrame):
                                                                    text='Symmetry breaking\nfor all components:')
         self.__global_symmetry_breaking_checkbox = ttk.Checkbutton(self.__set_global_symmetry_breaking_frame,
                                                                    variable=self.__global_symmetry_breaking_checkbox_var)
-        self.__global_symmetry_breaking_checkbox_label.grid(row=0, column=0, sticky='w', padx=LABEL_PAD_X)
-        self.__global_symmetry_breaking_checkbox.grid(row=0, column=1, sticky='w')
 
         self.__cmp_label_var = tk.StringVar()
         self.__cmp_label = ttk.Label(self.__set_instances_frame, textvariable=self.__cmp_label_var, style='Big.TLabel')
@@ -56,26 +50,38 @@ class InstancesTab(Tab, CFrame):
                                            textvariable=self.__count_spinbox_var)
         self.__symm_breaking_checkbox_var = tk.BooleanVar()
         self.__symm_breaking_checkbox_var.trace('w', self.__on_symmetry_breaking_toggled)
-        self.__symm_breaking_checkbox_label = ttk.Label(self.__set_instances_frame, text='Symmetry breaking:',)
+        self.__symm_breaking_checkbox_label = ttk.Label(self.__set_instances_frame, text='Symmetry breaking:', )
         self.__symm_breaking_checkbox = ttk.Checkbutton(self.__set_instances_frame,
                                                         variable=self.__symm_breaking_checkbox_var)
 
+    def _setup_layout(self):
+        # self.__set_instances_frame.grid(row=0, column=0, sticky='nswe')
+        # self.__set_instances_frame.grid_forget()
+
+        # self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky='nswe')
+        # self.__set_global_symmetry_breaking_frame.grid_forget()
+
+        self.__global_symmetry_breaking_checkbox_label.grid(row=0, column=0, sticky='w', padx=LABEL_PAD_X)
+        self.__global_symmetry_breaking_checkbox.grid(row=0, column=1, sticky='w')
+
+        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__right_frame.rowconfigure(0, weight=1, uniform='fred')
+        self.__right_frame.rowconfigure(1, weight=2, uniform='fred')
+
         self.__cmp_label.grid(row=0, column=0, columnspan=2)
-        self.__count_spinbox_label.grid(row=1, column=0, sticky='w', padx=LABEL_PAD_X)
-        self.__count_spinbox.grid(row=1, column=1, sticky='w')
-        self.__symm_breaking_checkbox_label.grid(row=2, column=0, sticky='w', padx=LABEL_PAD_X)
-        self.__symm_breaking_checkbox.grid(row=2, column=1, sticky='w')
-
-        if self.controller.model.hierarchy:
-            self.__build_tree()
-
-        pub.subscribe(self.__build_tree, actions.HIERARCHY_CREATED)
-        pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
-        pub.subscribe(self.__reset, actions.RESET)
+        self.__count_spinbox_label.grid(row=1, column=0, sticky=tk.W, padx=LABEL_PAD_X)
+        self.__count_spinbox.grid(row=1, column=1, sticky=tk.W)
+        self.__symm_breaking_checkbox_label.grid(row=2, column=0, sticky=tk.W, padx=LABEL_PAD_X)
+        self.__symm_breaking_checkbox.grid(row=2, column=1, sticky=tk.W)
 
         self.frame.columnconfigure(0, weight=2, uniform='fred')
         self.frame.columnconfigure(1, weight=1, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
+
+    def _subscribe_to_listeners(self):
+        pub.subscribe(self.__build_tree, actions.HIERARCHY_CREATED)
+        pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
+        pub.subscribe(self.__reset, actions.RESET)
 
     def __on_select(self, cmp_id):
         selected_cmp: Component = self.controller.model.hierarchy.get_component_by_id(cmp_id)
@@ -104,7 +110,7 @@ class InstancesTab(Tab, CFrame):
             self.__hierarchy_tree.update_values([self.__selected_component])
 
     def __on_count_changed(self, _1, _2, _3):
-        if self.__selected_component:
+        if self.__selected_component:  # TODO: Necessary?
             try:
                 self.__selected_component.count = self.__count_spinbox_var.get()
             except tk.TclError as e:

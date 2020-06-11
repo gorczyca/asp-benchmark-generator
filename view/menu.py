@@ -5,8 +5,8 @@ from tkinter import filedialog, messagebox
 from pubsub import pub
 
 import actions
-from view.c_frame import CFrame
 from model.helpers import json_converter
+from view.c_frame import CFrame
 
 DEFAULT_FILE_EXTENSION = '.json'
 
@@ -35,6 +35,15 @@ class Menu(CFrame):
         self.__menu.add_cascade(label='About', menu=about_menu)
 
         self.parent_frame.config(menu=self.__menu)
+
+    def _create_widgets(self):
+        pass
+
+    def _setup_layout(self):
+        pass
+
+    def _subscribe_to_listeners(self):
+        pass
 
     def __new(self):
         if not self.controller.model.hierarchy:

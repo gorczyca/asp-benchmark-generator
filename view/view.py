@@ -4,12 +4,17 @@ from typing import Optional
 from pubsub import pub
 
 import actions
-from view.style import CustomTheme
+from view.main_notebook.main_notebook import MainNotebook
+from view.main_notebook.encoding_tab import EncodingTab
+from view.main_notebook.instances_tab import InstancesTab
 from view.menu import Menu
-from view.main_notebook import MainNotebook, EncodingTab, InstancesTab
-from view.vertical_notebook import VerticalNotebook, HierarchyTab, AssociationsTab, \
-    PortsTab, ResourcesTab, ConstraintsTab
-
+from view.style import CustomTheme
+from view.vertical_notebook.vertical_notebook import VerticalNotebook
+from view.vertical_notebook.hierarchy_tab import HierarchyTab
+from view.vertical_notebook.associations_tab import AssociationsTab
+from view.vertical_notebook.ports_tab import PortsTab
+from view.vertical_notebook.resources_tab import ResourcesTab
+from view.vertical_notebook.constraints_tab import ConstraintsTab
 
 NEW_FILE_NAME = 'untitled'
 WINDOW_TITLE = 'Benchmark Generator'

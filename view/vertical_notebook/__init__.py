@@ -1,6 +1,0 @@
-from view.vertical_notebook.vertical_notebook import VerticalNotebook
-from view.vertical_notebook.hierarchy_tab import HierarchyTab
-from view.vertical_notebook.associations_tab import AssociationsTab
-from view.vertical_notebook.ports_tab import PortsTab
-from view.vertical_notebook.resources_tab import ResourcesTab
-from view.vertical_notebook.constraints_tab import ConstraintsTab

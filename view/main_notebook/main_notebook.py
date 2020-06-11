@@ -1,15 +1,18 @@
 import tkinter as tk
 from tkinter import ttk
-from view.main_notebook.encoding_tab import EncodingTab
-from view.main_notebook.instances_tab import InstancesTab
+
 from view.c_frame import CFrame
 
 
 class MainNotebook(CFrame):
-    def __init__(self, parent, parent_frame, *args, **kwargs):
-        CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
+    def __init__(self, parent, parent_frame):
+        CFrame.__init__(self, parent, parent_frame)
 
-        self.notebook = ttk.Notebook(parent_frame, style='Main.TNotebook')
+    def _create_widgets(self):
+        self.notebook = ttk.Notebook(self.parent_frame, style='Main.TNotebook')
 
-        # TODO: to wrzucić to view
-        self.notebook.grid(row=0, column=0, sticky='e')
+    def _setup_layout(self):
+        self.notebook.grid(row=0, column=0, sticky=tk.E)
+
+    def _subscribe_to_listeners(self):
+        pass

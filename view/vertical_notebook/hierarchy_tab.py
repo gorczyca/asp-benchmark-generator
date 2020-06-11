@@ -1,17 +1,17 @@
 import tkinter as tk
-from tkinter import ttk
 from tkinter import messagebox, simpledialog
+from tkinter import ttk
+from typing import Optional
 
 from pubsub import pub
 
 import actions
-from view.c_frame import CFrame
-from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
-from view.hierarchy_tree import HierarchyTree
-from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
-from model import Component
 from exceptions import HierarchyStringError
-
+from model.component import Component
+from view.c_frame import CFrame
+from view.hierarchy_tree import HierarchyTree
+from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
+from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
 
 TAB_NAME = 'Hierarchy'
 
@@ -31,10 +31,11 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
         VerticalNotebookTab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
         CFrame.__init__(self, parent, parent_notebook)
 
-        self.__hierarchy_tree = None
-        self.__selected_component = None
+        self.__hierarchy_tree: Optional[HierarchyTree] = None
+        self.__selected_component: Optional[Component] = None
+
+    def _create_widgets(self):
         self.__right_frame = tk.Frame(self.frame)
-        # self.__right_frame.grid(row=0, column=1, sticky='nswe')
 
         self.__cmp_name_var = tk.StringVar()
         self.__cmp_name_var.set('COMPONENT')
@@ -46,6 +47,15 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
         self.__remove_button = ttk.Button(self.__right_frame, text='Remove', command=self.__remove)
         self.__remove_recursively_button = ttk.Button(self.__right_frame, text='Remove recursively',
                                                       command=self.__remove_recursively)
+        self.__create_hierarchy_button = ttk.Button(self.frame, text="Create hierarchy",
+                                                    command=self.__create_hierarchy, width=14)
+
+    def _setup_layout(self):
+        self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=2, uniform='fred')
+        self.frame.columnconfigure(1, weight=1, uniform='fred')
+
+        self.__right_frame.columnconfigure(0, weight=1)
 
         self.__cmp_name_label.grid(row=0, sticky=tk.NSEW, padx=LABEL_PAD_X, pady=LABEL_PAD_Y)
         self.__rename_button.grid(row=1, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
@@ -54,37 +64,36 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
         self.__remove_button.grid(row=4, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
         self.__remove_recursively_button.grid(row=5, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
 
-        self.__right_frame.columnconfigure(0, weight=1)
-
-        self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=2, uniform='fred')
-        self.frame.columnconfigure(1, weight=1, uniform='fred')
-
-        self.__create_hierarchy_button = ttk.Button(self.frame, text="Create hierarchy",
-                                                    command=self.__create_hierarchy, width=14)
         self.__create_hierarchy_button.grid(row=1, column=0, padx=30, pady=5)
 
+    def _subscribe_to_listeners(self):
         pub.subscribe(self.__reset, actions.RESET)
         pub.subscribe(self.__hierarchy_created, actions.HIERARCHY_CREATED)
 
     def __add_sibling(self):
         sibling_name = simpledialog.askstring('Add sibling', f'Enter name of sibling of the "'
                                                              f'{self.__selected_component.name}" component.')
-        if sibling_name:
-            new_item = self.controller.model.hierarchy.add(sibling_name, self.__selected_component.level,
-                                                           self.__selected_component.parent_id,
-                                                           self.__selected_component.is_leaf)
-            self.__hierarchy_tree.add_item(new_item)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
+        try:
+            if sibling_name:
+                new_item = self.controller.model.hierarchy.add(sibling_name, self.__selected_component.level,
+                                                               self.__selected_component.parent_id,
+                                                               self.__selected_component.is_leaf)
+                self.__hierarchy_tree.add_item(new_item)
+                pub.sendMessage(actions.HIERARCHY_EDITED)
+        except HierarchyStringError as e:
+            messagebox.showerror('Rename error.', e.message)
 
     def __add_child(self):
         child_name = simpledialog.askstring('Add child', f'Enter name of child of the "'
                                                          f'{self.__selected_component.name}" component.')
         if child_name:
-            new_item = self.controller.model.hierarchy.add(child_name, self.__selected_component.level + 1,
-                                                           self.__selected_component.id_, is_leaf=True)
-            self.__hierarchy_tree.add_item(new_item)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
+            try:
+                new_item = self.controller.model.hierarchy.add(child_name, self.__selected_component.level + 1,
+                                                               self.__selected_component.id_, is_leaf=True)
+                self.__hierarchy_tree.add_item(new_item)
+                pub.sendMessage(actions.HIERARCHY_EDITED)
+            except HierarchyStringError as e:
+                messagebox.showerror('Add component error.', e.message)
 
     def __rename(self):
         new_name = simpledialog.askstring('Rename', f'Enter new name for "{self.__selected_component.name}" component.')
