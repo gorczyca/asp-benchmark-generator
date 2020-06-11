@@ -5,4 +5,4 @@ TAB_NAME = 'Ports'
 
 class PortsTab(VerticalNotebookTab):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
-        VerticalNotebookTab.__init__(self, parent, parent_notebook, TAB_NAME, *args, **kwargs)
+        VerticalNotebookTab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)

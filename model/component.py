@@ -1,57 +1,77 @@
-BOOLEAN_TO_STRING_DICT = {
-    True: 'yes',
-    False: 'no',
-    None: ''
-}
+import uuid
+from typing import Optional
 
 
 class Component:
-    def __init__(self, id_, name, level, parent_id=None, is_leaf=False, symmetry_breaking=None, count=None):
-        self.id_ = id_
-        self.name = name
-        self.is_leaf = is_leaf
-        self.level = level
-        self.parent_id = parent_id
-        self.count = count
-        self.symmetry_breaking = symmetry_breaking
+    """Represents components in the component hierarchy.
 
-    def get_name(self):
-        return self.name
+    Attributes:
+        __id        Unique identifier
+        __name      Unique name
+        __is_leaf   True if component is a leaf component; False otherwise
+        __level     Nesting level
+        __parent_id Id of parent; None if component is a root
+        __count     Number of instances of component; None if unspecified (has to be None for non-leaf components)
+        __symmetry_breaking:    Whether or not apply symmetry breaking (None for non-leaf components)
+    """
+    def __init__(self, name: str, level: int, parent_id: Optional[int] = None, is_leaf: bool = False,
+                 symmetry_breaking: Optional[bool] = None, count: Optional[int] = None):
+        self.__id: int = uuid.uuid4().int
+        self.__name: str = name
+        self.__is_leaf: bool = is_leaf
+        self.__level: int = level
+        self.__parent_id: Optional[int] = parent_id
+        self.__count: Optional[int] = count
+        self.__symmetry_breaking: Optional[bool] = symmetry_breaking
 
-    def set_name(self, name):
-        self.name = name
+    @property
+    def id(self): return self.__id
 
-    def set_leaf(self):
-        self.is_leaf = True
+    @property
+    def name(self): return self.__name
 
-    def set_symmetry_breaking(self):
-        self.symmetry_breaking = True
+    @name.setter
+    def name(self, value): self.__name = value
+
+    @property
+    def level(self): return self.__level
+
+    @property
+    def count(self): return self.__count
+
+    @count.setter
+    def count(self, value): self.__count = value
+
+    @property
+    def parent_id(self): return self.__parent_id
+
+    @parent_id.setter
+    def parent_id(self, value): self.__parent_id = value
+
+    @property
+    def is_leaf(self): return self.__is_leaf
+
+    @is_leaf.setter
+    def is_leaf(self, value): self.__is_leaf = value
+
+    @property
+    def symmetry_breaking(self): return self.__symmetry_breaking
+
+    @symmetry_breaking.setter
+    def symmetry_breaking(self, value): self.__symmetry_breaking = value
 
     @classmethod
     def from_json(cls, data):
+        """Necessary to create an instance from JSON"""
         return cls(**data)
 
-    def to_view_item(self):
-        return ComponentTreeItem(self)
-
-    # TODO: for development only
-    def __str__(self):
-        return self.name
-
     def __repr__(self):
-        return self.name
+        """Provides object's string representation.
 
+        For development purposes only.
+        """
+        return self.__name
 
-class ComponentTreeItem(Component):
-    def __init__(self, cmp):
-        Component.__init__(self, cmp.id_, cmp.name, cmp.level, parent_id=cmp.parent_id, is_leaf=cmp.is_leaf,
-                           symmetry_breaking=cmp.symmetry_breaking, count=cmp.count)
-
-    def get_count(self):
-        return self.count if self.count is not None else ''
-
-    def get_symmetry_breaking(self):
-        return BOOLEAN_TO_STRING_DICT[self.symmetry_breaking]
 
 
 

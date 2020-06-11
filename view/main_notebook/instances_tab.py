@@ -1,22 +1,29 @@
-from view.c_tab import CTab
+import math
 import tkinter as tk
 from tkinter import ttk
-from view.hierarchy_tree import HierarchyTree
+from typing import Optional
+
 from pubsub import pub
-from controller import actions
+
+import actions
+from model import Component
+from view.tab import Tab
+from view.c_frame import CFrame
+from view.hierarchy_tree import HierarchyTree
 from view.hierarchy_tree_column import Column
-import math
+import view.tree_view_item as tv_item
 
 TAB_NAME = 'Instances'
 LABEL_PAD_X = 25
 
 
-class InstancesTab(CTab):
+class InstancesTab(Tab, CFrame):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
-        CTab.__init__(self, parent, parent_notebook, TAB_NAME, *args, **kwargs)
+        Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
+        CFrame.__init__(self, parent, parent_notebook)
 
-        self.hierarchy_tree = None
-        self.__selected_component_name = None
+        self.__hierarchy_tree: Optional[HierarchyTree] = None
+        self.__selected_component: Optional[Component] = None
 
         self.__right_frame = tk.Frame(self.frame)
         self.__right_frame.grid(row=0, column=1, sticky='nswe')
@@ -59,8 +66,7 @@ class InstancesTab(CTab):
         self.__symm_breaking_checkbox_label.grid(row=2, column=0, sticky='w', padx=LABEL_PAD_X)
         self.__symm_breaking_checkbox.grid(row=2, column=1, sticky='w')
 
-        hierarchy = self.controller.model.get_hierarchy()
-        if hierarchy:
+        if self.controller.model.hierarchy:
             self.__build_tree()
 
         pub.subscribe(self.__build_tree, actions.HIERARCHY_CREATED)
@@ -71,73 +77,66 @@ class InstancesTab(CTab):
         self.frame.columnconfigure(1, weight=1, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
 
-    def __on_select(self, item_name):
-        cmp = self.controller.model.get_component_by_name(item_name)
-        if cmp.is_leaf:
-            if cmp.count is not None:
-                self.__count_spinbox_var.set(cmp.count)
+    def __on_select(self, cmp_id):
+        selected_cmp: Component = self.controller.model.hierarchy.get_component_by_id(cmp_id)
+        self.__selected_component = selected_cmp
+        if selected_cmp.is_leaf:
+            self.__cmp_label_var.set(selected_cmp.name)
+            if selected_cmp.count is not None:
+                self.__count_spinbox_var.set(selected_cmp.count)
             else:
                 self.__count_spinbox_var.set(0)
-            self.__cmp_label_var.set(cmp.name)
-            if cmp.symmetry_breaking is not None:
-                self.__symm_breaking_checkbox_var.set(cmp.symmetry_breaking)
+            if selected_cmp.symmetry_breaking:
+                self.__symm_breaking_checkbox_var.set(selected_cmp.symmetry_breaking)
 
-            self.__set_instances_frame.grid(row=0, column=0, sticky='nswe')
-            self.__selected_component_name = cmp.name
+            self.__set_instances_frame.grid(row=0, column=0, sticky=tk.NSEW)
         else:
             self.__set_instances_frame.grid_forget()
 
     def __on_global_symmetry_breaking_toggled(self, _1, _2, _3):
         value = self.__global_symmetry_breaking_checkbox_var.get()
-        hierarchy = self.controller.model.get_hierarchy()
-        updated_cmps = []
-        for cmp in hierarchy:
-            if cmp.is_leaf:
-                cmp.symmetry_breaking = value
-                updated_cmps.append(cmp)
-        self.hierarchy_tree.update_values(updated_cmps)
+        edited_cmps = self.controller.model.hierarchy.set_symmetry_breaking_for_all(value)
+        self.__hierarchy_tree.update_values(edited_cmps)
 
     def __on_symmetry_breaking_toggled(self, _1, _2, _3):
-        if self.__selected_component_name:
-            cmp = self.controller.model.get_component_by_name(self.__selected_component_name)
-            if cmp:
-                cmp.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
-                self.hierarchy_tree.update_values([cmp])
+        if self.__selected_component:
+            self.__selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
+            self.__hierarchy_tree.update_values([self.__selected_component])
 
     def __on_count_changed(self, _1, _2, _3):
-        if self.__selected_component_name:
-            cmp = self.controller.model.get_component_by_name(self.__selected_component_name)
-            if cmp:
-                try:
-                    value = self.__count_spinbox_var.get()
-                    cmp.count = value
-                except tk.TclError as e:
-                    print(e)
-                    cmp.count = None
-                finally:
-                    self.hierarchy_tree.update_values([cmp])
+        if self.__selected_component:
+            try:
+                self.__selected_component.count = self.__count_spinbox_var.get()
+            except tk.TclError as e:
+                print(e)
+                self.__selected_component.count = None
+            finally:
+                self.__hierarchy_tree.update_values([self.__selected_component])
 
     def __build_tree(self):
-        hierarchy = self.controller.model.get_hierarchy()
         columns = [
             Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
             Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
 
-        if self.hierarchy_tree:
-            self.hierarchy_tree.destroy_()
+        if self.__hierarchy_tree:
+            self.__hierarchy_tree.destroy_()
 
-        self.hierarchy_tree = HierarchyTree(self.frame, hierarchy, columns=columns, on_select_callback=self.__on_select,
-                                            extract_values=lambda cmp:
-                                            (cmp.to_view_item().get_count(), cmp.to_view_item().get_symmetry_breaking()))
-        self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky='nswe')  # show global checkbox
-        self.__set_instances_frame.grid_forget()    # hide other checkbox
+        self.__hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=columns,
+                                              on_select_callback=self.__on_select, extract_values=lambda cmp:
+                                              (cmp.count if cmp.count else '',
+                                               tv_item.BOOLEAN_TO_STRING_DICT[cmp.symmetry_breaking]))
+        self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky=tk.NSEW)  # Show global checkbox
+        self.__set_instances_frame.grid_forget()    # Hide other checkbox
 
-    def __reset(self):  # TODO: czy z tym do jakiejs klasy? (albo jakis wzorzec)
-        if self.hierarchy_tree:
-            self.hierarchy_tree.destroy_()
-            self.hierarchy_tree = None
+    def __reset(self):
+        if self.__hierarchy_tree:
+            self.__hierarchy_tree.destroy_()
+            self.__hierarchy_tree = None
             self.__set_global_symmetry_breaking_frame.grid_forget()
             self.__set_instances_frame.grid_forget()
+
+            # TODO: maybe just forget everything, not every grid specifically
+
 
 
 

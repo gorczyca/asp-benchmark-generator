@@ -1,21 +1,19 @@
-from tkinter import ttk
 import tkinter as tk
-from view.c_frame import CFrame
+from typing import List, Callable, Any
+from tkinter import ttk
 
+from model import Hierarchy, Component
 
 COL_ID_COMPONENT = '#0'
 COL_NAME_COMPONENT = 'Component'
 
 
 class HierarchyTree(ttk.Treeview):
-    def __init__(self, parent_frame, hierarchy, columns=None, on_select_callback=None, extract_values=lambda cmp: [],
-                 **kwargs):
+    def __init__(self, parent_frame, hierarchy: Hierarchy, columns=None, on_select_callback=None,
+                 extract_values: Callable[[Component], Any] = lambda cmp: [], **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
-        # CFrame.__init__(self, parent, parent_frame, *args, **kwargs)
 
         self.parent_frame = parent_frame
-
-        self.items = {}
 
         self.__tree = ttk.Treeview(self.parent_frame, style='Custom.Treeview', selectmode='extended', **kwargs)
 
@@ -35,51 +33,49 @@ class HierarchyTree(ttk.Treeview):
             self.__tree['columns'] = column_ids
             for col in columns:
                 self.__tree.column(col.id, stretch=col.stretch)
-                self.__tree.heading(col.id, text=col.name, anchor=col.anchor)    # TODO: lepiej to
+                self.__tree.heading(col.id, text=col.name, anchor=col.anchor)    # TODO: better
 
         self.__build_tree(hierarchy)
         self.__tree.grid(row=0, column=0, sticky='nswe')
 
-    def add_item(self, cmp):
-        ancestor = '' if cmp.parent_id is None else self.items[cmp.parent_id]  # TODO: do poprawy to
+    def add_item(self, cmp: Component):
+        ancestor = '' if cmp.parent_id is None else cmp.parent_id  # TODO: do poprawy to
         values = self.__extract_values(cmp)
-        self.items[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
+        self.__tree.insert(ancestor, tk.END, iid=cmp.id, text=cmp.name, values=values)
 
-    def rename_item(self, cmp):
-        self.__tree.item(self.items[cmp.id_], text=cmp.get_name())
+    def rename_item(self, cmp: Component):
+        self.__tree.item(cmp.id, text=cmp.name)
 
-    def remove_items_recursively(self, root, cmps_to_remove):
-        self.__tree.delete(self.items[root.id_])
-        for c in cmps_to_remove:
-            self.items.pop(c.id_)
+    def remove_items_recursively(self, cmp: Component):
+        self.__tree.delete(cmp.id)
 
-    def remove_item_preserve_children(self, item, children):
-        cmp_parent = self.__tree.parent(self.items[item.id_])
+    def remove_item_preserve_children(self, cmp: Component, children: List[Component]):
+        cmp_parent = self.__tree.parent(cmp.id)
         children_count = len(children)
         for c in children:
-            self.__tree.move(self.items[c.id_], cmp_parent, children_count)
-        self.__tree.delete(self.items[item.id_])
+            self.__tree.move(c.id, cmp_parent, children_count) # TODO: check with tk.END
+        self.__tree.delete(cmp.id)
 
-    def update_values(self, cmps):
-        for cmp in cmps:
-            self.__update_value(cmp)
+    def update_values(self, cmps: List[Component]):
+        for c in cmps:
+            self.__update_value(c)
 
-    def __update_value(self, cmp):
+    def __update_value(self, cmp: Component):
         values = self.__extract_values(cmp)
-        self.__tree.item(self.items[cmp.id_], values=values)
+        self.__tree.item(cmp.id, values=values)
 
     def __item_selected(self, _):
-        selected_item_name = self.__tree.item(self.__tree.focus())['text']
-        if selected_item_name is not '':
-            self.__on_select_callback(selected_item_name)
+        selected_item_id_str: str = self.__tree.focus()
+        if selected_item_id_str:
+            self.__on_select_callback(int(selected_item_id_str))
 
     def destroy_(self):
         self.__tree.destroy()
-        self.__tree = None
-        self.items = {}
+        self.__tree = None      # TODO: is that necessary?
 
-    def __build_tree(self, hierarchy):
-        for cmp in hierarchy:
+    def __build_tree(self, hierarchy: Hierarchy):
+        for cmp in hierarchy.hierarchy_list:
             values = self.__extract_values(cmp)
-            ancestor = '' if cmp.parent_id is None else self.items[cmp.parent_id]  # TODO: do poprawy to
-            self.items[cmp.id_] = self.__tree.insert(ancestor, tk.END, text=cmp.name, values=values)
+            ancestor = cmp.parent_id if cmp.parent_id is not None else ''
+            self.__tree.insert(ancestor, tk.END, iid=cmp.id, text=cmp.name, values=values)
+
