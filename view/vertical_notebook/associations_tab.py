@@ -192,7 +192,7 @@ class AssociationsTab(VerticalNotebookTab, CFrame):
         return has_association, min_, max_
 
     def __on_select(self, cmp_id: int):
-        selected_cmp: Component = self.controller.model.hierarchy.get_component_by_id(cmp_id)
+        selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
         self.__selected_component = selected_cmp
 
         if selected_cmp.association:

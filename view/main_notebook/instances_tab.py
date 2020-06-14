@@ -84,7 +84,7 @@ class InstancesTab(Tab, CFrame):
         pub.subscribe(self.__reset, actions.RESET)
 
     def __on_select(self, cmp_id):
-        selected_cmp: Component = self.controller.model.hierarchy.get_component_by_id(cmp_id)
+        selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
         self.__selected_component = selected_cmp
         if selected_cmp.is_leaf:
             self.__cmp_label_var.set(selected_cmp.name)
@@ -101,7 +101,7 @@ class InstancesTab(Tab, CFrame):
 
     def __on_global_symmetry_breaking_toggled(self, _1, _2, _3):
         value = self.__global_symmetry_breaking_checkbox_var.get()
-        edited_cmps = self.controller.model.hierarchy.set_symmetry_breaking_for_all(value)
+        edited_cmps = self.controller.model.set_symmetry_breaking_for_all_in_hierarchy(value)
         self.__hierarchy_tree.update_values(edited_cmps)
 
     def __on_symmetry_breaking_toggled(self, _1, _2, _3):

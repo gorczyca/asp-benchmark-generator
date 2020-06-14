@@ -7,7 +7,6 @@ above.
 from typing import List, Tuple, Optional
 
 from model.component import Component
-from model.hierarchy import Hierarchy
 from exceptions import HierarchyStringError
 
 
@@ -31,7 +30,7 @@ def __extract_tabs(line: str) -> Tuple[int, str]:
     return tab_count, line.split()[0]
 
 
-def string_to_hierarchy(hierarchy_string: str) -> Hierarchy:
+def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
     """Converts string into Hierarchy object
 
     :param hierarchy_string:    hierarchy represented as string
@@ -39,7 +38,7 @@ def string_to_hierarchy(hierarchy_string: str) -> Hierarchy:
     """
     hierarchy_string = hierarchy_string.replace(' ' * NUMBER_OF_SPACES_EQUAL_TO_TAB,
                                                 CHILD_SYMBOL)  # make sure N spaces are converted to '\t'
-    hierarchy_list = []
+    hierarchy = []
     last_on_level = []
     cmp_names = []
 
@@ -65,31 +64,31 @@ def string_to_hierarchy(hierarchy_string: str) -> Hierarchy:
         if level != 0:
             component.parent_id = last_on_level[level - 1]
 
-        hierarchy_list.append(component)
-    return Hierarchy(hierarchy_list)
+        hierarchy.append(component)
+    return hierarchy
 
 
-def hierarchy_to_string(hierarchy: Hierarchy) -> str:
+def hierarchy_to_string(hierarchy: List[Component]) -> str:
     """Converts 'Hierarchy' object to string.
 
     :param hierarchy:   'Hierarchy' object to be converted to string.
     :returns:           Hierarchy's string representation.
     """
-    def __hierarchy_to_string(hierarchy_list_: List[Component], string_: str, parent_id: Optional[int]) -> str:
+    def __hierarchy_to_string(hierarchy_: List[Component], string_: str, parent_id: Optional[int]) -> str:
         """Internal function used recursively.
 
         Appends the name of a child to current string and then calls itself looking for previously appended
         child's children.
 
-        :param hierarchy_list_: Hierarchy list too look for components in.
+        :param hierarchy_: Hierarchy list too look for components in.
         :param string_: Current string representation.
         :param parent_id:   Id of a parent component whose children (and then their children) are to be added to string.
         :returns: String after adding component's children, and then their children recursively and so forth.
         """
-        for cmp in hierarchy_list_:
+        for cmp in hierarchy_:
             if cmp.parent_id == parent_id:
                 string_ += cmp.level * CHILD_SYMBOL + cmp.name + NEWLINE_SYMBOL     # Add children string
                 # Recursively add children of added children
-                string_ = __hierarchy_to_string(hierarchy_list_, string_, cmp.id_)
+                string_ = __hierarchy_to_string(hierarchy_, string_, cmp.id_)
         return string_
-    return __hierarchy_to_string(hierarchy.hierarchy_list, '', None)
+    return __hierarchy_to_string(hierarchy, '', None)

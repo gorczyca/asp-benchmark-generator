@@ -1,4 +1,8 @@
-from model.hierarchy import Hierarchy
+from typing import List, Optional
+
+from exceptions import HierarchyStringError
+from model.component import Component
+from model.resource import Resource
 
 
 class Model:
@@ -7,12 +11,143 @@ class Model:
     Gathers in one place all configuration's problem instance information.
 
     Attributes:
-        hierarchy:    Hierarchy of components.
+        hierarchy:  Hierarchy of components. Hierarchy of components is naturally a tree structure. Because of 
+        complexity issues (to avoid recursion) it is implemented as a List with component having a pointer to its 
+        ancestor. Still, recursion could not be completely avoided (e.g. when removing a component recursively or 
+        creating a string from hierarchy)
+
+        resources:  List of resources
     """
-    def __init__(self, hierarchy: Hierarchy = None):
-        self.hierarchy: Hierarchy = hierarchy
+    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None):
+        self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
+        self.resources: List[Resource] = resources if resources is not None else []
 
     def clear(self):
         """Destroys all Model's attributes"""
-        self.hierarchy = None
+        self.hierarchy = []
+        self.resources = []
 
+    @classmethod
+    def from_json(cls, data):
+        """Necessary to create an instance from JSON."""
+        data['hierarchy'] = list(map(Component.from_json, data['hierarchy']))
+        data['resources'] = list(map(Resource.from_json, data['resources']))    # Convert dictionary to object
+        return cls(**data)  # TODO: better
+
+    # Hierarchy
+
+    def set_hierarchy(self, hierarchy: List[Component]):
+        self.hierarchy = hierarchy
+        self.__set_leaves()
+
+    def __set_leaves(self) -> None:
+        """Traverses through hierarchy and sets the property is_leaf of leaf components to True.
+
+        Used when hierarchy is changed.
+        """
+        parents_ids = [cmp.parent_id for cmp in self.hierarchy if cmp.parent_id is not None]
+        parents_ids = set(parents_ids)
+
+        for cmp in self.hierarchy:
+            if cmp.id_ not in parents_ids:
+                cmp.is_leaf = True
+                cmp.symmetry_breaking = True
+
+    def add_component_to_hierarchy(self, cmp_name: str, level: int, parent_id: Optional[int], is_leaf: bool) -> Component:
+        """Creates and adds new component to hierarchy.
+
+        :param cmp_name: Name.
+        :param level: Level.
+        :param parent_id: Id of parent.
+        :param is_leaf: True if component is a leaf-component; False otherwise.
+        :returns: Created component
+        """
+        cmps_names = [c.name for c in self.hierarchy]
+        if cmp_name in cmps_names:
+            raise HierarchyStringError(message=f'Component with name: "{cmp_name}" already exists in the hierarchy.')
+        symmetry_breaking = True if is_leaf else None
+        cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=is_leaf,
+                        symmetry_breaking=symmetry_breaking)
+        self.hierarchy.append(cmp)
+        if parent_id:
+            parent = self.get_component_by_id(parent_id)
+            parent.is_leaf = False      # Parent is not leaf anymore
+            parent.count = None
+            parent.symmetry_breaking = None
+        return cmp
+
+    def remove_component_from_hierarchy_recursively(self, cmp: Component) -> List[Component]:
+        """Removes the component recursively (the component itself, its children, the children of the children...).
+
+        :param cmp: Component to remove.
+        :returns: List of components removed from the hierarchy.
+        """
+        def __remove_component(cmp_: Component, hierarchy_: List[Component], to_remove_: List[Component]) -> None:
+            """Creates a list of components to remove by recursive calls to itself.
+
+            :param cmp_: Current component to remove (and all its children recursively).
+            :param hierarchy_: Components hierarchy.
+            :param to_remove_: List of components to be removed.
+            """
+            to_remove_.append(cmp_)     # Add current element to list of elements to remove.
+            for c in hierarchy_:
+                if c.parent_id == cmp_.id_:
+                    __remove_component(c, hierarchy_, to_remove_)   # Recursively remove all the component's children
+
+        to_remove = []
+        __remove_component(cmp, self.hierarchy, to_remove)
+        self.hierarchy = [cmp for cmp in self.hierarchy if cmp not in to_remove]
+        self.__set_leaves()
+        return to_remove
+
+    def remove_component_from_hierarchy_preserve_children(self, cmp: Component) -> List[Component]:
+        """Removes the component from hierarchy, but preserves its children.
+
+        The children of the removed component are placed on their ancestor's place; Their parent_id attribute is set
+        to their actual parent's parent_id attribute.
+
+        :param cmp: Component to remove.
+        :returns: List of removed components children.
+        """
+        children = []
+        for c in self.hierarchy:
+            if c.parent_id == cmp.id_:
+                c.parent_id = cmp.parent_id
+                children.append(c)
+        self.hierarchy.remove(cmp)
+        self.__set_leaves()
+        return children
+
+    def get_component_by_id(self, id_: int) -> Component:
+        """Returns component, that has the specify id
+
+        :param id_: Id of the parameter to return
+        :returns: Component with the given id.
+        """
+        return next((cmp for cmp in self.hierarchy if cmp.id_ == id_), None)
+
+    def change_components_name(self, cmp: Component, new_name: str) -> Component:
+        """Changes name for a specified component.
+
+        Raises HierarchyStringError when a component with the new name already exists in the hierarchy.
+        :param cmp: Component
+        :param new_name: New name for component
+        :returns: Component with its name changed
+        """
+        cmps_names = [c.name for c in self.hierarchy]
+        if new_name in cmps_names:
+            raise HierarchyStringError(message=f'Component with name: "{new_name}" already exists in the hierarchy.')
+        cmp.name = new_name
+        return cmp
+
+    def set_symmetry_breaking_for_all_in_hierarchy(self, symmetry_breaking) -> List[Component]:
+        """Sets the value of symmetry breaking for all element in the hierarchy.
+
+        :param symmetry_breaking: Value to set the symmetry breaking to.
+        """
+        edited_cmps = []
+        for c in self.hierarchy:
+            if c.is_leaf:
+                c.symmetry_breaking = symmetry_breaking
+                edited_cmps.append(c)
+        return edited_cmps

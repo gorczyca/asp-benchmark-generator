@@ -46,8 +46,6 @@ class Menu(CFrame):
         pass
 
     def __new(self):
-        if not self.controller.model.hierarchy:
-            return
         if not self.controller.saved:
             answer = messagebox.askyesnocancel('New', 'You have some unsaved changes, '
                                                       'would you like to save them?')
@@ -63,9 +61,7 @@ class Menu(CFrame):
         pub.sendMessage(actions.RESET)
 
     def __open(self):
-        if not self.controller.model.hierarchy:
-            pass
-        elif not self.controller.saved:
+        if not self.controller.saved:
             answer = messagebox.askyesnocancel('Open', 'You have some unsaved changes, '
                                                        'would you like to save them?')
             if answer is None:
@@ -79,14 +75,14 @@ class Menu(CFrame):
         if file is not None:
             self.controller.file = file
             json = file.read()
-            hierarchy = json_converter.json_to_hierarchy(json)
-            self.controller.model.hierarchy = hierarchy
+            model = json_converter.json_to_model(json)
+            self.controller.model = model
             file_name = Menu.__extract_file_name(file.name)
             pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
             pub.sendMessage(actions.HIERARCHY_CREATED)
 
     def __save(self):
-        json_string = json_converter.hierarchy_to_json(self.controller.model.hierarchy)
+        json_string = json_converter.model_to_json(self.controller.model)
         if self.controller.file:
             with open(self.controller.file.name, 'w') as file_:
                 self.__save_(file_, json_string)
@@ -94,7 +90,7 @@ class Menu(CFrame):
             self.__save_as()
 
     def __save_as(self):
-        json_string = json_converter.hierarchy_to_json(self.controller.model.hierarchy)
+        json_string = json_converter.model_to_json(self.controller.model)
         file = filedialog.asksaveasfile(mode='w', defaultextension=DEFAULT_FILE_EXTENSION)
         if file is not None:  # TODO: czy to potrzebne
             self.__save_(file, json_string)

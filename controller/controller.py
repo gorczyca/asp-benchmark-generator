@@ -26,6 +26,9 @@ class Controller:
     @property
     def model(self): return self.__model
 
+    @model.setter
+    def model(self, value): self.__model = value
+
     def run(self) -> None:
         self.__view.mainloop()
 

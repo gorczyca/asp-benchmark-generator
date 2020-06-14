@@ -75,9 +75,9 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
                                                              f'{self.__selected_component.name}" component.')
         try:
             if sibling_name:
-                new_item = self.controller.model.hierarchy.add(sibling_name, self.__selected_component.level,
-                                                               self.__selected_component.parent_id,
-                                                               self.__selected_component.is_leaf)
+                new_item = self.controller.model.add_component_to_hierarchy(sibling_name, self.__selected_component.level,
+                                                                            self.__selected_component.parent_id,
+                                                                            self.__selected_component.is_leaf)
                 self.__hierarchy_tree.add_item(new_item)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
         except HierarchyStringError as e:
@@ -88,8 +88,9 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
                                                          f'{self.__selected_component.name}" component.')
         if child_name:
             try:
-                new_item = self.controller.model.hierarchy.add(child_name, self.__selected_component.level + 1,
-                                                               self.__selected_component.id_, is_leaf=True)
+                new_item = self.controller.model.add_component_to_hierarchy(child_name,
+                                                                            self.__selected_component.level+1,
+                                                                            self.__selected_component.id_, is_leaf=True)
                 self.__hierarchy_tree.add_item(new_item)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
             except HierarchyStringError as e:
@@ -99,7 +100,7 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
         new_name = simpledialog.askstring('Rename', f'Enter new name for "{self.__selected_component.name}" component.')
         if new_name:
             try:
-                self.controller.model.hierarchy.change_components_name(self.__selected_component, new_name)
+                self.controller.model.change_components_name(self.__selected_component, new_name)
                 self.__cmp_name_var.set(new_name)
                 self.__hierarchy_tree.rename_item(self.__selected_component)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
@@ -107,21 +108,21 @@ class HierarchyTab(VerticalNotebookTab, CFrame):
                 messagebox.showerror('Rename error.', e.message)
 
     def __remove(self):
-        children = self.controller.model.hierarchy.remove_component_preserve_children(self.__selected_component)
+        children = self.controller.model.remove_component_from_hierarchy_preserve_children(self.__selected_component)
         self.__hierarchy_tree.remove_item_preserve_children(self.__selected_component, children)
         self.__right_frame.grid_forget()
         self.__selected_component = None
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __remove_recursively(self):
-        self.controller.model.hierarchy.remove_component_recursively(self.__selected_component)  # alternatively, remove just this one component
+        self.controller.model.remove_component_from_hierarchy_recursively(self.__selected_component)
         self.__hierarchy_tree.remove_items_recursively(self.__selected_component)
         self.__right_frame.grid_forget()
         self.__selected_component = None
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_select(self, cmp_id):
-        selected_component: Component = self.controller.model.hierarchy.get_component_by_id(cmp_id)
+        selected_component: Component = self.controller.model.get_component_by_id(cmp_id)
         self.__selected_component = selected_component
         self.__cmp_name_var.set(selected_component.name)
         self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)

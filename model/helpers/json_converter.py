@@ -3,18 +3,15 @@
 
 import json
 
-from model.hierarchy import Hierarchy
+from model.model import Model
 
 
-def hierarchy_to_json(hierarchy: Hierarchy) -> str:
+def model_to_json(model: Model) -> str:
     """Converts the Hierarchy object to JSON string."""
-    return json.dumps(hierarchy, default=lambda obj: obj.__dict__, sort_keys=True, indent=4)
+    return json.dumps(model, default=lambda obj: obj.__dict__, sort_keys=True, indent=4)
 
 
-def json_to_hierarchy(json_string: str) -> Hierarchy:
+def json_to_model(json_string: str) -> Model:
     """Converts the JSON string to the Hierarchy object"""
-    return Hierarchy.from_json(json.loads(json_string))
+    return Model.from_json(json.loads(json_string))
 
-# TODO: usunąć jeżeli lambda zadziała
-# def obj_dict(obj):
-#     return obj.__dict__

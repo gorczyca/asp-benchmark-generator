@@ -2,7 +2,6 @@ import tkinter as tk
 from tkinter import ttk
 from typing import List, Callable, Any
 
-from model.hierarchy import Hierarchy
 from model.component import Component
 
 COL_ID_COMPONENT = '#0'
@@ -10,7 +9,7 @@ COL_NAME_COMPONENT = 'Component'
 
 
 class HierarchyTree(ttk.Treeview):
-    def __init__(self, parent_frame, hierarchy: Hierarchy, columns=None, on_select_callback=None,
+    def __init__(self, parent_frame, hierarchy: List[Component], columns=None, on_select_callback=None,
                  extract_values: Callable[[Component], Any] = lambda cmp: [], **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 
@@ -74,8 +73,8 @@ class HierarchyTree(ttk.Treeview):
         self.__tree.destroy()
         self.__tree = None      # TODO: is that necessary?
 
-    def __build_tree(self, hierarchy: Hierarchy):
-        for cmp in hierarchy.hierarchy_list:
+    def __build_tree(self, hierarchy: List[Component]):
+        for cmp in hierarchy:
             values = self.__extract_values(cmp)
             ancestor = cmp.parent_id if cmp.parent_id is not None else ''
             self.__tree.insert(ancestor, tk.END, iid=cmp.id_, text=cmp.name, values=values)

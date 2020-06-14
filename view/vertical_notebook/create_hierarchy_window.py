@@ -82,7 +82,7 @@ class CreateHierarchyWindow(CFrame):
         hierarchy_string = self.text.get(1.0, tk.END)
         try:
             hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
-            self.controller.model.hierarchy = hierarchy
+            self.controller.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
             pub.sendMessage(actions.HIERARCHY_CREATED)
             pub.sendMessage(actions.MODEL_CHANGED)
             self.window.destroy()
