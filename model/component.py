@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional
+from typing import Optional, Dict
 
 from model.association import Association
 
@@ -15,10 +15,12 @@ class Component:
         parent_id: Id of parent; None if component is a root
         count:     Number of instances of component; None if unspecified (has to be None for non-leaf components)
         symmetry_breaking:    Whether or not apply symmetry breaking (None for non-leaf components)
+        produces:   Dictionary of type "id of resource": "Amount produced". Negative number in "Amount produced" value
+            means that resource is consumed by component.
     """
-    def __init__(self, name: str, level: int, id_: Optional[int] = None, parent_id: Optional[int] = None, is_leaf: bool = False,
-                 symmetry_breaking: Optional[bool] = None, count: Optional[int] = None,
-                 association: Optional[Association] = None):
+    def __init__(self, name: str, level: int, id_: Optional[int] = None, parent_id: Optional[int] = None,
+                 is_leaf: bool = False, symmetry_breaking: Optional[bool] = None, count: Optional[int] = None,
+                 association: Optional[Association] = None, produces: Dict[int, int] = None):
         self.id_: int = id_ if id_ is not None else uuid.uuid4().int
         self.name: str = name
         self.is_leaf: bool = is_leaf
@@ -27,6 +29,7 @@ class Component:
         self.count: Optional[int] = count
         self.symmetry_breaking: Optional[bool] = symmetry_breaking
         self.association: Optional[Association] = association
+        self.produces: Dict[int, int] = produces if produces is not None else {}
 
     @classmethod
     def from_json(cls, data):

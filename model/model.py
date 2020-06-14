@@ -151,3 +151,8 @@ class Model:
                 c.symmetry_breaking = symmetry_breaking
                 edited_cmps.append(c)
         return edited_cmps
+
+    # Resources
+    def get_all_resources_names(self) -> List[str]:
+        """Returns a list with all resources names."""
+        return [r.name for r in self.resources]
