@@ -15,6 +15,9 @@ FONT_BOLD = (FONT_TYPE, 13, 'bold')
 BIG_FONT = (FONT_TYPE, 18)
 BIG_FONT_BOLD = (FONT_TYPE, 18, 'bold')
 
+VERTICAL_TAB_HEIGHT = 720
+VERTICAL_TAB_WIDTH = 1080
+
 
 class CustomTheme(ttk.Style):
     def __init__(self, master=None):

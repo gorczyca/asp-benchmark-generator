@@ -8,7 +8,7 @@ from view.main_notebook.main_notebook import MainNotebook
 from view.main_notebook.encoding_tab import EncodingTab
 from view.main_notebook.instances_tab import InstancesTab
 from view.menu import Menu
-from view.style import CustomTheme
+from view.style import CustomTheme, VERTICAL_TAB_HEIGHT, VERTICAL_TAB_WIDTH
 from view.vertical_notebook.vertical_notebook import VerticalNotebook
 from view.vertical_notebook.hierarchy_tab import HierarchyTab
 from view.vertical_notebook.associations_tab import AssociationsTab
@@ -56,11 +56,16 @@ class View(tk.Frame):
 
         self.__vertical_notebook = VerticalNotebook(self, self.__encoding_frame.frame)
 
-        self.__hierarchy_tab = HierarchyTab(self, self.__vertical_notebook.notebook)
-        self.__associations_tab = AssociationsTab(self, self.__vertical_notebook.notebook)
-        self.__ports_tab = PortsTab(self, self.__vertical_notebook.notebook)
-        self.__resources_tab = ResourcesTab(self, self.__vertical_notebook.notebook)
-        self.__constraints_tab = ConstraintsTab(self, self.__vertical_notebook.notebook)
+        self.__hierarchy_tab = HierarchyTab(self, self.__vertical_notebook.notebook,
+                                            height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
+        self.__associations_tab = AssociationsTab(self, self.__vertical_notebook.notebook,
+                                                  height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
+        self.__ports_tab = PortsTab(self, self.__vertical_notebook.notebook,
+                                    height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
+        self.__resources_tab = ResourcesTab(self, self.__vertical_notebook.notebook,
+                                            height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
+        self.__constraints_tab = ConstraintsTab(self, self.__vertical_notebook.notebook,
+                                                height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
 
     def __init_title(self):
         window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'

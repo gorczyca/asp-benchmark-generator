@@ -8,20 +8,28 @@ from pubsub import pub
 import actions
 import view.tree_view_item as tv_item
 from model.component import Component
-from view.c_frame import CFrame
+from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.has_common_setup import HasCommonSetup
+from view.abstract.has_treeview import HasTreeView
+from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.hierarchy_tree import HierarchyTree
 from view.hierarchy_tree_column import Column
-from view.tab import Tab
+from view.abstract.tab import Tab
 
 TAB_NAME = 'Instances'
 LABEL_PAD_X = 25
 
 
-class InstancesTab(Tab, CFrame):
+class InstancesTab(Tab, HasControllerAccess, HasCommonSetup, HasTreeView, SubscribesToListeners):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        CFrame.__init__(self, parent, parent_notebook)
+        HasControllerAccess.__init__(self, parent)
 
+        HasCommonSetup.__init__(self)
+        HasTreeView.__init__(self)
+        SubscribesToListeners.__init__(self)
+
+        # TODO: move to HasTreeView.__init__
         self.__hierarchy_tree: Optional[HierarchyTree] = None
         self.__selected_component: Optional[Component] = None
 

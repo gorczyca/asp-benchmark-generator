@@ -8,19 +8,27 @@ from pubsub import pub
 import actions
 from model.component import Component
 from model.association import Association
+from view.abstract.tab import Tab
 from view.hierarchy_tree_column import Column
 from view.hierarchy_tree import HierarchyTree
-from view.vertical_notebook.vertical_notebook_tab import VerticalNotebookTab
-from view.c_frame import CFrame
+from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.has_common_setup import HasCommonSetup
+from view.abstract.subscribes_to_listeners import SubscribesToListeners
+from view.abstract.has_treeview import HasTreeView # TODO: rename
 
 TAB_NAME = 'Associations'
 
 
-class AssociationsTab(VerticalNotebookTab, CFrame):
+class AssociationsTab(Tab, HasControllerAccess, HasCommonSetup, SubscribesToListeners, HasTreeView):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
-        VerticalNotebookTab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        CFrame.__init__(self, parent, parent_notebook)
+        Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
+        HasControllerAccess.__init__(self, parent)
 
+        HasCommonSetup.__init__(self)
+        SubscribesToListeners.__init__(self)
+        HasTreeView.__init__(self)
+
+        # TODO: move
         self.__hierarchy_tree: Optional[HierarchyTree] = None
         self.__selected_component: Optional[Component] = None
 

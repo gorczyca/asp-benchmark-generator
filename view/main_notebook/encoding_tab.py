@@ -1,4 +1,4 @@
-from view.tab import Tab
+from view.abstract.tab import Tab
 
 TAB_NAME = 'Encoding'
 

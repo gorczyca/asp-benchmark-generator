@@ -6,14 +6,16 @@ from pubsub import pub
 
 import actions
 from model.helpers import json_converter
-from view.c_frame import CFrame
+from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.base_frame import BaseFrame
 
 DEFAULT_FILE_EXTENSION = '.json'
 
 
-class Menu(CFrame):
+class Menu(BaseFrame, HasControllerAccess):
     def __init__(self, parent, parent_frame, *args, **kwargs):
-        CFrame.__init__(self, parent, parent_frame)
+        BaseFrame.__init__(self, parent_frame)
+        HasControllerAccess.__init__(self, parent)
 
         self.__menu = tk.Menu(parent_frame, *args, **kwargs)
 
@@ -35,15 +37,6 @@ class Menu(CFrame):
         self.__menu.add_cascade(label='About', menu=about_menu)
 
         self.parent_frame.config(menu=self.__menu)
-
-    def _create_widgets(self):
-        pass
-
-    def _setup_layout(self):
-        pass
-
-    def _subscribe_to_listeners(self):
-        pass
 
     def __new(self):
         if not self.controller.saved:

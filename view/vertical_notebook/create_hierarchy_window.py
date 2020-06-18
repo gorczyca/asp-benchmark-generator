@@ -6,7 +6,9 @@ from pubsub import pub
 import actions
 from exceptions import HierarchyStringError
 from model.helpers import string_converter
-from view.c_frame import CFrame
+from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.base_frame import BaseFrame
+from view.abstract.has_common_setup import HasCommonSetup
 from view import style
 from view.common_callbacks import select_all_text
 
@@ -17,9 +19,13 @@ EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent
 
 # TODO: not every variable has to be a class property!
 
-class CreateHierarchyWindow(CFrame):
+class CreateHierarchyWindow(BaseFrame, HasControllerAccess, HasCommonSetup):
     def __init__(self, parent, parent_frame, callback):
-        CFrame.__init__(self, parent, parent_frame)
+        BaseFrame.__init__(self, parent_frame)
+        HasControllerAccess.__init__(self, parent)
+
+        HasCommonSetup.__init__(self)
+
         self.__callback = callback
 
     def _create_widgets(self):
@@ -73,9 +79,6 @@ class CreateHierarchyWindow(CFrame):
 
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(1, weight=1)
-
-    def _subscribe_to_listeners(self):
-        pass
 
     def __ok(self):
         self.window.grab_release()
