@@ -26,10 +26,9 @@ class CustomTheme(ttk.Style):
         # font=('URW Gothic L','40','bold')
         self.style = ttk.Style(master)
         self.style.theme_create(STYLE_NAME, parent=PARENT_THEME, settings={
-            '.': {'configure': {'font': FONT}},  # TODO: make more specific (too general)
+            '.': {'configure': {'font': FONT}},  # TODO: it is too general
             'Big.TLabel': {'configure': {'font': BIG_FONT_BOLD}},
             'Bold.TLabel': {'configure': {'font': FONT_BOLD}},
-            # 'TSpinbox': {'configure': {'padding': 50}},
             "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns'}},
             "Vertical.TNotebook.Tab": {"configure": {'width': 12, 'padding': [30, 30], 'borderwidth': 3,
                                                      'focuscolor': "#dd4814", 'font': BIG_FONT}, # usuwa tę brzydką ramkę

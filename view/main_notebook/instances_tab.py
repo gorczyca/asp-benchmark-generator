@@ -21,6 +21,7 @@ TAB_NAME = 'Instances'
 LABEL_PAD_X = 25
 
 
+# TODO: Add button "Apply to all children"
 class InstancesTab(Tab,
                    HasControllerAccess,
                    HasCommonSetup,
@@ -34,10 +35,6 @@ class InstancesTab(Tab,
         HasCommonSetup.__init__(self)
         HasHierarchyTree.__init__(self)
         SubscribesToListeners.__init__(self)
-
-        # TODO: isn't it pointless?
-        # if self.controller.model.hierarchy:
-        #     self.__build_tree()
 
     # HasCommonSetup
     def _create_widgets(self):
@@ -66,11 +63,8 @@ class InstancesTab(Tab,
                                                         variable=self.__symm_breaking_checkbox_var)
 
     def _setup_layout(self):
-        # self.__set_instances_frame.grid(row=0, column=0, sticky='nswe')
-        # self.__set_instances_frame.grid_forget()
-
-        # self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky='nswe')
-        # self.__set_global_symmetry_breaking_frame.grid_forget()
+        self.__set_instances_frame.grid(row=0, column=0, sticky=tk.NSEW)
+        self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky=tk.NSEW)
 
         self.__global_symmetry_breaking_checkbox_label.grid(row=0, column=0, sticky='w', padx=LABEL_PAD_X)
         self.__global_symmetry_breaking_checkbox.grid(row=0, column=1, sticky='w')
@@ -88,6 +82,9 @@ class InstancesTab(Tab,
         self.frame.columnconfigure(0, weight=2, uniform='fred')
         self.frame.columnconfigure(1, weight=1, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
+        # Hide widgets
+        self.__set_instances_frame.grid_forget()
+        self.__set_global_symmetry_breaking_frame.grid_forget()
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
@@ -141,22 +138,29 @@ class InstancesTab(Tab,
         if self._hierarchy_tree:
             self._destroy_tree()
 
+        self._selected_component = None
+        # Hide widgets
         self.__set_global_symmetry_breaking_frame.grid_forget()
-        self.__set_instances_frame.grid_forget()    # TODO: maybe just forget everything, not every grid specifically
+        self.__set_instances_frame.grid_forget()
+        # Set entries to default
+        self.__global_symmetry_breaking_checkbox_var.set(True)
+        self.__count_spinbox_var.set(0)
+        self.__symm_breaking_checkbox_var.set(True)
 
     # Class-specific
     def __on_global_symmetry_breaking_toggled(self, _1, _2, _3):
-        value = self.__global_symmetry_breaking_checkbox_var.get()
-        edited_cmps = self.controller.model.set_symmetry_breaking_for_all_in_hierarchy(value)
-        self._hierarchy_tree.update_values(edited_cmps)
+        if self._hierarchy_tree:
+            value = self.__global_symmetry_breaking_checkbox_var.get()
+            edited_cmps = self.controller.model.set_symmetry_breaking_for_all_in_hierarchy(value)
+            self._hierarchy_tree.update_values(edited_cmps)
 
     def __on_symmetry_breaking_toggled(self, _1, _2, _3):
-        if self._selected_component:
+        if self._selected_component and self._hierarchy_tree:
             self._selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
             self._hierarchy_tree.update_values([self._selected_component])
 
     def __on_count_changed(self, _1, _2, _3):
-        if self._selected_component:  # TODO: Necessary?
+        if self._selected_component and self._hierarchy_tree:
             try:
                 self._selected_component.count = self.__count_spinbox_var.get()
             except tk.TclError as e:

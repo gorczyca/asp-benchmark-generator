@@ -77,6 +77,8 @@ class HierarchyTab(Tab,
         self.__remove_recursively_button.grid(row=5, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
 
         self.__create_hierarchy_button.grid(row=1, column=0, padx=30, pady=5)
+        # Hide widgets
+        self.__right_frame.grid_forget()
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
@@ -111,6 +113,8 @@ class HierarchyTab(Tab,
     def _reset(self) -> None:
         if self._hierarchy_tree:
             self._destroy_tree()
+        self._selected_component = None
+        # Hide widgets
         self.__right_frame.grid_forget()
 
     # Class-specific
@@ -144,7 +148,7 @@ class HierarchyTab(Tab,
         new_name = simpledialog.askstring('Rename', f'Enter new name for "{self._selected_component.name}" component.')
         if new_name:
             try:
-                self.controller.model.change_components_name(self._selected_component, new_name)
+                self.controller.model.change_component_name(self._selected_component, new_name)
                 self.__cmp_name_var.set(new_name)
                 self._hierarchy_tree.rename_item(self._selected_component)
                 pub.sendMessage(actions.HIERARCHY_EDITED)

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from exceptions import HierarchyStringError
+from exceptions import HierarchyStringError, ResourceStringError
 from model.component import Component
 from model.resource import Resource
 
@@ -118,16 +118,24 @@ class Model:
         self.__set_leaves()
         return children
 
+    # TODO: get by lambda, e.g. where is_leaf is true or where id == some id ???
     def get_component_by_id(self, id_: int) -> Component:
-        """Returns component, that has the specify id
+        """Returns component, that has the specified id
 
         :param id_: Id of the parameter to return
         :returns: Component with the given id.
         """
         return next((cmp for cmp in self.hierarchy if cmp.id_ == id_), None)
 
-    def change_components_name(self, cmp: Component, new_name: str) -> Component:
-        """Changes name for a specified component.
+    def get_leaf_components(self) -> List[Component]:
+        """Returns a list of component that are leaves.
+
+        :returns: List of leaf-components
+        """
+        return [c for c in self.hierarchy if c.is_leaf]
+
+    def change_component_name(self, cmp: Component, new_name: str) -> Component:
+        """Changes name of a specified component.
 
         Raises HierarchyStringError when a component with the new name already exists in the hierarchy.
         :param cmp: Component
@@ -156,3 +164,85 @@ class Model:
     def get_all_resources_names(self) -> List[str]:
         """Returns a list with all resources names."""
         return [r.name for r in self.resources]
+
+    def add_resource(self, name: str) -> Resource:
+        """Creates a resource with a specified name. Raises ResourceStringError whenever such a resource already exists
+
+        :param name: Name of the resource
+        :returns: Created Resource.
+        """
+        resources_names = self.get_all_resources_names()
+        if name in resources_names:
+            raise ResourceStringError(f'Resource "{name}" already exists.')
+        resource = Resource(name)
+        self.resources.append(resource)
+        return resource
+
+    def get_resource_by_name(self, name: str) -> Resource:
+        """Returns resource, that has the specified name
+
+        :param name: Name of the resource
+        :returns: Component with the specified name.
+        """
+        return next((res for res in self.resources if res.name == name), None)
+
+    def change_resource_name(self, res: Resource, new_name: str) -> Resource:
+        """Changes name of a specified resource.
+
+        Raises ResourceStringError when a resource with the new name already exists.
+        :param res: Resource
+        :param new_name: New name for resource
+        :returns: Resource with its name changed
+        """
+        res_names = self.get_all_resources_names()
+        if new_name in res_names:
+            raise ResourceStringError(message=f'Resource with name: "{new_name}" already exists in the hierarchy.')
+        res.name = new_name
+        return res
+
+    def remove_resource(self, res: Resource) -> Resource:
+        """Removes resource from model and all the references to it by its id in Component.produces.
+
+        :param res: Resource to be removed from model.
+        :returns: Removed Resource.
+        """
+        for c in self.hierarchy:
+            if res.id_ in c.produces:
+                del c.produces[res.id_]     # Remove information about production of this resource from components
+
+        self.resources.remove(res)  # Remove component itself
+        return res
+
+    def set_resource_production_to_all_components_children(self, cmp: Component, res: Resource, value: int) \
+            -> List[Component]:
+        """Sets the production of a resource to specific value for all leaf-component children.
+
+        :param cmp: Component to set the children production of.
+        :param res: Production of this Resource
+        :param value: Amount of produced Resource by components
+        :returns: List of Component's children that are leaves.
+        """
+        def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
+            """Returns an array of Component children that are leaves (obtained recursively)
+
+            :param cmp_: Current component to check whether is a leaf or not
+            :param hierarchy_: Hierarchy of all components
+            :param leaves_: Current list of leaves
+            """
+            if cmp_.is_leaf:
+                leaves_.append(cmp_)
+            else:
+                for c_ in hierarchy_:
+                    if c_.parent_id == cmp_.id_:
+                        __get_components_leaf_children(c_, hierarchy_, leaves_)
+
+        leaf_children = []
+        __get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        for c in leaf_children:
+            c.produces[res.id_] = value
+        return leaf_children
+
+
+
+
+

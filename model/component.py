@@ -37,6 +37,8 @@ class Component:
         # Convert dictionary to object
         association = None if data['association'] is None else Association.from_json(data['association'])
         data['association'] = association
+        produces = None if data['produces'] is None else {int(key): val for key, val in data['produces'].items()}
+        data['produces'] = produces
         return cls(**data)
 
     def __repr__(self):

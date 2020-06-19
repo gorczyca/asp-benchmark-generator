@@ -144,7 +144,20 @@ class AssociationsTab(Tab,
     def _reset(self) -> None:
         if self._hierarchy_tree:
             self._destroy_tree()
+
+        self._selected_component = None
+        # Hide widgets
         self.__right_frame.grid_forget()
+        # Set entries to default
+        self.__has_association_checkbox_var.set(False)
+        self.__has_min_checkbox_var.set(False)
+        self.__has_min_checkbox.config(state=tk.DISABLED)
+        self.__min_spinbox_var.set('')  # TODO: dangerous
+        self.__min_spinbox.config(state=tk.DISABLED)
+        self.__has_max_checkbox_var.set(False)
+        self.__has_max_checkbox.config(state=tk.DISABLED)
+        self.__max_spinbox_var.set('')  # TODO: dangerous
+        self.__max_spinbox.config(state=tk.DISABLED)
 
     # Class-specific
     def __disable_widgets(self):
@@ -158,74 +171,79 @@ class AssociationsTab(Tab,
         self.__max_spinbox_var.set('')
 
     def __on_has_association_changed(self, _1, _2, _3):
-        has_association = self.__has_association_checkbox_var.get()
-        if has_association:
-            if not self._selected_component.association:
-                self._selected_component.association = Association()
-            self.__has_min_checkbox.config(state=tk.NORMAL)
-            self.__has_max_checkbox.config(state=tk.NORMAL)
-        else:
-            self.__disable_widgets()
-            self._selected_component.association = None
-        self._hierarchy_tree.update_values([self._selected_component])
+        if self._hierarchy_tree and self._selected_component:
+            has_association = self.__has_association_checkbox_var.get()
+            if has_association:
+                if not self._selected_component.association:
+                    self._selected_component.association = Association()
+                self.__has_min_checkbox.config(state=tk.NORMAL)
+                self.__has_max_checkbox.config(state=tk.NORMAL)
+            else:
+                self.__disable_widgets()
+                self._selected_component.association = None
+            self._hierarchy_tree.update_values([self._selected_component])
 
     def __on_has_min_changed(self, _1, _2, _3):
-        has_min = self.__has_min_checkbox_var.get()
-        if has_min:
-            self.__min_spinbox.config(state=tk.ACTIVE)
-            if self._selected_component.association and self._selected_component.association.min_:
-                self.__min_spinbox_var.set(self._selected_component.association.min_)
+        if self._selected_component:
+            has_min = self.__has_min_checkbox_var.get()
+            if has_min:
+                self.__min_spinbox.config(state=tk.ACTIVE)
+                if self._selected_component.association and self._selected_component.association.min_:
+                    self.__min_spinbox_var.set(self._selected_component.association.min_)
+                else:
+                    self.__min_spinbox_var.set(0)
             else:
-                self.__min_spinbox_var.set(0)
-        else:
-            self.__min_spinbox_var.set('')
-            self.__min_spinbox.config(state=tk.DISABLED)
+                self.__min_spinbox_var.set('')
+                self.__min_spinbox.config(state=tk.DISABLED)
 
     def __on_has_max_changed(self, _1, _2, _3):
-        has_max = self.__has_max_checkbox_var.get()
-        if has_max:
-            self.__max_spinbox.config(state=tk.ACTIVE)
-            if self._selected_component.association.max_:
-                self.__max_spinbox_var.set(self._selected_component.association.max_)
-            else:
-                if self._selected_component.association.min_:
-                    # If component has a minimum association, set the value of Spinbox to it
-                    self.__max_spinbox_var.set(self._selected_component.association.min_)
+        if self._selected_component:
+            has_max = self.__has_max_checkbox_var.get()
+            if has_max:
+                self.__max_spinbox.config(state=tk.ACTIVE)
+                if self._selected_component.association.max_:
+                    self.__max_spinbox_var.set(self._selected_component.association.max_)
                 else:
-                    # Otherwise set it to 0
-                    self.__max_spinbox_var.set(0)
-        else:
-            self.__max_spinbox_var.set('')
-            self.__max_spinbox.config(state=tk.DISABLED)
+                    if self._selected_component.association.min_:
+                        # If component has a minimum association, set the value of Spinbox to it
+                        self.__max_spinbox_var.set(self._selected_component.association.min_)
+                    else:
+                        # Otherwise set it to 0
+                        self.__max_spinbox_var.set(0)
+            else:
+                self.__max_spinbox_var.set('')
+                self.__max_spinbox.config(state=tk.DISABLED)
 
     def __on_min_changed(self, _1, _2, _3):
-        if self._selected_component.association:
-            # This gets triggered at unpredicted moments (e.g. enabling and disabling widgets
-            # so it's necessary to check this condition.
-            try:
-                min_ = self.__min_spinbox_var.get()
-                self._selected_component.association.min_ = min_
-                if self._selected_component.association.max_ \
-                   and self._selected_component.association.max_ < min_:  # If max < min; set max to min
-                    self._selected_component.association.max_ = min_
-                    self.__max_spinbox_var.set(min_)
-            except tk.TclError as e:
-                print(e)
-                self._selected_component.association.min_ = ''
-            finally:
-                self._hierarchy_tree.update_values([self._selected_component])
+        if self._selected_component and self._hierarchy_tree:
+            if self._selected_component.association:
+                # This gets triggered at unpredicted moments (e.g. enabling and disabling widgets
+                # so it's necessary to check this condition.
+                try:
+                    min_ = self.__min_spinbox_var.get()
+                    self._selected_component.association.min_ = min_
+                    if self._selected_component.association.max_ \
+                       and self._selected_component.association.max_ < min_:  # If max < min; set max to min
+                        self._selected_component.association.max_ = min_
+                        self.__max_spinbox_var.set(min_)
+                except tk.TclError as e:
+                    print(e)
+                    self._selected_component.association.min_ = ''
+                finally:
+                    self._hierarchy_tree.update_values([self._selected_component])
 
     def __on_max_changed(self, _1, _2, _3):
-        if self._selected_component.association:
-            try:
-                max_ = self.__max_spinbox_var.get()
-                self._selected_component.association.max_ = max_
-                if self._selected_component.association.min_ \
-                   and self._selected_component.association.min_ > max_:  # If min > max; set min to max
-                    self._selected_component.association.min_ = max_
-                    self.__min_spinbox_var.set(max_)
-            except tk.TclError as e:
-                print(e)
-                self._selected_component.association.max_ = ''
-            finally:
-                self._hierarchy_tree.update_values([self._selected_component])
+        if self._selected_component and self._hierarchy_tree:
+            if self._selected_component.association:
+                try:
+                    max_ = self.__max_spinbox_var.get()
+                    self._selected_component.association.max_ = max_
+                    if self._selected_component.association.min_ \
+                       and self._selected_component.association.min_ > max_:  # If min > max; set min to max
+                        self._selected_component.association.min_ = max_
+                        self.__min_spinbox_var.set(max_)
+                except tk.TclError as e:
+                    print(e)
+                    self._selected_component.association.max_ = ''
+                finally:
+                    self._hierarchy_tree.update_values([self._selected_component])
