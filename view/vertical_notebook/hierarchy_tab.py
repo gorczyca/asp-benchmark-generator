@@ -1,19 +1,21 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from tkinter import ttk
-from typing import Optional
+from typing import List, Tuple, Any
 
 from pubsub import pub
 
 import actions
 from exceptions import HierarchyStringError
 from model.component import Component
-from view.abstract.has_treeview import HasTreeView
+from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.resetable import Resetable
 from view.abstract.tab import Tab
 from view.hierarchy_tree import HierarchyTree
+from view.hierarchy_tree_column import Column
 from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
 
 TAB_NAME = 'Hierarchy'
@@ -29,18 +31,21 @@ LABEL_PAD_X = 40
 LABEL_PAD_Y = 10
 
 
-class HierarchyTab(Tab, HasControllerAccess, HasCommonSetup, SubscribesToListeners, HasTreeView):
+class HierarchyTab(Tab,
+                   HasControllerAccess,
+                   HasCommonSetup,
+                   SubscribesToListeners,
+                   HasHierarchyTree,
+                   Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
         HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
         SubscribesToListeners.__init__(self)
-        HasTreeView.__init__(self)
+        HasHierarchyTree.__init__(self)
 
-        self.__hierarchy_tree: Optional[HierarchyTree] = None
-        self.__selected_component: Optional[Component] = None
-
+    # HasCommonSetup
     def _create_widgets(self):
         self.__right_frame = tk.Frame(self.frame)
 
@@ -73,80 +78,94 @@ class HierarchyTab(Tab, HasControllerAccess, HasCommonSetup, SubscribesToListene
 
         self.__create_hierarchy_button.grid(row=1, column=0, padx=30, pady=5)
 
+    # SubscribesToListeners
     def _subscribe_to_listeners(self):
-        pub.subscribe(self.__reset, actions.RESET)
-        pub.subscribe(self.__hierarchy_created, actions.HIERARCHY_CREATED)
+        pub.subscribe(self._reset, actions.RESET)
+        pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
 
-    def __add_sibling(self):
+    # HasHierarchyTree
+    def _on_select_tree_item(self, cmp_id: int) -> None:
+        selected_component: Component = self.controller.model.get_component_by_id(cmp_id)
+        self._selected_component = selected_component
+        self.__cmp_name_var.set(selected_component.name)
+        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
+
+    @property
+    def _columns(self) -> List[Column]:
+        return []    # TODO: will this work?
+
+    def _extract_values(self, cmp: Component) -> Tuple[Any, ...]:
+        pass    # TODO: will this work?
+
+    def _build_tree(self) -> None:
+        if self._hierarchy_tree:
+            self._hierarchy_tree.destroy_()
+        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy,
+                                             on_select_callback=self._on_select_tree_item)
+
+    def _destroy_tree(self) -> None:
+        self._hierarchy_tree.destroy_()
+        self._hierarchy_tree = None
+
+    # Resetable
+    def _reset(self) -> None:
+        if self._hierarchy_tree:
+            self._destroy_tree()
+        self.__right_frame.grid_forget()
+
+    # Class-specific
+    def __add_sibling(self) -> None:
         sibling_name = simpledialog.askstring('Add sibling', f'Enter name of sibling of the "'
-                                                             f'{self.__selected_component.name}" component.')
+                                                             f'{self._selected_component.name}" component.')
         try:
             if sibling_name:
-                new_item = self.controller.model.add_component_to_hierarchy(sibling_name, self.__selected_component.level,
-                                                                            self.__selected_component.parent_id,
-                                                                            self.__selected_component.is_leaf)
-                self.__hierarchy_tree.add_item(new_item)
+                new_item = self.controller.model.add_component_to_hierarchy(sibling_name, self._selected_component.level,
+                                                                            self._selected_component.parent_id,
+                                                                            self._selected_component.is_leaf)
+                self._hierarchy_tree.add_item(new_item)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
         except HierarchyStringError as e:
             messagebox.showerror('Rename error.', e.message)
 
-    def __add_child(self):
+    def __add_child(self) -> None:
         child_name = simpledialog.askstring('Add child', f'Enter name of child of the "'
-                                                         f'{self.__selected_component.name}" component.')
+                                                         f'{self._selected_component.name}" component.')
         if child_name:
             try:
                 new_item = self.controller.model.add_component_to_hierarchy(child_name,
-                                                                            self.__selected_component.level+1,
-                                                                            self.__selected_component.id_, is_leaf=True)
-                self.__hierarchy_tree.add_item(new_item)
+                                                                            self._selected_component.level + 1,
+                                                                            self._selected_component.id_, is_leaf=True)
+                self._hierarchy_tree.add_item(new_item)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
             except HierarchyStringError as e:
                 messagebox.showerror('Add component error.', e.message)
 
-    def __rename(self):
-        new_name = simpledialog.askstring('Rename', f'Enter new name for "{self.__selected_component.name}" component.')
+    def __rename(self) -> None:
+        new_name = simpledialog.askstring('Rename', f'Enter new name for "{self._selected_component.name}" component.')
         if new_name:
             try:
-                self.controller.model.change_components_name(self.__selected_component, new_name)
+                self.controller.model.change_components_name(self._selected_component, new_name)
                 self.__cmp_name_var.set(new_name)
-                self.__hierarchy_tree.rename_item(self.__selected_component)
+                self._hierarchy_tree.rename_item(self._selected_component)
                 pub.sendMessage(actions.HIERARCHY_EDITED)
             except HierarchyStringError as e:
                 messagebox.showerror('Rename error.', e.message)
 
-    def __remove(self):
-        children = self.controller.model.remove_component_from_hierarchy_preserve_children(self.__selected_component)
-        self.__hierarchy_tree.remove_item_preserve_children(self.__selected_component, children)
+    def __remove(self) -> None:
+        children = self.controller.model.remove_component_from_hierarchy_preserve_children(self._selected_component)
+        self._hierarchy_tree.remove_item_preserve_children(self._selected_component, children)
         self.__right_frame.grid_forget()
-        self.__selected_component = None
+        self._selected_component = None
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
-    def __remove_recursively(self):
-        self.controller.model.remove_component_from_hierarchy_recursively(self.__selected_component)
-        self.__hierarchy_tree.remove_items_recursively(self.__selected_component)
+    def __remove_recursively(self) -> None:
+        self.controller.model.remove_component_from_hierarchy_recursively(self._selected_component)
+        self._hierarchy_tree.remove_items_recursively(self._selected_component)
         self.__right_frame.grid_forget()
-        self.__selected_component = None
+        self._selected_component = None
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
-    def __on_select(self, cmp_id):
-        selected_component: Component = self.controller.model.get_component_by_id(cmp_id)
-        self.__selected_component = selected_component
-        self.__cmp_name_var.set(selected_component.name)
-        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
-
-    def __reset(self):
-        self.__right_frame.grid_forget()
-        if self.__hierarchy_tree:
-            self.__hierarchy_tree.destroy_()
-            self.__hierarchy_tree = None
-
-    def __hierarchy_created(self):
-        if self.__hierarchy_tree:
-            self.__hierarchy_tree.destroy_()
-        self.__hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy,
-                                              on_select_callback=self.__on_select)
-
-    def __create_hierarchy(self):
+    def __create_hierarchy(self) -> None:
         if self.controller.model.hierarchy:
             answer = messagebox.askyesno('Create hierarchy', 'Warning: hierarchy has already been created. \n '
                                                              'If you use this option again, previous hierarchy will be '
@@ -156,7 +175,7 @@ class HierarchyTab(Tab, HasControllerAccess, HasCommonSetup, SubscribesToListene
             if not answer:
                 return
 
-        self.__window = CreateHierarchyWindow(self, self.frame, self.__hierarchy_created)
+        self.__window = CreateHierarchyWindow(self, self.frame, self._build_tree)
 
 
 

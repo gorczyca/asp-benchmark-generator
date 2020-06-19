@@ -1,7 +1,7 @@
 import math
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional
+from typing import List, Any, Tuple
 
 from pubsub import pub
 
@@ -10,33 +10,36 @@ import view.tree_view_item as tv_item
 from model.component import Component
 from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_treeview import HasTreeView
+from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
+from view.abstract.tab import Tab
+from view.abstract.resetable import Resetable
 from view.hierarchy_tree import HierarchyTree
 from view.hierarchy_tree_column import Column
-from view.abstract.tab import Tab
 
 TAB_NAME = 'Instances'
 LABEL_PAD_X = 25
 
 
-class InstancesTab(Tab, HasControllerAccess, HasCommonSetup, HasTreeView, SubscribesToListeners):
+class InstancesTab(Tab,
+                   HasControllerAccess,
+                   HasCommonSetup,
+                   HasHierarchyTree,
+                   SubscribesToListeners,
+                   Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
         HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
-        HasTreeView.__init__(self)
+        HasHierarchyTree.__init__(self)
         SubscribesToListeners.__init__(self)
 
-        # TODO: move to HasTreeView.__init__
-        self.__hierarchy_tree: Optional[HierarchyTree] = None
-        self.__selected_component: Optional[Component] = None
-
         # TODO: isn't it pointless?
-        if self.controller.model.hierarchy:
-            self.__build_tree()
+        # if self.controller.model.hierarchy:
+        #     self.__build_tree()
 
+    # HasCommonSetup
     def _create_widgets(self):
         self.__right_frame = tk.Frame(self.frame)
         self.__set_instances_frame = tk.Frame(self.__right_frame)
@@ -86,14 +89,40 @@ class InstancesTab(Tab, HasControllerAccess, HasCommonSetup, HasTreeView, Subscr
         self.frame.columnconfigure(1, weight=1, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
 
+    # SubscribesToListeners
     def _subscribe_to_listeners(self):
-        pub.subscribe(self.__build_tree, actions.HIERARCHY_CREATED)
-        pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
-        pub.subscribe(self.__reset, actions.RESET)
+        pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
+        pub.subscribe(self._build_tree, actions.HIERARCHY_EDITED)
+        pub.subscribe(self._reset, actions.RESET)
 
-    def __on_select(self, cmp_id):
+    # HasHierarchyTree
+    @property
+    def _columns(self) -> List[Column]:
+        return [ Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
+                 Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
+
+    def _extract_values(self, cmp: Component) -> Tuple[Any, ...]:
+        return (cmp.count if cmp.count else '',
+                tv_item.BOOLEAN_TO_STRING_DICT[cmp.symmetry_breaking])
+
+    def _build_tree(self):
+        if self._hierarchy_tree:
+            self._destroy_tree()
+
+        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
+                                             on_select_callback=self._on_select_tree_item,
+                                             extract_values=self._extract_values)
+
+        self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky=tk.NSEW)  # Show global checkbox
+        self.__set_instances_frame.grid_forget()  # Hide other checkbox
+
+    def _destroy_tree(self) -> None:
+        self._hierarchy_tree.destroy_()
+        self._hierarchy_tree = None
+
+    def _on_select_tree_item(self, cmp_id: int):
         selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
-        self.__selected_component = selected_cmp
+        self._selected_component = selected_cmp
         if selected_cmp.is_leaf:
             self.__cmp_label_var.set(selected_cmp.name)
             if selected_cmp.count is not None:
@@ -107,52 +136,31 @@ class InstancesTab(Tab, HasControllerAccess, HasCommonSetup, HasTreeView, Subscr
         else:
             self.__set_instances_frame.grid_forget()
 
+    # Resetable
+    def _reset(self) -> None:
+        if self._hierarchy_tree:
+            self._destroy_tree()
+
+        self.__set_global_symmetry_breaking_frame.grid_forget()
+        self.__set_instances_frame.grid_forget()    # TODO: maybe just forget everything, not every grid specifically
+
+    # Class-specific
     def __on_global_symmetry_breaking_toggled(self, _1, _2, _3):
         value = self.__global_symmetry_breaking_checkbox_var.get()
         edited_cmps = self.controller.model.set_symmetry_breaking_for_all_in_hierarchy(value)
-        self.__hierarchy_tree.update_values(edited_cmps)
+        self._hierarchy_tree.update_values(edited_cmps)
 
     def __on_symmetry_breaking_toggled(self, _1, _2, _3):
-        if self.__selected_component:
-            self.__selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
-            self.__hierarchy_tree.update_values([self.__selected_component])
+        if self._selected_component:
+            self._selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
+            self._hierarchy_tree.update_values([self._selected_component])
 
     def __on_count_changed(self, _1, _2, _3):
-        if self.__selected_component:  # TODO: Necessary?
+        if self._selected_component:  # TODO: Necessary?
             try:
-                self.__selected_component.count = self.__count_spinbox_var.get()
+                self._selected_component.count = self.__count_spinbox_var.get()
             except tk.TclError as e:
                 print(e)
-                self.__selected_component.count = None
+                self._selected_component.count = None
             finally:
-                self.__hierarchy_tree.update_values([self.__selected_component])
-
-    def __build_tree(self):
-        columns = [
-            Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
-            Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
-
-        if self.__hierarchy_tree:
-            self.__hierarchy_tree.destroy_()
-
-        self.__hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=columns,
-                                              on_select_callback=self.__on_select, extract_values=lambda cmp:
-                                              (cmp.count if cmp.count else '',
-                                               tv_item.BOOLEAN_TO_STRING_DICT[cmp.symmetry_breaking]))
-        self.__set_global_symmetry_breaking_frame.grid(row=1, column=0, sticky=tk.NSEW)  # Show global checkbox
-        self.__set_instances_frame.grid_forget()    # Hide other checkbox
-
-    def __reset(self):
-        if self.__hierarchy_tree:
-            self.__hierarchy_tree.destroy_()
-            self.__hierarchy_tree = None
-            self.__set_global_symmetry_breaking_frame.grid_forget()
-            self.__set_instances_frame.grid_forget()
-
-            # TODO: maybe just forget everything, not every grid specifically
-
-
-
-
-
-
+                self._hierarchy_tree.update_values([self._selected_component])

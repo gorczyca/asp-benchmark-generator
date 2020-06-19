@@ -7,10 +7,10 @@ from model.component import Component
 COL_ID_COMPONENT = '#0'
 COL_NAME_COMPONENT = 'Component'
 
-
+# TODO: cleanup the arguments -- which suppose to be default, annotated etc.
 class HierarchyTree(ttk.Treeview):
     def __init__(self, parent_frame, hierarchy: List[Component], columns=None, on_select_callback=None,
-                 extract_values: Callable[[Component], Any] = lambda cmp: [], **kwargs):
+                 extract_values: Callable[[Component], Any] = lambda cmp: [], grid_row=0, grid_column=0, **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 
         self.parent_frame = parent_frame
@@ -36,7 +36,7 @@ class HierarchyTree(ttk.Treeview):
                 self.__tree.heading(col.id_, text=col.name, anchor=col.anchor)    # TODO: better
 
         self.__build_tree(hierarchy)
-        self.__tree.grid(row=0, column=0, sticky='nswe')
+        self.__tree.grid(row=grid_row, column=grid_column, sticky=tk.NSEW)    # TODO:
 
     def add_item(self, cmp: Component):
         ancestor = '' if cmp.parent_id is None else cmp.parent_id  # TODO: do poprawy to

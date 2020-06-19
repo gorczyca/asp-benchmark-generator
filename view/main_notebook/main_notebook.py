@@ -5,7 +5,8 @@ from view.abstract.base_frame import BaseFrame
 from view.abstract.has_common_setup import HasCommonSetup
 
 
-class MainNotebook(BaseFrame, HasCommonSetup):
+class MainNotebook(BaseFrame,
+                   HasCommonSetup):
     def __init__(self, parent, parent_frame):
         BaseFrame.__init__(self, parent_frame)
 

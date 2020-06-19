@@ -19,7 +19,9 @@ EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent
 
 # TODO: not every variable has to be a class property!
 
-class CreateHierarchyWindow(BaseFrame, HasControllerAccess, HasCommonSetup):
+class CreateHierarchyWindow(BaseFrame,
+                            HasControllerAccess,
+                            HasCommonSetup):
     def __init__(self, parent, parent_frame, callback):
         BaseFrame.__init__(self, parent_frame)
         HasControllerAccess.__init__(self, parent)
@@ -28,6 +30,7 @@ class CreateHierarchyWindow(BaseFrame, HasControllerAccess, HasCommonSetup):
 
         self.__callback = callback
 
+    # HasCommonSetup
     def _create_widgets(self):
         self.window = tk.Toplevel(self.parent_frame)
         self.window.grab_set()
@@ -80,6 +83,7 @@ class CreateHierarchyWindow(BaseFrame, HasControllerAccess, HasCommonSetup):
         self.window.columnconfigure(0, weight=1)
         self.window.rowconfigure(1, weight=1)
 
+    # Class-specific
     def __ok(self):
         self.window.grab_release()
         hierarchy_string = self.text.get(1.0, tk.END)
