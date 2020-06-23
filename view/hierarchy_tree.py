@@ -3,13 +3,16 @@ from tkinter import ttk
 from typing import List, Callable, Any
 
 from model.component import Component
+from view.abstract.has_common_setup import HasCommonSetup
+from view.tree_view_column import Column
 
 COL_ID_COMPONENT = '#0'
 COL_NAME_COMPONENT = 'Component'
 
+
 # TODO: cleanup the arguments -- which suppose to be default, annotated etc.
 class HierarchyTree(ttk.Treeview):
-    def __init__(self, parent_frame, hierarchy: List[Component], columns=None, on_select_callback=None,
+    def __init__(self, parent_frame, hierarchy: List[Component], columns: List[Column] = None, on_select_callback=None,
                  extract_values: Callable[[Component], Any] = lambda cmp: [], grid_row=0, grid_column=0, **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 

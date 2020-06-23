@@ -1,4 +1,4 @@
-# TODO: improve
+# TODO: create a unified way of creation of exceptions
 
 
 class HierarchyStringError(Exception):
@@ -7,7 +7,19 @@ class HierarchyStringError(Exception):
         self.message = message
 
 
-class ResourceStringError(Exception):
+class ComponentError(Exception):
+    def __init__(self, message: str = 'Error while creating port.'):
+        super().__init__(message)
+        self.message = message
+
+
+class ResourceError(Exception):
     def __init__(self, message: str = 'Error while creating resource.'):
+        super().__init__(message)
+        self.message = message
+
+
+class PortError(Exception):
+    def __init__(self, message: str = 'Error while creating port.'):
         super().__init__(message)
         self.message = message

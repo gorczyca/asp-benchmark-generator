@@ -13,3 +13,4 @@ def get_symmetry_breaking(self):
     return BOOLEAN_TO_STRING_DICT[self.symmetry_breaking]
 
 # TODO: lambdas instead of this?
+# TODO: remove this junk

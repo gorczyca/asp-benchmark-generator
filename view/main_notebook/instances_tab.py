@@ -15,7 +15,7 @@ from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.tab import Tab
 from view.abstract.resetable import Resetable
 from view.hierarchy_tree import HierarchyTree
-from view.hierarchy_tree_column import Column
+from view.tree_view_column import Column
 
 TAB_NAME = 'Instances'
 LABEL_PAD_X = 25

@@ -3,9 +3,10 @@ from typing import Optional, List, Any, Tuple
 
 from model.component import Component
 from view.hierarchy_tree import HierarchyTree
-from view.hierarchy_tree_column import Column
+from view.tree_view_column import Column
 
 
+# TODO: consider if that makes sense
 class HasHierarchyTree(ABC):
     @abstractmethod
     def __init__(self):
@@ -27,7 +28,3 @@ class HasHierarchyTree(ABC):
 
     @abstractmethod
     def _destroy_tree(self) -> None: pass
-
-        # if self._hierarchy_tree:
-        #     self._hierarchy_tree.destroy()
-        #     self._hierarchy_tree = None     # TODO: check if necessary (not redundant)

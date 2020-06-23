@@ -34,7 +34,6 @@ class CreateHierarchyWindow(BaseFrame,
     def _create_widgets(self):
         self.window = tk.Toplevel(self.parent_frame)
         self.window.grab_set()
-
         self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
         self.window.geometry(EDIT_HIERARCHY_WINDOW_SIZE)
 

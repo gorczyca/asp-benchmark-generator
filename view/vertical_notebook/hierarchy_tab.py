@@ -15,7 +15,7 @@ from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.resetable import Resetable
 from view.abstract.tab import Tab
 from view.hierarchy_tree import HierarchyTree
-from view.hierarchy_tree_column import Column
+from view.tree_view_column import Column
 from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
 
 TAB_NAME = 'Hierarchy'

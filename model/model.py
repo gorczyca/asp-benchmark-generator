@@ -1,8 +1,10 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-from exceptions import HierarchyStringError, ResourceStringError
+# TODO: rename Errors
+from exceptions import HierarchyStringError, ResourceError, PortError
 from model.component import Component
 from model.resource import Resource
+from model.port import Port
 
 
 class Model:
@@ -17,25 +19,28 @@ class Model:
         creating a string from hierarchy)
 
         resources:  List of resources
+        ports: List of ports
     """
-    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None):
+    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None):
         self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
+        self.ports: List[Port] = ports if ports is not None else []
 
     def clear(self):
         """Destroys all Model's attributes"""
         self.hierarchy = []
         self.resources = []
+        self.ports = []
 
     @classmethod
     def from_json(cls, data):
         """Necessary to create an instance from JSON."""
         data['hierarchy'] = list(map(Component.from_json, data['hierarchy']))
         data['resources'] = list(map(Resource.from_json, data['resources']))    # Convert dictionary to object
+        data['ports'] = list(map(Port.from_json, data['ports']))
         return cls(**data)  # TODO: better
 
     # Hierarchy
-
     def set_hierarchy(self, hierarchy: List[Component]):
         self.hierarchy = hierarchy
         self.__set_leaves()
@@ -166,14 +171,14 @@ class Model:
         return [r.name for r in self.resources]
 
     def add_resource(self, name: str) -> Resource:
-        """Creates a resource with a specified name. Raises ResourceStringError whenever such a resource already exists
+        """Creates a resource with a specified name. Raises ResourceError whenever such  resource already exists
 
         :param name: Name of the resource
         :returns: Created Resource.
         """
         resources_names = self.get_all_resources_names()
         if name in resources_names:
-            raise ResourceStringError(f'Resource "{name}" already exists.')
+            raise ResourceError(f'Resource "{name}" already exists.')
         resource = Resource(name)
         self.resources.append(resource)
         return resource
@@ -196,7 +201,7 @@ class Model:
         """
         res_names = self.get_all_resources_names()
         if new_name in res_names:
-            raise ResourceStringError(message=f'Resource with name: "{new_name}" already exists in the hierarchy.')
+            raise ResourceError(message=f'Resource with name: "{new_name}" already exists in the hierarchy.')
         res.name = new_name
         return res
 
@@ -229,6 +234,7 @@ class Model:
             :param hierarchy_: Hierarchy of all components
             :param leaves_: Current list of leaves
             """
+            # TODO: take this function out, to be able to get to component's children from anywhere
             if cmp_.is_leaf:
                 leaves_.append(cmp_)
             else:
@@ -241,6 +247,60 @@ class Model:
         for c in leaf_children:
             c.produces[res.id_] = value
         return leaf_children
+
+    # Port
+    def add_port(self, name: str) -> Tuple[Port, int]:
+        """Creates a port with a specified name. Raises PortError whenever such resource already exists
+
+        :param name: Name of the Port
+        :returns: tuple (Created Port, index of created port in the list of ports sorted alphabetically)
+        """
+        port_names = [p.name for p in self.ports]
+        if name in port_names:
+            raise PortError(f'Port "{name}" already exists.')
+        port = Port(name)
+        self.ports.append(port)
+        port_names_sorted = sorted([p.name for p in self.ports])
+        index = port_names_sorted.index(name)
+        return port, index
+
+    def change_port_name(self, prt: Port, new_name: str) -> Tuple[Port, int]:
+        """Changes name of a specified port.
+
+        Raises PortError when a port with the new name already exists.
+        :param prt: Port
+        :param new_name: New name for port
+        :returns: tuple (Port, index of port with the name edited)
+        """
+        port_names = [p.name for p in self.ports]
+        if new_name in port_names:
+            raise PortError(f'Port "{new_name}" already exists.')
+        prt.name = new_name
+        # TODO: do it better, sort the ports list and then take port
+        port_names_sorted = sorted([p.name for p in self.ports])
+        index = port_names_sorted.index(new_name)
+        return prt, index
+
+    def get_port_by_id(self, id_: int) -> Port:
+        """Returns port, that has the specified id
+
+        :param id_: Id of the Port to return
+        :returns: Port with the given id.
+        """
+        return next((prt for prt in self.ports if prt.id_ == id_), None)
+
+    def remove_port(self, prt: Port) -> Port:
+        """Removes port from model and all the references to it by its id in Component.ports.
+
+        :param prt: Port to be removed from model.
+        :returns: Removed Port.
+        """
+        for c in self.hierarchy:
+            if prt.id_ in c.ports:
+                del c.ports[prt.id_]     # Remove information about ports from components
+
+        self.ports.remove(prt)  # Remove port itself
+        return prt
 
 
 

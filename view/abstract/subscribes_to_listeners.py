@@ -7,4 +7,4 @@ class SubscribesToListeners(ABC):
         self._subscribe_to_listeners()
 
     @abstractmethod
-    def _subscribe_to_listeners(self): pass
+    def _subscribe_to_listeners(self) -> None: pass

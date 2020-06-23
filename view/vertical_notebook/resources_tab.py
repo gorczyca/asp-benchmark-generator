@@ -6,10 +6,10 @@ from tkinter import ttk, simpledialog, messagebox
 from pubsub import pub
 
 import actions
-from exceptions import ResourceStringError
+from exceptions import ResourceError
 from model.component import Component
 from model.resource import Resource
-from view.hierarchy_tree_column import Column
+from view.tree_view_column import Column
 from view.hierarchy_tree import HierarchyTree
 from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_common_setup import HasCommonSetup
@@ -49,7 +49,7 @@ class ResourcesTab(Tab,
         self.__resource_combobox_var.trace('w', self.__on_combobox_changed)
         self.__resource_combobox = ttk.Combobox(self.__right_top_frame, state='readonly',
                                                 textvariable=self.__resource_combobox_var)
-        # Add resource button
+        # C(r)ud Buttons
         self.__add_resource_button = ttk.Button(self.__right_top_frame, text='Add', state=tk.NORMAL,
                                                 command=self.__add_resource)
         self.__rename_resource_button = ttk.Button(self.__right_top_frame, text='Rename', state=tk.DISABLED,
@@ -199,7 +199,7 @@ class ResourcesTab(Tab,
                 self.__resource_combobox['values'] = sorted((*self.__resource_combobox['values'], name))
                 self.__resource_combobox_var.set(name)
                 self.__enable_rename_remove_buttons()
-            except ResourceStringError as e:
+            except ResourceError as e:
                 messagebox.showerror('Add resource error.', e.message)
 
     def __enable_rename_remove_buttons(self):
@@ -221,7 +221,7 @@ class ResourcesTab(Tab,
                                                [*self.__resource_combobox['values']]]
                     self.__resource_combobox['values'] = sorted(updated_combobox_values)
                     self.__resource_combobox_var.set(new_name)
-                except ResourceStringError as e:
+                except ResourceError as e:
                     messagebox.showerror('Rename error.', e.message)
 
     def __remove_resource(self):

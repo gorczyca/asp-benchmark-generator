@@ -8,10 +8,10 @@ class HasCommonSetup(ABC):
         self._setup_layout()
 
     @abstractmethod
-    def _create_widgets(self): pass
+    def _create_widgets(self) -> None: pass
 
     @abstractmethod
-    def _setup_layout(self): pass
+    def _setup_layout(self) -> None: pass
 
 
 
