@@ -23,3 +23,8 @@ class PortError(Exception):
     def __init__(self, message: str = 'Error while creating port.'):
         super().__init__(message)
         self.message = message
+
+class ConstraintError(Exception):
+    def __init__(self, message: str = 'Error while creating constraint.'):
+        super().__init__(message)
+        self.message = message

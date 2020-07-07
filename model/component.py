@@ -32,7 +32,7 @@ class Component:
         self.symmetry_breaking: Optional[bool] = symmetry_breaking
         self.association: Optional[Association] = association
         self.produces: Dict[int, int] = produces if produces is not None else {}
-        self.ports: Dict[int] = ports if ports is not None else {}
+        self.ports: Dict[int, int] = ports if ports is not None else {}
 
     @classmethod
     def from_json(cls, data):

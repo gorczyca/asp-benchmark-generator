@@ -9,8 +9,8 @@ class Association:
         max_: Maximal quantity of components
     """
     def __init__(self, min_: Optional[int] = None, max_: Optional[int] = None):
-        self.min_ = min_
-        self.max_ = max_
+        self.min_: Optional[int] = min_
+        self.max_: Optional[int] = max_
 
     @classmethod
     def from_json(cls, data):

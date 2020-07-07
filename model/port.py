@@ -16,9 +16,13 @@ class Port:
         self.id_: int = id_ if id_ is not None else uuid.uuid4().int
         self.name: str = name
         self.force_connection: bool = force_connection
-        self.compatible_with = compatible_with if compatible_with is not None else []
+        self.compatible_with: List[int] = compatible_with if compatible_with is not None else []
 
     @classmethod
     def from_json(cls, data):
         """Necessary to create an instance from JSON"""
         return cls(**data)
+
+    def __repr__(self):
+        """For development purposes only"""
+        return self.name

@@ -1,6 +1,6 @@
 import ntpath
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 
 from pubsub import pub
 
@@ -8,8 +8,10 @@ import actions
 from model.helpers import json_converter
 from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.base_frame import BaseFrame
+import code_generator.code_generator as gen
 
-DEFAULT_FILE_EXTENSION = '.json'
+JSON_EXTENSION = '.json'
+LP_EXTENSION = '.lp'
 
 
 class Menu(BaseFrame, HasControllerAccess):
@@ -35,8 +37,21 @@ class Menu(BaseFrame, HasControllerAccess):
         self.__menu.add_cascade(label='Edit', menu=edit_menu)
         self.__menu.add_cascade(label='Help', menu=help_menu)
         self.__menu.add_cascade(label='About', menu=about_menu)
+        self.__menu.add_command(label='Generate', command=self.__generate)
 
         self.parent_frame.config(menu=self.__menu)
+
+    def __generate(self):
+        # TODO:
+        root_name = simpledialog.askstring('Enter root name', f'Enter name for root component.')
+        if root_name:
+            code = gen.generate_code(self.controller.model, root_name)
+            file = filedialog.asksaveasfile(mode='w', defaultextension=LP_EXTENSION)
+            if file is not None:  # TODO: czy to potrzebne
+                file.write(code)
+                file.close()
+                file_name = Menu.__extract_file_name(file.name)
+                messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.')
 
     def __new(self):
         if not self.controller.saved:
@@ -64,7 +79,7 @@ class Menu(BaseFrame, HasControllerAccess):
         self.__open_()
 
     def __open_(self):
-        file = filedialog.askopenfile(mode='r', defaultextension=DEFAULT_FILE_EXTENSION)
+        file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
         if file is not None:
             self.controller.file = file
             json = file.read()
@@ -84,7 +99,7 @@ class Menu(BaseFrame, HasControllerAccess):
 
     def __save_as(self):
         json_string = json_converter.model_to_json(self.controller.model)
-        file = filedialog.asksaveasfile(mode='w', defaultextension=DEFAULT_FILE_EXTENSION)
+        file = filedialog.asksaveasfile(mode='w', defaultextension=JSON_EXTENSION)
         if file is not None:  # TODO: czy to potrzebne
             self.__save_(file, json_string)
             self.controller.file = file

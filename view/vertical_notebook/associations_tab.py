@@ -36,41 +36,41 @@ class AssociationsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__right_frame = tk.Frame(self.frame)
+        self.__left_frame = tk.Frame(self.frame)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
-        self.__cmp_label = ttk.Label(self.__right_frame, textvariable=self.__cmp_label_var, style='Big.TLabel')
+        self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel')
         # Has association checkbox
         self.__has_association_checkbox_var = tk.BooleanVar(value=False)
         self.__has_association_checkbox_var.trace('w', self.__on_has_association_changed)
-        self.__has_association_checkbox_label = ttk.Label(self.__right_frame, text='Has association?')
-        self.__has_association_checkbox = ttk.Checkbutton(self.__right_frame,
+        self.__has_association_checkbox_label = ttk.Label(self.__left_frame, text='Has association?')
+        self.__has_association_checkbox = ttk.Checkbutton(self.__left_frame,
                                                           variable=self.__has_association_checkbox_var)
         # Has min checkbox
         self.__has_min_checkbox_var = tk.BooleanVar(value=False)
         self.__has_min_checkbox_var.trace('w', self.__on_has_min_changed)
-        self.__has_min_checkbox_label = ttk.Label(self.__right_frame, text='Has min?')
-        self.__has_min_checkbox = ttk.Checkbutton(self.__right_frame, state=tk.DISABLED,
+        self.__has_min_checkbox_label = ttk.Label(self.__left_frame, text='Has min?')
+        self.__has_min_checkbox = ttk.Checkbutton(self.__left_frame, state=tk.DISABLED,
                                                   variable=self.__has_min_checkbox_var)
-
+        # Min spinbox
         self.__min_spinbox_var = tk.IntVar(value='')
         self.__min_spinbox_var.trace('w', self.__on_min_changed)
-        self.__min_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, state=tk.DISABLED,
+        self.__min_spinbox = ttk.Spinbox(self.__left_frame, from_=0, to=math.inf, state=tk.DISABLED,
                                          textvariable=self.__min_spinbox_var)
         # Has max checkbox
         self.__has_max_checkbox_var = tk.BooleanVar(value=False)
         self.__has_max_checkbox_var.trace('w', self.__on_has_max_changed)
-        self.__has_max_checkbox_label = ttk.Label(self.__right_frame, text='Has max?')
-        self.__has_max_checkbox = ttk.Checkbutton(self.__right_frame, state=tk.DISABLED,
+        self.__has_max_checkbox_label = ttk.Label(self.__left_frame, text='Has max?')
+        self.__has_max_checkbox = ttk.Checkbutton(self.__left_frame, state=tk.DISABLED,
                                                   variable=self.__has_max_checkbox_var)
-
+        # Max spinbox
         self.__max_spinbox_var = tk.IntVar(value='')
         self.__max_spinbox_var.trace('w', self.__on_max_changed)
-        self.__max_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, state=tk.DISABLED,
+        self.__max_spinbox = ttk.Spinbox(self.__left_frame, from_=0, to=math.inf, state=tk.DISABLED,
                                          textvariable=self.__max_spinbox_var)
 
     def _setup_layout(self):
-        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)
         self.__cmp_label.grid(row=0, column=0, columnspan=4)
         self.__has_association_checkbox_label.grid(row=1, column=0, columnspan=2, sticky=tk.W)
         self.__has_association_checkbox.grid(row=1, column=2, columnspan=2, sticky=tk.W)
@@ -81,11 +81,11 @@ class AssociationsTab(Tab,
         self.__min_spinbox.grid(row=3, column=0, columnspan=2)
         self.__max_spinbox.grid(row=3, column=2, columnspan=2)
 
-        self.frame.columnconfigure(0, weight=2, uniform='fred')
-        self.frame.columnconfigure(1, weight=1, uniform='fred')
+        self.frame.columnconfigure(0, weight=1, uniform='fred')
+        self.frame.columnconfigure(1, weight=2, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
 
-        self.__right_frame.grid_forget()
+        self.__left_frame.grid_forget()
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
@@ -110,7 +110,7 @@ class AssociationsTab(Tab,
             self.__disable_widgets()
             self.__has_association_checkbox_var.set(False)
         self.__cmp_label_var.set(selected_cmp.name)
-        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)
 
     @property
     def _columns(self) -> List[Column]:
@@ -133,7 +133,7 @@ class AssociationsTab(Tab,
             self._destroy_tree()
 
         self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
-                                             on_select_callback=self._on_select_tree_item,
+                                             on_select_callback=self._on_select_tree_item, grid_column=1,
                                              extract_values=self._extract_values)
 
     def _destroy_tree(self) -> None:
@@ -147,7 +147,7 @@ class AssociationsTab(Tab,
 
         self._selected_component = None
         # Hide widgets
-        self.__right_frame.grid_forget()
+        self.__left_frame.grid_forget()
         # Set entries to default
         self.__has_association_checkbox_var.set(False)
         self.__has_min_checkbox_var.set(False)
@@ -228,7 +228,8 @@ class AssociationsTab(Tab,
                         self.__max_spinbox_var.set(min_)
                 except tk.TclError as e:
                     print(e)
-                    self._selected_component.association.min_ = ''
+                    self._selected_component.association.min_ = None
+                    # self._selected_component.association.min_ = ''  # TODO: URGENT! co to jest??
                 finally:
                     self._hierarchy_tree.update_values([self._selected_component])
 
@@ -244,6 +245,7 @@ class AssociationsTab(Tab,
                         self.__min_spinbox_var.set(max_)
                 except tk.TclError as e:
                     print(e)
-                    self._selected_component.association.max_ = ''
+                    self._selected_component.association.max_ = None
+                    # self._selected_component.association.max_ = ''  # TODO: URGENT! co to jest??
                 finally:
                     self._hierarchy_tree.update_values([self._selected_component])

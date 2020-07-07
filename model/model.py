@@ -1,10 +1,12 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Callable, Any
 
 # TODO: rename Errors
-from exceptions import HierarchyStringError, ResourceError, PortError
+from exceptions import HierarchyStringError, ResourceError, PortError, ConstraintError
+from model.complex_constraint import ComplexConstraint
 from model.component import Component
 from model.resource import Resource
 from model.port import Port
+from model.simple_constraint import SimpleConstraint
 
 
 class Model:
@@ -21,10 +23,13 @@ class Model:
         resources:  List of resources
         ports: List of ports
     """
-    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None):
+    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
+                 simple_constraints: List[SimpleConstraint] = None, complex_constraints: List[ComplexConstraint] = None):
         self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
         self.ports: List[Port] = ports if ports is not None else []
+        self.simple_constraints: List[SimpleConstraint] = simple_constraints if simple_constraints is not None else []
+        self.complex_constraints: List[ComplexConstraint] = complex_constraints if complex_constraints is not None else []
 
     def clear(self):
         """Destroys all Model's attributes"""
@@ -105,6 +110,21 @@ class Model:
         self.__set_leaves()
         return to_remove
 
+    def get_component_and_its_children(self, cmp: Component) -> List[Component]:
+        """TODO:
+        """
+        def __get_component_and_children(cmp_: Component, hierarchy_: List[Component], children_: List[Component]) -> None:
+            """TODO:
+            """
+            children_.append(cmp_)
+            for c in hierarchy_:
+                if c.parent_id == cmp_.id_:
+                    __get_component_and_children(c, hierarchy_, children_)   # TODO: comment
+
+        list_ = []
+        __get_component_and_children(cmp, self.hierarchy, list_)
+        return list_
+
     def remove_component_from_hierarchy_preserve_children(self, cmp: Component) -> List[Component]:
         """Removes the component from hierarchy, but preserves its children.
 
@@ -131,6 +151,14 @@ class Model:
         :returns: Component with the given id.
         """
         return next((cmp for cmp in self.hierarchy if cmp.id_ == id_), None)
+
+    def get_components_by_ids(self, ids: List[int]) -> List[Component]:
+        """Returns a list of components that have their ids among given ids list.
+
+        :param ids: List of ids of components to return.
+        :returns: List of components.
+        """
+        return [c for c in self.hierarchy if c.id_ in ids]
 
     def get_leaf_components(self) -> List[Component]:
         """Returns a list of component that are leaves.
@@ -187,9 +215,15 @@ class Model:
         """Returns resource, that has the specified name
 
         :param name: Name of the resource
-        :returns: Component with the specified name.
+        :returns: Port with the specified name.
         """
         return next((res for res in self.resources if res.name == name), None)
+
+    def get_resource_by_id(self, id_: int) -> Resource:
+        """TODO:
+
+        """
+        return next((res for res in self.resources if res.id_ == id_), None)
 
     def change_resource_name(self, res: Resource, new_name: str) -> Resource:
         """Changes name of a specified resource.
@@ -217,6 +251,31 @@ class Model:
 
         self.resources.remove(res)  # Remove component itself
         return res
+
+    def __get_components_children(self, cmp_: Component, hierarchy_: List[Component], children_: List[Component]):
+        """Returns an array of Component children (obtained recursively)
+
+        :param cmp_: Current component
+        :param hierarchy_: Hierarchy of all components
+        :param children_: Current list of children
+        """
+        # TODO: take this function out, to be able to get to component's children from anywhere
+        # TODO: its only leaves
+        if cmp_.is_leaf:
+            children_.append(cmp_)
+        else:
+            for c_ in hierarchy_:
+                if c_.parent_id == cmp_.id_:
+                    self.__get_components_children(c_, hierarchy_, children_)
+
+    def set_ports_amount_to_all_components_children(self, cmp: Component, prt: Port, value: int) \
+            -> List[Component]:
+        children = []
+        self.__get_components_children(cmp, self.hierarchy, children)
+        leaf_children = [c for c in children if c.is_leaf]
+        for c in leaf_children:
+            c.ports[prt.id_] = value
+        return leaf_children
 
     def set_resource_production_to_all_components_children(self, cmp: Component, res: Resource, value: int) \
             -> List[Component]:
@@ -262,6 +321,7 @@ class Model:
         self.ports.append(port)
         port_names_sorted = sorted([p.name for p in self.ports])
         index = port_names_sorted.index(name)
+        # TODO: remove returning index
         return port, index
 
     def change_port_name(self, prt: Port, new_name: str) -> Tuple[Port, int]:
@@ -279,6 +339,7 @@ class Model:
         # TODO: do it better, sort the ports list and then take port
         port_names_sorted = sorted([p.name for p in self.ports])
         index = port_names_sorted.index(new_name)
+        # TODO: do not remove index
         return prt, index
 
     def get_port_by_id(self, id_: int) -> Port:
@@ -288,6 +349,17 @@ class Model:
         :returns: Port with the given id.
         """
         return next((prt for prt in self.ports if prt.id_ == id_), None)
+
+    def get_port_by_name(self, name: str) -> Port:
+        """Returns port, that has the specified name
+
+        :param name: Name of the port
+        :returns: Port with the specified name.
+        """
+        return next((prt for prt in self.ports if prt.name == name), None)
+
+    def get_ports_by_ids(self, ids: List[int]) -> List[Port]:
+        return [p for p in self.ports if p.id_ in ids]
 
     def remove_port(self, prt: Port) -> Port:
         """Removes port from model and all the references to it by its id in Component.ports.
@@ -302,7 +374,78 @@ class Model:
         self.ports.remove(prt)  # Remove port itself
         return prt
 
+    def get_all_ports_names(self) -> List[str]:
+        """Returns a list with all ports names."""
+        return [p.name for p in self.ports]
 
+    def update_ports_compatibility(self, port, compatible_ports) -> None:
+        compatible_ports_ids = [p.id_ for p in compatible_ports]
+        # If compatibility was removed
+        ports_to_remove_ids = [pid for pid in port.compatible_with if pid not in compatible_ports_ids]
+        # Remove from the other ports the compatibility with this port
+        for pid in ports_to_remove_ids:
+            port_ = self.get_port_by_id(pid)
+            port_.compatible_with.remove(port.id_)
+        # Add to other ports compatibility with this port
+        for pid in compatible_ports_ids:
+            port_ = self.get_port_by_id(pid)
+            if port.id_ not in port_.compatible_with:
+                port_.compatible_with.append(port.id_)
+        port.compatible_with = compatible_ports_ids
 
+    # Constraint (Simple & Complex)
+    def get_all_constraints(self) -> List[Any]:
+        """Returns a union of sets of simple & complex constraints.
 
+        :returns: Set of simple & complex constraints
+        """
+        return [*self.simple_constraints, *self.complex_constraints]
+
+    def get_constraint_by_id(self, id_: int):
+        """Returns a constraint by a given id. Note: 'Constraint' might be an instance of either SimpleConstraint or ComplexConstraint
+
+        :param id_: Id of the constraint to return.
+        :returns: SimpleConstraint or ComplexConstraint instance with a given id
+        """
+        simple_ctr = next((c for c in self.simple_constraints if c.id_ == id_), None)
+        # Look in the simple constraints first
+        return simple_ctr if simple_ctr is not None \
+            else next((c for c in self.complex_constraints if c.id_ == id_), None)  # Then look in the complex ones
+
+    def add_constraint(self, ctr: Any) -> Tuple[Any, int]:
+        """Adds constraint to the model (either to the list of simple constraints or complex).
+
+        :param ctr: Constraint to add to the model
+        :returns: Added constraint and index of it in the sorted alphabetically union of simple
+        and complex constraints (Simple constraints are put first in the union, complex constraints later).
+        """
+        ctr_names = [*[s.name for s in self.simple_constraints], *[c.name for c in self.complex_constraints]]
+        if ctr.name in ctr_names:
+            raise ConstraintError(f'Constraint with the name {ctr.name} already exists.')
+
+        if isinstance(ctr, SimpleConstraint):
+            # TODO: already insert in sorted maybe?
+            self.simple_constraints.append(ctr)
+        else:
+            self.complex_constraints.append(ctr)
+        sorted_ctrs_names = [*sorted([s.name for s in self.simple_constraints]), *sorted([c.name for c in self.complex_constraints])]
+        return ctr, sorted_ctrs_names.index(ctr.name)
+
+    def remove_constraint(self, ctr: Any) -> Any:
+        """Removes constraint from the model (either from the list of simple constraints or complex).
+
+        :param ctr: Constraint to remove from the model.
+        :returns: Removed constraint
+        """
+        if isinstance(ctr, SimpleConstraint):
+            self.simple_constraints.remove(ctr)
+        else:
+            self.complex_constraints.remove(ctr)
+        return ctr
+
+    def get_constraint_index(self, ctr: Any):
+        """TODO:
+        """
+        sorted_ctrs_names = [*sorted([p.name for p in self.simple_constraints]), *sorted([p.name for p in self.complex_constraints])]
+        return sorted_ctrs_names.index(ctr.name)
 
