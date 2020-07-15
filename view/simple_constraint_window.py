@@ -74,11 +74,16 @@ class SimpleConstraintWindow(BaseFrame,
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
 
         # Contains radiobutton
-        self.__contains_var = tk.BooleanVar(value=self.__constraint.contains)
-        self.__contains_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Contains', value=True,
-                                                      variable=self.__contains_var)
-        self.__does_not_contain_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Does not contain',
-                                                              value=False, variable=self.__contains_var)
+        # self.__contains_var = tk.BooleanVar(value=self.__constraint.contains)
+        # self.__contains_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Contains', value=True,
+        #                                               variable=self.__contains_var)
+        # self.__does_not_contain_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Does not contain',
+        #                                                       value=False, variable=self.__contains_var)
+
+        # Distinct checkbox
+        self.__distinct_checkbox_var = tk.BooleanVar(value=self.__constraint.distinct)
+        self.__distinct_checkbox_label = ttk.Label(self.__constraints_data_frame, text='Distinct?')
+        self.__distinct_checkbox = ttk.Checkbutton(self.__constraints_data_frame, variable=self.__distinct_checkbox_var)
 
         # Has min checkbox
         self.__has_min_checkbox_var = tk.BooleanVar(value=self.__constraint.min_ is not None)
@@ -119,8 +124,10 @@ class SimpleConstraintWindow(BaseFrame,
         self.__name_entry.grid(row=0, column=1)
         self.__description_text_label.grid(row=1, column=0)
         self.__description_text.grid(row=1, column=1, columnspan=3)
-        self.__contains_radiobutton.grid(row=2, column=0)
-        self.__does_not_contain_radiobutton.grid(row=2, column=1)
+        # self.__contains_radiobutton.grid(row=2, column=0)
+        # self.__does_not_contain_radiobutton.grid(row=2, column=1)
+        self.__distinct_checkbox_label.grid(row=2, column=0)
+        self.__distinct_checkbox.grid(row=2, column=1)
 
         self.__has_min_checkbox_label.grid(row=3, column=0)
         self.__has_min_checkbox.grid(row=3, column=1)
@@ -247,7 +254,9 @@ class SimpleConstraintWindow(BaseFrame,
         self.__constraint.name = name
         self.__constraint.description = self.__description_text.get(1.0, tk.END)
         self.__constraint.components_ids = self.__components_ids
-        self.__constraint.contains = self.__contains_var.get()
+        # self.__constraint.contains = self.__contains_var.get()
+        self.__constraint.distinct = self.__distinct_checkbox_var.get()
+
         if self.__has_min_checkbox_var.get():   # If component has min
             try:
                 min_ = self.__min_spinbox_var.get()
