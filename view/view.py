@@ -1,6 +1,7 @@
 import tkinter as tk
 from typing import Optional
 
+
 from pubsub import pub
 
 import actions
