@@ -314,6 +314,7 @@ class Model:
         :param name: Name of the Port
         :returns: tuple (Created Port, index of created port in the list of ports sorted alphabetically)
         """
+        # TODO: remove index
         port_names = [p.name for p in self.ports]
         if name in port_names:
             raise PortError(f'Port "{name}" already exists.')

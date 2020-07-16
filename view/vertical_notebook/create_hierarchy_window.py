@@ -13,11 +13,17 @@ from view import style
 from view.common_callbacks import select_all_text
 
 EDIT_HIERARCHY_WINDOW_NAME = 'Edit hierarchy'
-EDIT_HIERARCHY_WINDOW_SIZE = '800x800'
 EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
+WINDOW_WIDTH_RATIO = 0.75
+WINDOW_HEIGHT_RATIO = 0.75
 
+CONTROL_PAD_Y = 3
+
+FRAME_PAD_Y = 10
+FRAME_PAD_X = 10
 
 # TODO: not every variable has to be a class property!
+
 
 class CreateHierarchyWindow(BaseFrame,
                             HasControllerAccess,
@@ -29,13 +35,13 @@ class CreateHierarchyWindow(BaseFrame,
         HasCommonSetup.__init__(self)
 
         self.__callback = callback
+        self.__set_geometry()
 
     # HasCommonSetup
     def _create_widgets(self):
         self.window = tk.Toplevel(self.parent_frame)
         self.window.grab_set()
         self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
-        self.window.geometry(EDIT_HIERARCHY_WINDOW_SIZE)
 
         self.text_frame = tk.Frame(self.window)
         self.x_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.HORIZONTAL)
@@ -94,6 +100,16 @@ class CreateHierarchyWindow(BaseFrame,
             self.window.destroy()
         except HierarchyStringError as e:
             messagebox.showerror('Error', e.message)
+
+    def __set_geometry(self):
+        screen_width = self.window.winfo_screenwidth()
+        screen_height = self.window.winfo_screenheight()
+        window_width = round(screen_width * WINDOW_WIDTH_RATIO)
+        window_height = round(screen_height * WINDOW_HEIGHT_RATIO)
+        x_pos = round((screen_width - window_width) / 2)
+        y_pos = round((screen_height - window_height) / 2)
+        self.window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
+
 
 
 

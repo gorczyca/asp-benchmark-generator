@@ -95,8 +95,8 @@ class InstancesTab(Tab,
     # HasHierarchyTree
     @property
     def _columns(self) -> List[Column]:
-        return [ Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
-                 Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
+        return [Column('count', 'Count', stretch=tk.NO, anchor=tk.W),
+                Column('symmetry_breaking', 'Symmetry breaking?', stretch=tk.NO, anchor=tk.W)]
 
     def _extract_values(self, cmp: Component) -> Tuple[Any, ...]:
         return (cmp.count if cmp.count else '',

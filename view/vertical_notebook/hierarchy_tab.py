@@ -25,10 +25,11 @@ COL_ID_COUNT = 'count'
 COL_NAME_SYMMETRY_BREAKING = 'Symmetry breaking?'
 COL_NAME_COUNT = 'Count'
 
-BUTTONS_PAD_X = 30
-BUTTONS_PAD_Y = 3
-LABEL_PAD_X = 40
-LABEL_PAD_Y = 10
+CONTROL_PAD_Y = 3
+CONTROL_PAD_X = 20
+
+FRAME_PAD_Y = 20
+FRAME_PAD_X = 20
 
 
 class HierarchyTab(Tab,
@@ -64,17 +65,19 @@ class HierarchyTab(Tab,
 
     def _setup_layout(self):
         self.frame.rowconfigure(0, weight=1)
-        self.frame.columnconfigure(0, weight=2, uniform='fred')
         self.frame.columnconfigure(1, weight=1, uniform='fred')
+        self.frame.columnconfigure(0, weight=3, uniform='fred')
 
         self.__right_frame.columnconfigure(0, weight=1)
 
-        self.__cmp_name_label.grid(row=0, sticky=tk.NSEW, padx=LABEL_PAD_X, pady=LABEL_PAD_Y)
-        self.__rename_button.grid(row=1, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
-        self.__add_sibling_button.grid(row=2, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
-        self.__add_child_button.grid(row=3, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
-        self.__remove_button.grid(row=4, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
-        self.__remove_recursively_button.grid(row=5, sticky=tk.NSEW, padx=BUTTONS_PAD_X, pady=BUTTONS_PAD_Y)
+        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+
+        self.__cmp_name_label.grid(row=0, sticky=tk.EW, pady=CONTROL_PAD_Y)
+        self.__rename_button.grid(row=1, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__add_sibling_button.grid(row=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__add_child_button.grid(row=3, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__remove_button.grid(row=4, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__remove_recursively_button.grid(row=5, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
         self.__create_hierarchy_button.grid(row=1, column=0, padx=30, pady=5)
         # Hide widgets
@@ -90,7 +93,7 @@ class HierarchyTab(Tab,
         selected_component: Component = self.controller.model.get_component_by_id(cmp_id)
         self._selected_component = selected_component
         self.__cmp_name_var.set(selected_component.name)
-        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__right_frame.grid(row=0, column=1, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
 
     @property
     def _columns(self) -> List[Column]:
@@ -104,6 +107,7 @@ class HierarchyTab(Tab,
             self._hierarchy_tree.destroy_()
         self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy,
                                              on_select_callback=self._on_select_tree_item)
+        self._hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW)
 
     def _destroy_tree(self) -> None:
         self._hierarchy_tree.destroy_()

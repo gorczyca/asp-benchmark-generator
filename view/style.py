@@ -14,6 +14,8 @@ FONT = (FONT_TYPE, 13)
 FONT_BOLD = (FONT_TYPE, 13, 'bold')
 BIG_FONT = (FONT_TYPE, 18)
 BIG_FONT_BOLD = (FONT_TYPE, 18, 'bold')
+MEDIUM_FONT = (FONT_TYPE, 15)
+MEDIUM_FONT_BOLD = (FONT_TYPE, 15, 'bold')
 
 VERTICAL_TAB_HEIGHT = 720
 VERTICAL_TAB_WIDTH = 1080
@@ -29,6 +31,7 @@ class CustomTheme(ttk.Style):
             '.': {'configure': {'font': FONT}},  # TODO: it is too general
             'Big.TLabel': {'configure': {'font': BIG_FONT_BOLD}},
             'Bold.TLabel': {'configure': {'font': FONT_BOLD}},
+            'Medium.Bold.TLabel': {'configure': {'font': MEDIUM_FONT_BOLD}},
             "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns'}},
             "Vertical.TNotebook.Tab": {"configure": {'width': 12, 'padding': [30, 30], 'borderwidth': 3,
                                                      'focuscolor': "#dd4814", 'font': BIG_FONT}, # usuwa tę brzydką ramkę

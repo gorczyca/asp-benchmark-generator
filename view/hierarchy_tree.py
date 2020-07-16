@@ -13,7 +13,7 @@ COL_NAME_COMPONENT = 'Component'
 # TODO: cleanup the arguments -- which suppose to be default, annotated etc.
 class HierarchyTree(ttk.Treeview):
     def __init__(self, parent_frame, hierarchy: List[Component], columns: List[Column] = None, on_select_callback=None,
-                 extract_values: Callable[[Component], Any] = lambda cmp: [], grid_row=0, grid_column=0, **kwargs):
+                 extract_values: Callable[[Component], Any] = lambda cmp: [], **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 
         self.parent_frame = parent_frame
@@ -39,7 +39,7 @@ class HierarchyTree(ttk.Treeview):
                 self.__tree.heading(col.id_, text=col.name, anchor=col.anchor)    # TODO: better
 
         self.__build_tree(hierarchy)
-        self.__tree.grid(row=grid_row, column=grid_column, sticky=tk.NSEW)    # TODO:
+        # self.__tree.grid(row=grid_row, column=grid_column, sticky=tk.NSEW)    # TODO:
 
     def add_item(self, cmp: Component):
         ancestor = '' if cmp.parent_id is None else cmp.parent_id  # TODO: do poprawy to
@@ -81,4 +81,10 @@ class HierarchyTree(ttk.Treeview):
             values = self.__extract_values(cmp)
             ancestor = cmp.parent_id if cmp.parent_id is not None else ''
             self.__tree.insert(ancestor, tk.END, iid=cmp.id_, text=cmp.name, values=values)
+
+    def grid(self, **kwargs):
+        self.__tree.grid(**kwargs)
+
+    def grid_forget(self):
+        self.__tree.grid_forget()
 

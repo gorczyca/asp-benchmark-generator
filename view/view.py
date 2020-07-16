@@ -36,7 +36,7 @@ class View(tk.Frame):
         self.__window_title: Optional[str] = None
 
         self.__init_title()
-        # self.frame.geometry(WINDOW_SIZE)
+        self.__set_geometry()
         self.__setup_layout()
 
         pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
@@ -49,24 +49,22 @@ class View(tk.Frame):
     def __setup_layout(self):
         CustomTheme().use()
 
+        self.__main_window.rowconfigure(0, weight=1)
+        self.__main_window.columnconfigure(0, weight=1)
+
         self.__menu = Menu(self, self.__main_window)
-        self.__main_notebook = MainNotebook(self, self.__main_window)
+        self.__main_notebook = MainNotebook(self, self.__main_window)   # TODO: get out the grid method
 
         self.__encoding_frame = EncodingTab(self, self.__main_notebook.notebook)
         self.__instances_tab = InstancesTab(self, self.__main_notebook.notebook)
 
         self.__vertical_notebook = VerticalNotebook(self, self.__encoding_frame.frame)
 
-        self.__hierarchy_tab = HierarchyTab(self, self.__vertical_notebook.notebook,
-                                            height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
-        self.__associations_tab = AssociationsTab(self, self.__vertical_notebook.notebook,
-                                                  height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
-        self.__ports_tab = PortsTab(self, self.__vertical_notebook.notebook,
-                                    height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
-        self.__resources_tab = ResourcesTab(self, self.__vertical_notebook.notebook,
-                                            height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
-        self.__constraints_tab = ConstraintsTab(self, self.__vertical_notebook.notebook,
-                                                height=VERTICAL_TAB_HEIGHT, width=VERTICAL_TAB_WIDTH)
+        self.__hierarchy_tab = HierarchyTab(self, self.__vertical_notebook.notebook)
+        self.__associations_tab = AssociationsTab(self, self.__vertical_notebook.notebook)
+        self.__ports_tab = PortsTab(self, self.__vertical_notebook.notebook)
+        self.__resources_tab = ResourcesTab(self, self.__vertical_notebook.notebook)
+        self.__constraints_tab = ConstraintsTab(self, self.__vertical_notebook.notebook)
 
     def __init_title(self):
         window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'
@@ -80,6 +78,12 @@ class View(tk.Frame):
         window_title = f'{file_name} - {WINDOW_TITLE}'
         self.__main_window.title(window_title)
         self.__window_title = window_title
+
+    def __set_geometry(self):
+        # screen_width = self.__main_window.winfo_screenwidth()
+        # screen_height = self.__main_window.winfo_screenheight()
+        # self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
+        self.__main_window.wm_state('zoomed')   # TODO: requires tests
 
 
 

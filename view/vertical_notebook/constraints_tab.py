@@ -53,6 +53,7 @@ class ConstraintsTab(Tab,
                                                      command=self.__remove_constraint)
 
     def _setup_layout(self) -> None:
+        self.__constraints_listbox.grid(row=0, column=0, sticky=tk.NSEW)
         self.__right_frame.grid(row=0, column=1)
 
         self.__ctr_label.grid(row=0, column=0)

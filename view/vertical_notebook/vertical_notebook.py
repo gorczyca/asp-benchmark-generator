@@ -14,5 +14,6 @@ class VerticalNotebook(BaseFrame, HasCommonSetup):
         self.notebook = ttk.Notebook(self.parent_frame, style='Vertical.TNotebook')
 
     def _setup_layout(self):
-        self.notebook.grid(row=0, column=0, sticky=tk.N + tk.W)
+        #self.notebook.grid(row=0, column=0, sticky=tk.N + tk.W)
+        self.notebook.grid(row=0, column=0, sticky=tk.NSEW)
 

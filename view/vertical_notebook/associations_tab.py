@@ -16,8 +16,15 @@ from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.resetable import Resetable
+from view.style import FONT
 
 TAB_NAME = 'Associations'
+
+CONTROL_PAD_Y = 3
+CONTROL_PAD_X = 20
+
+FRAME_PAD_Y = 10
+FRAME_PAD_X = 10
 
 
 class AssociationsTab(Tab,
@@ -36,10 +43,11 @@ class AssociationsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__left_frame = tk.Frame(self.frame)
+        self.__left_frame = tk.Frame(self.frame, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
-        self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel')
+        self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var,
+                                     anchor=tk.CENTER, style='Big.TLabel')
         # Has association checkbox
         self.__has_association_checkbox_var = tk.BooleanVar(value=False)
         self.__has_association_checkbox_var.trace('w', self.__on_has_association_changed)
@@ -56,7 +64,7 @@ class AssociationsTab(Tab,
         self.__min_spinbox_var = tk.IntVar(value='')
         self.__min_spinbox_var.trace('w', self.__on_min_changed)
         self.__min_spinbox = ttk.Spinbox(self.__left_frame, from_=0, to=math.inf, state=tk.DISABLED,
-                                         textvariable=self.__min_spinbox_var)
+                                         textvariable=self.__min_spinbox_var, font=FONT)
         # Has max checkbox
         self.__has_max_checkbox_var = tk.BooleanVar(value=False)
         self.__has_max_checkbox_var.trace('w', self.__on_has_max_changed)
@@ -67,24 +75,30 @@ class AssociationsTab(Tab,
         self.__max_spinbox_var = tk.IntVar(value='')
         self.__max_spinbox_var.trace('w', self.__on_max_changed)
         self.__max_spinbox = ttk.Spinbox(self.__left_frame, from_=0, to=math.inf, state=tk.DISABLED,
-                                         textvariable=self.__max_spinbox_var)
+                                         textvariable=self.__max_spinbox_var, font=FONT)
 
     def _setup_layout(self):
-        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)
-        self.__cmp_label.grid(row=0, column=0, columnspan=4)
-        self.__has_association_checkbox_label.grid(row=1, column=0, columnspan=2, sticky=tk.W)
-        self.__has_association_checkbox.grid(row=1, column=2, columnspan=2, sticky=tk.W)
-        self.__has_min_checkbox_label.grid(row=2, column=0, sticky=tk.W)
-        self.__has_min_checkbox.grid(row=2, column=1, sticky=tk.E)
-        self.__has_max_checkbox_label.grid(row=2, column=2, sticky=tk.W)
-        self.__has_max_checkbox.grid(row=2, column=3, sticky=tk.E)
-        self.__min_spinbox.grid(row=3, column=0, columnspan=2)
-        self.__max_spinbox.grid(row=3, column=2, columnspan=2)
+        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+        self.__cmp_label.grid(row=0, column=0, columnspan=4, sticky=tk.EW, pady=CONTROL_PAD_Y)
+        self.__has_association_checkbox_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__has_association_checkbox.grid(row=1, column=2, columnspan=2, sticky=tk.E, pady=CONTROL_PAD_Y)
+        self.__has_min_checkbox_label.grid(row=2, column=0, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__has_min_checkbox.grid(row=2, column=1, sticky=tk.E, pady=CONTROL_PAD_Y)
+        self.__has_max_checkbox_label.grid(row=2, column=2, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__has_max_checkbox.grid(row=2, column=3, sticky=tk.E, pady=CONTROL_PAD_Y)
+        self.__min_spinbox.grid(row=3, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__max_spinbox.grid(row=3, column=2, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self.frame.columnconfigure(0, weight=1, uniform='fred')
-        self.frame.columnconfigure(1, weight=2, uniform='fred')
+        self.__left_frame.columnconfigure(0, weight=1)
+        self.__left_frame.columnconfigure(1, weight=1)
+        self.__left_frame.columnconfigure(2, weight=1)
+        self.__left_frame.columnconfigure(3, weight=1)
+
         self.frame.rowconfigure(0, weight=1)
+        self.frame.columnconfigure(0, weight=1, uniform='fred')
+        self.frame.columnconfigure(1, weight=3, uniform='fred')
 
+        # Hide widgets
         self.__left_frame.grid_forget()
 
     # SubscribesToListeners
@@ -133,8 +147,9 @@ class AssociationsTab(Tab,
             self._destroy_tree()
 
         self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
-                                             on_select_callback=self._on_select_tree_item, grid_column=1,
+                                             on_select_callback=self._on_select_tree_item,
                                              extract_values=self._extract_values)
+        self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
 
     def _destroy_tree(self) -> None:
         self._hierarchy_tree.destroy_()

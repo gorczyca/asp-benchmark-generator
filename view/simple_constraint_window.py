@@ -55,7 +55,7 @@ class SimpleConstraintWindow(BaseFrame,
         self.__right_frame = tk.Frame(self.__window)
         self.__constraints_data_frame = tk.Frame(self.__right_frame)
         # TODO: move grid_row to a separate function and invoke it in setup_layout
-        self.__components_listbox = ScrollbarListbox(self.__right_frame,  grid_row=5,
+        self.__components_listbox = ScrollbarListbox(self.__right_frame, # grid_row=5,
                                                      values=self.controller.model.get_components_by_ids(
                                                          self.__constraint.components_ids),
                                                      extract_id=lambda cmp: cmp.id_,
@@ -113,6 +113,7 @@ class SimpleConstraintWindow(BaseFrame,
         self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.__window.destroy)
 
     def _setup_layout(self) -> None:
+        self._hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW)
         self.__mid_frame.grid(row=0, column=1)
         self.__remove_component_button.grid(row=1, column=0)
         self.__add_component_button.grid(row=2, column=0)
@@ -135,6 +136,8 @@ class SimpleConstraintWindow(BaseFrame,
         self.__has_max_checkbox.grid(row=3, column=3)
         self.__min_spinbox.grid(row=4, column=0, columnspan=2)
         self.__max_spinbox.grid(row=4, column=2, columnspan=2)
+
+        self.__components_listbox.grid(row=5, column=0, columnspan=4)
 
         self.__buttons_frame.grid(row=6, column=0)
         self.__ok_button.grid(row=0, column=0)
@@ -161,6 +164,7 @@ class SimpleConstraintWindow(BaseFrame,
     def _build_tree(self) -> None:
         self._hierarchy_tree = HierarchyTree(self.__window, self.controller.model.hierarchy,
                                              on_select_callback=self._on_select_tree_item)
+
 
     def _destroy_tree(self) -> None:
         pass

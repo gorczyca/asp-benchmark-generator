@@ -17,13 +17,17 @@ class ScrollbarListbox(ttk.Treeview,
                  extract_id: Callable[[Any], int] = None,
                  extract_text: Callable[[Any], str] = None,
                  extract_values: Callable[[Any], Any] = None,  # TODO: ???
-                 grid_row=0, grid_column=0, column_span=1, **kwargs):
+                 # grid_row=0, grid_column=0, column_span=1,
+                 # padx=0, pady=0,
+                 **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 
         self.parent_frame = parent_frame    # TODO:  necessary?
-        self.__grid_row = grid_row
-        self.__grid_column = grid_column
-        self.__column_span = column_span
+        # self.__grid_row = grid_row
+        # self.__grid_column = grid_column
+        # self.__column_span = column_span
+        # self.__padx = padx
+        # self.__pady = pady
         self.__extract_id = extract_id
         self.__extract_text = extract_text
         self.__extract_values = extract_values
@@ -61,8 +65,9 @@ class ScrollbarListbox(ttk.Treeview,
             self.__listbox.bind('<ButtonRelease-1>', self.__item_selected)
 
     def _setup_layout(self) -> None:
-        self.__listbox_frame.grid(row=self.__grid_row, column=self.__grid_column, sticky=tk.NSEW,
-                                  columnspan=self.__column_span)
+        # TODO:
+        # self.__listbox_frame.grid(row=self.__grid_row, column=self.__grid_column, sticky=tk.NSEW,
+        #                          columnspan=self.__column_span)
         self.__listbox_frame.rowconfigure(0, weight=1)
         self.__listbox_frame.columnconfigure(0, weight=1)
 
@@ -105,4 +110,15 @@ class ScrollbarListbox(ttk.Treeview,
             selected_item_id_str: str = self.__listbox.focus()
             if selected_item_id_str:
                 self.__on_select_callback(int(selected_item_id_str))
+
+    # TODO: test these both methods
+    def grid_forget(self):
+        # self.grid_forget()  # TODO?
+        self.__listbox_frame.grid_forget()
+
+    # row = 0, column = 0, sticky = tk.NSEW, columnspan = 0
+    def grid(self, **kwargs):
+        self.__listbox_frame.grid(**kwargs)
+
+
 

@@ -17,9 +17,16 @@ from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.tab import Tab
 from view.abstract.resetable import Resetable
+from view.common import change_controls_state, trim_string
+from view.style import FONT
 
 TAB_NAME = 'Resources'
 SELECT_RESOURCE = '(select resource)'
+
+CONTROL_PAD_Y = 3
+
+FRAME_PAD_Y = 10
+FRAME_PAD_X = 10
 
 
 class ResourcesTab(Tab,
@@ -41,67 +48,65 @@ class ResourcesTab(Tab,
     # HasCommonSetup
     def _create_widgets(self):
         self.__left_frame = tk.Frame(self.frame)
-        self.__left_top_frame = tk.Frame(self.__left_frame)
-        self.__left_mid_frame = tk.Frame(self.__left_frame)
-        self.__left_bot_frame = tk.Frame(self.__left_frame)
         # Resources combobox
         self.__resource_combobox_var = tk.StringVar(value=SELECT_RESOURCE)
         self.__resource_combobox_var.trace('w', self.__on_combobox_changed)
-        self.__resource_combobox = ttk.Combobox(self.__left_top_frame, state='readonly',
+        self.__resource_combobox = ttk.Combobox(self.__left_frame, state='readonly', font=FONT,
                                                 textvariable=self.__resource_combobox_var)
         # C(r)ud Buttons
-        self.__add_resource_button = ttk.Button(self.__left_top_frame, text='Add', state=tk.NORMAL,
+        self.__add_resource_button = ttk.Button(self.__left_frame, text='Add', state=tk.NORMAL,
                                                 command=self.__add_resource)
-        self.__rename_resource_button = ttk.Button(self.__left_top_frame, text='Rename', state=tk.DISABLED,
+        self.__rename_resource_button = ttk.Button(self.__left_frame, text='Rename', state=tk.DISABLED,
                                                    command=self.__rename_resource)
-        self.__remove_resource_button = ttk.Button(self.__left_top_frame, text='Remove', state=tk.DISABLED,
+        self.__remove_resource_button = ttk.Button(self.__left_frame, text='Remove', state=tk.DISABLED,
                                                    command=self.__remove_resource)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
-        self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel')
-        self.__produces_spinbox_label = ttk.Label(self.__left_mid_frame, text='Produces:')
+        self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel', anchor=tk.CENTER)
+        self.__produces_spinbox_label = ttk.Label(self.__left_frame, text='Produces:')
         self.__produces_spinbox_var = tk.IntVar(value='')
         self.__produces_spinbox_var.trace('w', self.__on_produced_changed)
-        self.__produces_spinbox = ttk.Spinbox(self.__left_mid_frame, from_=-math.inf, to=math.inf,
+        self.__produces_spinbox = ttk.Spinbox(self.__left_frame, from_=-math.inf, to=math.inf,
                                               textvariable=self.__produces_spinbox_var)
 
-        self.__all_children_produce_spinbox_label = ttk.Label(self.__left_bot_frame, text='Produces:')
-        self.__all_children_produce_spinbox_var = tk.IntVar(value='')
-        self.__all_children_produce_spinbox = ttk.Spinbox(self.__left_bot_frame, from_=-math.inf, to=math.inf,
+        self.__all_children_produce_spinbox_label = ttk.Label(self.__left_frame, text='Produces:')
+        self.__all_children_produce_spinbox_var = tk.IntVar(value=0)
+        self.__all_children_produce_spinbox = ttk.Spinbox(self.__left_frame, from_=-math.inf, to=math.inf,
                                                           textvariable=self.__all_children_produce_spinbox_var)
-        self.__apply_to_all_children_button = ttk.Button(self.__left_bot_frame, text='Apply to all children',
+        self.__apply_to_all_children_button = ttk.Button(self.__left_frame, text='Apply to all children',
                                                          command=self.__apply_to_all_children)
 
     def _setup_layout(self):
-        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)
+        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
 
-        self.__left_top_frame.grid(row=0, column=0, sticky=tk.NSEW)
-        self.__resource_combobox.grid(row=0, column=0, columnspan=3, sticky=tk.NSEW)
+        self.__resource_combobox.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self.__add_resource_button.grid(row=1, column=0)
-        self.__rename_resource_button.grid(row=1, column=1)
-        self.__remove_resource_button.grid(row=1, column=2)
+        self.__add_resource_button.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__rename_resource_button.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__remove_resource_button.grid(row=3, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self.__cmp_label.grid(row=1, column=0)
+        self.__cmp_label.grid(row=4, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)
 
-        self.__left_mid_frame.grid(row=2, column=0, sticky=tk.NSEW)
-        self.__produces_spinbox_label.grid(row=0, column=0)
-        self.__produces_spinbox.grid(row=0, column=1, columnspan=2)
+        self.__produces_spinbox_label.grid(row=5, column=0, pady=CONTROL_PAD_Y, sticky=tk.W)
+        self.__produces_spinbox.grid(row=5, column=1, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
 
-        self.__left_bot_frame.grid(row=3, column=0, sticky=tk.NSEW)
-        self.__all_children_produce_spinbox_label.grid(row=0, column=0)
-        self.__all_children_produce_spinbox.grid(row=0, column=1, columnspan=2)
-        self.__apply_to_all_children_button.grid(row=1, column=0, columnspan=3)
+        self.__all_children_produce_spinbox_label.grid(row=5, column=0, pady=CONTROL_PAD_Y, sticky=tk.W)
+        self.__all_children_produce_spinbox.grid(row=5, column=1, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+        self.__apply_to_all_children_button.grid(row=6, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
         self.frame.columnconfigure(0, weight=1, uniform='fred')
-        self.frame.columnconfigure(1, weight=2, uniform='fred')
+        self.frame.columnconfigure(1, weight=3, uniform='fred')
         self.frame.rowconfigure(0, weight=1)
 
-        self.__left_frame.grid_forget()
-        self.__left_top_frame.grid_forget()
+        self.__left_frame.columnconfigure(1, weight=1)
+
+        # Hide widgets
         self.__cmp_label.grid_forget()
-        self.__left_mid_frame.grid_forget()
-        self.__left_bot_frame.grid_forget()
+        self.__produces_spinbox_label.grid_forget()
+        self.__produces_spinbox.grid_forget()
+        self.__all_children_produce_spinbox_label.grid_forget()
+        self.__all_children_produce_spinbox.grid_forget()
+        self.__apply_to_all_children_button.grid_forget()
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
@@ -115,19 +120,28 @@ class ResourcesTab(Tab,
             selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
             self._selected_component = selected_cmp
 
-            self.__cmp_label.grid(row=1, column=0, columnspan=3)
-            self.__cmp_label_var.set(selected_cmp.name)
+            self.__cmp_label.grid(row=4, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)
+            self.__cmp_label_var.set(trim_string(selected_cmp.name))
 
             if selected_cmp.is_leaf:
-                self.__left_bot_frame.grid_forget()
+                self.__all_children_produce_spinbox_label.grid_forget()     # Hide widgets (changing all children)
+                self.__all_children_produce_spinbox.grid_forget()
+                self.__apply_to_all_children_button.grid_forget()
                 produced = 0
                 if self.__selected_resource.id_ in selected_cmp.produces:
                     produced = selected_cmp.produces[self.__selected_resource.id_]
                 self.__produces_spinbox_var.set(produced)
-                self.__left_mid_frame.grid(row=2, column=0, sticky=tk.NSEW)
+                self.__produces_spinbox_label.grid(row=5, column=0, pady=CONTROL_PAD_Y, sticky=tk.W)
+                self.__produces_spinbox.grid(row=5, column=1, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
             else:
-                self.__left_mid_frame.grid_forget()
-                self.__left_bot_frame.grid(row=3, column=0, sticky=tk.NSEW)
+                self.__produces_spinbox_label.grid_forget()     # Hide widgets for leaves
+                self.__produces_spinbox.grid_forget()
+                # Show widgets (changing all children)
+                self.__all_children_produce_spinbox_var.set(0)
+                self.__all_children_produce_spinbox_label.grid(row=5, column=0, pady=CONTROL_PAD_Y, sticky=tk.W)
+                self.__all_children_produce_spinbox.grid(row=5, column=1, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+                self.__apply_to_all_children_button.grid(row=6, column=0, columnspan=2, sticky=tk.NSEW,
+                                                         pady=CONTROL_PAD_Y)
 
     @property
     def _columns(self) -> List[Column]:
@@ -146,13 +160,15 @@ class ResourcesTab(Tab,
 
         self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
                                              on_select_callback=self._on_select_tree_item,
-                                             extract_values=self._extract_values, grid_column=1)
+                                             extract_values=self._extract_values)
+        self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        if not self.__selected_resource:
+            self._hierarchy_tree.grid_forget()
 
+    def __on_model_loaded(self):
+        # TODO: move to other function
         resources_names = self.controller.model.get_all_resources_names()
         self.__resource_combobox['values'] = sorted(resources_names)
-
-        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)  # Show left grid
-        self.__left_top_frame.grid(row=0, column=0, sticky=tk.NSEW)  # Show the combobox
 
     def _destroy_tree(self) -> None:
         self._hierarchy_tree.destroy_()
@@ -166,25 +182,47 @@ class ResourcesTab(Tab,
         self._selected_component = None
         self.__selected_resource = None
         # Hide widgets
-        self.__left_frame.grid_forget()
-        self.__left_top_frame.grid_forget()
-        self.__cmp_label.grid_forget()
-        self.__left_mid_frame.grid_forget()
-        self.__left_bot_frame.grid_forget()
+        self.__produces_spinbox_label.grid_forget()
+        self.__produces_spinbox.grid_forget()
+        self.__all_children_produce_spinbox_label.grid_forget()
+        self.__all_children_produce_spinbox.grid_forget()
+        self.__apply_to_all_children_button.grid_forget()
         # Set entries to default
         self.__resource_combobox['values'] = ()
         self.__resource_combobox_var.set(SELECT_RESOURCE)
         self.__produces_spinbox_var.set('')
         self.__all_children_produce_spinbox_var.set('')
+        # Disable buttons
+        controls_to_disable = [
+            self.__rename_resource_button,
+            self.__remove_resource_button
+        ]
+        change_controls_state(controls_to_disable, state=tk.DISABLED)
 
     # Class-specific
     def __on_combobox_changed(self, _1, _2, _3):
-        if self._hierarchy_tree:
-            res_name = self.__resource_combobox_var.get()
-            resource = self.controller.model.get_resource_by_name(res_name)
-            self.__enable_rename_remove_buttons()
+        res_name = self.__resource_combobox_var.get()
+        resource = self.controller.model.get_resource_by_name(res_name)
+        if resource:
+            # Enable buttons
+            controls_to_enable = [
+                self.__rename_resource_button,
+                self.__remove_resource_button
+            ]
+            change_controls_state(controls_to_enable, state=tk.NORMAL)
             self.__selected_resource = resource
-            self.__update_tree()
+            if self._selected_component:
+                if self._selected_component.is_leaf:
+                    produced = 0
+                    if resource.id_ in self._selected_component.produces:
+                        produced = self._selected_component.produces[self.__selected_resource.id_]
+                    self.__produces_spinbox_var.set(produced)
+                else:
+                    self.__all_children_produce_spinbox_var.set('')
+
+            if self._hierarchy_tree:
+                self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+                self.__update_tree()
 
     def __update_tree(self):
         leaf_cmps = self.controller.model.get_leaf_components()
@@ -198,17 +236,14 @@ class ResourcesTab(Tab,
                 self.__selected_resource = resource
                 self.__resource_combobox['values'] = sorted((*self.__resource_combobox['values'], name))
                 self.__resource_combobox_var.set(name)
-                self.__enable_rename_remove_buttons()
+                # Enable buttons
+                controls_to_enable = [
+                    self.__rename_resource_button,
+                    self.__remove_resource_button
+                ]
+                change_controls_state(controls_to_enable, state=tk.NORMAL)
             except ResourceError as e:
                 messagebox.showerror('Add resource error.', e.message)
-
-    def __enable_rename_remove_buttons(self):
-        self.__rename_resource_button.config(state=tk.NORMAL)
-        self.__remove_resource_button.config(state=tk.NORMAL)
-
-    def __disable_rename_remove_buttons(self):
-        self.__rename_resource_button.config(state=tk.DISABLED)
-        self.__remove_resource_button.config(state=tk.DISABLED)
 
     def __rename_resource(self):
         if self.__selected_resource:
@@ -230,13 +265,23 @@ class ResourcesTab(Tab,
             updated_combobox_values = [val for val in [*self.__resource_combobox['values']] if val != removed_res.name]
             self.__resource_combobox['values'] = updated_combobox_values
             self.__selected_resource = None
-            self.__update_tree()
-            self.__resource_combobox_var.set(SELECT_RESOURCE)
-            self.__disable_rename_remove_buttons()
 
+            self.__resource_combobox_var.set(SELECT_RESOURCE)
+            # Disable buttons
+            controls_to_disable = [
+                self.__rename_resource_button,
+                self.__remove_resource_button
+            ]
+            change_controls_state(controls_to_disable, state=tk.DISABLED)
+            # Hide widgets
             self.__cmp_label.grid_forget()
-            self.__left_mid_frame.grid_forget()
-            self.__left_bot_frame.grid_forget()
+            self.__produces_spinbox_label.grid_forget()
+            self.__produces_spinbox.grid_forget()
+            self.__all_children_produce_spinbox_label.grid_forget()
+            self.__all_children_produce_spinbox.grid_forget()
+            self.__apply_to_all_children_button.grid_forget()
+            if self._hierarchy_tree:
+                self._hierarchy_tree.grid_forget()
 
     def __on_produced_changed(self, _1, _2, _3):
         if self._selected_component and self.__selected_resource:

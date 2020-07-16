@@ -16,5 +16,8 @@ class MainNotebook(BaseFrame,
         self.notebook = ttk.Notebook(self.parent_frame, style='Main.TNotebook')
 
     def _setup_layout(self):
-        self.notebook.grid(row=0, column=0, sticky=tk.E)
+        self.notebook.grid(row=0, column=0, sticky=tk.NSEW)
+        # TODO: necessary?
+        self.notebook.rowconfigure(0, weight=1)
+        self.notebook.columnconfigure(0, weight=1)
 
