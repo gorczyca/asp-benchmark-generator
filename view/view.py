@@ -80,10 +80,13 @@ class View(tk.Frame):
         self.__window_title = window_title
 
     def __set_geometry(self):
-        # screen_width = self.__main_window.winfo_screenwidth()
-        # screen_height = self.__main_window.winfo_screenheight()
-        # self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
-        self.__main_window.wm_state('zoomed')   # TODO: requires tests
+        self.__main_window.wm_attributes('-zoomed', 1)
+        # try:
+        #     self.__main_window.wm_state('zoomed')   # TODO: requires tests / catching exception is a bad solution
+        # except tk.TclError as e:
+        #     screen_width = self.__main_window.winfo_screenwidth()
+        #     screen_height = self.__main_window.winfo_screenheight()
+        #     self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
 
 
 
