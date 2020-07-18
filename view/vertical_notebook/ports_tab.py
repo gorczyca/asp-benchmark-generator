@@ -50,9 +50,9 @@ class PortsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__left_frame = tk.Frame(self.frame)
-        # self.__left_top_frame = tk.Frame(self.__left_frame)
-        # self.__left_bottom_frame = tk.Frame(self.__left_frame)
+        self.__left_frame = ttk.Frame(self.frame)
+        # self.__left_top_frame = ttk.Frame(self.__left_frame)
+        # self.__left_bottom_frame = ttk.Frame(self.__left_frame)
 
         # Ports combobox
         self.__port_combobox_var = tk.StringVar(value=SELECT_PORT)

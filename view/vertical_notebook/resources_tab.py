@@ -47,7 +47,7 @@ class ResourcesTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__left_frame = tk.Frame(self.frame)
+        self.__left_frame = ttk.Frame(self.frame)
         # Resources combobox
         self.__resource_combobox_var = tk.StringVar(value=SELECT_RESOURCE)
         self.__resource_combobox_var.trace('w', self.__on_combobox_changed)

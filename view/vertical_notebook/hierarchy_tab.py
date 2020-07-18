@@ -48,7 +48,7 @@ class HierarchyTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__right_frame = tk.Frame(self.frame)
+        self.__right_frame = ttk.Frame(self.frame)
 
         self.__cmp_name_var = tk.StringVar()
         self.__cmp_name_var.set('COMPONENT')

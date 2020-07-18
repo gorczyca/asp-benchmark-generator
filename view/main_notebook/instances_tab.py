@@ -38,9 +38,9 @@ class InstancesTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__right_frame = tk.Frame(self.frame)
-        self.__set_instances_frame = tk.Frame(self.__right_frame)
-        self.__set_global_symmetry_breaking_frame = tk.Frame(self.__right_frame)
+        self.__right_frame = ttk.Frame(self.frame)
+        self.__set_instances_frame = ttk.Frame(self.__right_frame)
+        self.__set_global_symmetry_breaking_frame = ttk.Frame(self.__right_frame)
 
         self.__global_symmetry_breaking_checkbox_var = tk.BooleanVar(value=True)
         self.__global_symmetry_breaking_checkbox_var.trace('w', self.__on_global_symmetry_breaking_toggled)

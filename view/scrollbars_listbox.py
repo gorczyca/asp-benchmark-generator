@@ -52,7 +52,7 @@ class ScrollbarListbox(ttk.Treeview,
     # HasCommonSetup
     def _create_widgets(self) -> None:
         # TODO: create new widget from this
-        self.__listbox_frame = tk.Frame(self.parent_frame)
+        self.__listbox_frame = ttk.Frame(self.parent_frame)
         self.__listbox_x_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.HORIZONTAL)
         self.__listbox_y_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.VERTICAL)
         self.__listbox = ttk.Treeview(self.__listbox_frame, selectmode=tk.BROWSE, style='Custom.Treeview',

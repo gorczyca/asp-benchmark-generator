@@ -10,9 +10,18 @@ from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.has_controller_access import HasControllerAccess
 from view.scrollbars_listbox import ScrollbarListbox
 from view.simple_constraint_window import SimpleConstraintWindow
+from view.common import change_controls_state
 
 SELECT_COMPONENTS_WINDOW_NAME = 'Complex constraint'
-SELECT_COMPONENTS_WINDOW_SIZE = '1080x720'
+
+CONTROL_PAD_Y = 1.5
+CONTROL_PAD_X = 1.5
+
+FRAME_PAD_Y = 10
+FRAME_PAD_X = 10
+
+WINDOW_WIDTH_RATIO = 0.8
+WINDOW_HEIGHT_RATIO = 0.8
 
 
 class ComplexConstraintWindow(BaseFrame,
@@ -38,16 +47,15 @@ class ComplexConstraintWindow(BaseFrame,
         self.__selected_constraint_consequent: Optional[SimpleConstraint] = None
 
         HasCommonSetup.__init__(self)
+        self.__set_geometry()
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
         self.__window = tk.Toplevel(self.parent_frame)
         self.__window.grab_set()
         self.__window.title(SELECT_COMPONENTS_WINDOW_NAME)
-        self.__window.geometry(SELECT_COMPONENTS_WINDOW_SIZE)
-
         # Name
-        self.__data_frame = tk.Frame(self.__window)
+        self.__data_frame = ttk.Frame(self.__window)
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
         self.__name_entry_label = ttk.Label(self.__data_frame, text='Name:')
         self.__name_entry = ttk.Entry(self.__data_frame, textvariable=self.__name_entry_var)
@@ -57,23 +65,21 @@ class ComplexConstraintWindow(BaseFrame,
         if self.__constraint.description:
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
 
-        self.__implication_frame = tk.Frame(self.__window)
+        self.__implication_frame = ttk.Frame(self.__window)
 
-        self.__antecedent_frame = tk.Frame(self.__implication_frame)
-        self.__consequent_frame = tk.Frame(self.__implication_frame)
+        self.__antecedent_frame = ttk.Frame(self.__implication_frame)
+        self.__consequent_frame = ttk.Frame(self.__implication_frame)
 
         self.__antecedent_listbox = ScrollbarListbox(self.__antecedent_frame, values=self.__antecedent,
                                                      heading='Condition',
                                                      extract_id=lambda ctr: ctr.id_,
                                                      extract_text=lambda ctr: ctr.name,
-                                                     on_select_callback=self.__on_select_antecedent,
-                                                     grid_row=0, grid_column=0, column_span=2)
+                                                     on_select_callback=self.__on_select_antecedent)
         self.__consequent_listbox = ScrollbarListbox(self.__consequent_frame, values=self.__consequent,
                                                      heading='Consequence',
                                                      extract_id=lambda ctr: ctr.id_,
                                                      extract_text=lambda ctr: ctr.name,
-                                                     on_select_callback=self.__on_select_consequent,
-                                                     grid_row=0, grid_column=0, column_span=2)
+                                                     on_select_callback=self.__on_select_consequent)
 
         # Antecedent all/any
         self.__antecedent_all_var = tk.BooleanVar(value=self.__constraint.antecedent_all)
@@ -90,44 +96,48 @@ class ComplexConstraintWindow(BaseFrame,
                                                             value=False, variable=self.__consequent_all_var)
 
         self.__add_antecedent_button = ttk.Button(self.__antecedent_frame, text='Add', command=self.__add_antecedent)
-        self.__edit_antecedent_button = ttk.Button(self.__antecedent_frame, text='Edit', command=self.__edit_antecedent)
-        self.__remove_antecedent_button = ttk.Button(self.__antecedent_frame, text='Remove',
+        self.__edit_antecedent_button = ttk.Button(self.__antecedent_frame, text='Edit', command=self.__edit_antecedent,
+                                                   state=tk.DISABLED)
+        self.__remove_antecedent_button = ttk.Button(self.__antecedent_frame, text='Remove', state=tk.DISABLED,
                                                      command=self.__remove_antecedent)
 
         self.__add_consequent_button = ttk.Button(self.__consequent_frame, text='Add', command=self.__add_consequent)
-        self.__edit_consequent_button = ttk.Button(self.__consequent_frame, text='Edit', command=self.__edit_consequent)
-        self.__remove_consequent_button = ttk.Button(self.__consequent_frame, text='Remove',
+        self.__edit_consequent_button = ttk.Button(self.__consequent_frame, text='Edit', command=self.__edit_consequent,
+                                                   state=tk.DISABLED)
+        self.__remove_consequent_button = ttk.Button(self.__consequent_frame, text='Remove', state=tk.DISABLED,
                                                      command=self.__remove_consequent)
 
         # Buttons frame
-        self.__buttons_frame = tk.Frame(self.__window)
+        self.__buttons_frame = ttk.Frame(self.__window)
         self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
         self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.__window.destroy)
 
     def _setup_layout(self) -> None:
-        self.__data_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=10)
-        self.__name_entry_label.grid(row=0, column=0)
-        self.__name_entry.grid(row=0, column=1)
-        self.__description_text_label.grid(row=0, column=2)
-        self.__description_text.grid(row=0, column=3)
+        self.__data_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
+        self.__name_entry_label.grid(row=0, column=0, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__name_entry.grid(row=0, column=1, sticky=tk.EW, pady=CONTROL_PAD_Y)
+        self.__description_text_label.grid(row=1, column=0, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__description_text.grid(row=1, column=1, sticky=tk.EW, pady=CONTROL_PAD_Y)
 
         self.__implication_frame.grid(row=1, column=0, sticky=tk.NSEW)
-        self.__antecedent_frame.grid(row=0, column=0, sticky=tk.NSEW)
-        self.__consequent_frame.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__antecedent_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
+        self.__consequent_frame.grid(row=0, column=1, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
 
-        self.__antecedent_all_radiobutton.grid(row=1, column=0, sticky=tk.E)
-        self.__antecedent_any_radiobutton.grid(row=1, column=1, sticky=tk.W)
-        self.__add_antecedent_button.grid(row=2, column=0, columnspan=2)
-        self.__edit_antecedent_button.grid(row=3, column=0, columnspan=2)
-        self.__remove_antecedent_button.grid(row=4, column=0, columnspan=2)
+        self.__antecedent_listbox.grid(row=0, column=0, columnspan=4, sticky=tk.NSEW)
+        self.__antecedent_all_radiobutton.grid(row=1, column=1, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__antecedent_any_radiobutton.grid(row=1, column=2, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__add_antecedent_button.grid(row=2, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+        self.__edit_antecedent_button.grid(row=3, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+        self.__remove_antecedent_button.grid(row=4, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
 
-        self.__consequent_all_radiobutton.grid(row=1, column=0, sticky=tk.E)
-        self.__consequent_any_radiobutton.grid(row=1, column=1, sticky=tk.W)
-        self.__add_consequent_button.grid(row=2, column=0, columnspan=2)
-        self.__edit_consequent_button.grid(row=3, column=0, columnspan=2)
-        self.__remove_consequent_button.grid(row=4, column=0, columnspan=2)
+        self.__consequent_listbox.grid(row=0, column=0, columnspan=4, sticky=tk.NSEW)
+        self.__consequent_all_radiobutton.grid(row=1, column=1, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__consequent_any_radiobutton.grid(row=1, column=2, sticky=tk.W, pady=CONTROL_PAD_Y)
+        self.__add_consequent_button.grid(row=2, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+        self.__edit_consequent_button.grid(row=3, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
+        self.__remove_consequent_button.grid(row=4, column=1, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
 
-        self.__buttons_frame.grid(row=2, column=0, sticky=tk.NSEW)
+        self.__buttons_frame.grid(row=2, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
         self.__ok_button.grid(row=0, column=0, sticky=tk.E)
         self.__cancel_button.grid(row=0, column=1, sticky=tk.W)
 
@@ -141,18 +151,16 @@ class ComplexConstraintWindow(BaseFrame,
         self.__antecedent_frame.rowconfigure(0, weight=1)
         self.__antecedent_frame.columnconfigure(0, weight=1)
         self.__antecedent_frame.columnconfigure(1, weight=1)
+        self.__antecedent_frame.columnconfigure(2, weight=1)
+        self.__antecedent_frame.columnconfigure(3, weight=1)
         self.__consequent_frame.rowconfigure(0, weight=1)
         self.__consequent_frame.columnconfigure(0, weight=1)
         self.__consequent_frame.columnconfigure(1, weight=1)
+        self.__consequent_frame.columnconfigure(2, weight=1)
+        self.__consequent_frame.columnconfigure(3, weight=1)
 
         self.__buttons_frame.columnconfigure(0, weight=1)
         self.__buttons_frame.columnconfigure(1, weight=1)
-
-        # Hide widgets
-        self.__edit_antecedent_button.grid_forget()
-        self.__remove_antecedent_button.grid_forget()
-        self.__edit_consequent_button.grid_forget()
-        self.__remove_consequent_button.grid_forget()
 
     def __ok(self):
         # Update constraint values
@@ -160,6 +168,7 @@ class ComplexConstraintWindow(BaseFrame,
         if name in self.__check_name_with:
             messagebox.showerror('Add constraint error.', f'Constraint {name} already exists.')
             return
+        # TODO: check required fields
         self.__constraint.name = name
         self.__constraint.description = self.__description_text.get(1.0, tk.END)
         self.__constraint.antecedent = self.__antecedent
@@ -172,15 +181,19 @@ class ComplexConstraintWindow(BaseFrame,
 
     def __on_select_antecedent(self, id_: int) -> None:
         self.__selected_antecedent = next((a for a in self.__antecedent if a.id_ == id_), None)
-        # Show widgets
-        self.__edit_antecedent_button.grid(row=3, column=0, columnspan=2)
-        self.__remove_antecedent_button.grid(row=4, column=0, columnspan=2)
+        # Enable widgets
+        change_controls_state([
+            self.__edit_antecedent_button,
+            self.__remove_antecedent_button
+        ], tk.NORMAL)
 
     def __on_select_consequent(self, id_: int) -> None:
         self.__selected_consequent = next((c for c in self.__consequent if c.id_ == id_), None)
-        # Show widgets
-        self.__edit_consequent_button.grid(row=3, column=0, columnspan=2)
-        self.__remove_consequent_button.grid(row=4, column=0, columnspan=2)
+        # Enable widgets
+        change_controls_state([
+            self.__edit_consequent_button,
+            self.__remove_consequent_button
+        ], tk.NORMAL)
 
     def __add_antecedent(self):
         ant_names = [a.name for a in self.__antecedent]
@@ -206,8 +219,11 @@ class ComplexConstraintWindow(BaseFrame,
             self.__antecedent.remove(self.__selected_antecedent)
             self.__antecedent_listbox.remove_item(self.__selected_antecedent)
             self.__selected_antecedent = None
-            self.__edit_antecedent_button.grid_forget()
-            self.__remove_antecedent_button.grid_forget()
+            # Disable widgets
+            change_controls_state([
+                self.__edit_antecedent_button,
+                self.__remove_antecedent_button
+            ], tk.DISABLED)
 
     def __add_consequent(self):
         con_names = [c.name for c in self.__consequent]
@@ -233,8 +249,20 @@ class ComplexConstraintWindow(BaseFrame,
             self.__consequent.remove(self.__selected_consequent)
             self.__consequent_listbox.remove_item(self.__selected_consequent)
             self.__selected_consequent = None
-            self.__edit_consequent_button.grid_forget()
-            self.__remove_consequent_button.grid_forget()
+            change_controls_state([
+                self.__edit_consequent_button,
+                self.__remove_consequent_button
+            ], tk.DISABLED)
+
+    def __set_geometry(self):
+        screen_width = self.__window.winfo_screenwidth()
+        screen_height = self.__window.winfo_screenheight()
+        window_width = round(screen_width * WINDOW_WIDTH_RATIO)
+        window_height = round(screen_height * WINDOW_HEIGHT_RATIO)
+        x_pos = round((screen_width - window_width) / 2)
+        y_pos = round((screen_height - window_height) / 2)
+        self.__window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
+
 
 
 

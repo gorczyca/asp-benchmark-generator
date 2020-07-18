@@ -43,7 +43,7 @@ class CreateHierarchyWindow(BaseFrame,
         self.window.grab_set()
         self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
 
-        self.text_frame = tk.Frame(self.window)
+        self.text_frame = ttk.Frame(self.window)
         self.x_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.HORIZONTAL)
         self.y_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.VERTICAL)
         self.text = tk.Text(self.text_frame, wrap=tk.NONE, font=style.FONT_BOLD,
@@ -62,14 +62,14 @@ class CreateHierarchyWindow(BaseFrame,
 
         self.label = ttk.Label(self.window, text=EDIT_HIERARCHY_LABEL_TEXT, anchor=tk.W)
 
-        self.buttons_frame = tk.Frame(self.window)
+        self.buttons_frame = ttk.Frame(self.window)
         self.ok_button = ttk.Button(self.buttons_frame, text='Ok', command=self.__ok)
         self.cancel_button = ttk.Button(self.buttons_frame, text='Cancel', command=self.window.destroy)
 
     def _setup_layout(self):
-        self.label.grid(row=0, column=0, sticky=tk.NSEW, padx=5, pady=5)
+        self.label.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
 
-        self.text_frame.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW)
+        self.text_frame.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
         self.text_frame.columnconfigure(0, weight=1)
         self.text_frame.rowconfigure(0, weight=1)
 

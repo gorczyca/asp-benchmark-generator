@@ -5,8 +5,10 @@ from tkinter import ttk
 PARENT_THEME = 'alt'
 # PARENT_THEME = 'radiance'
 STYLE_NAME = 'CUSTOM_STYLE'
+DARK_THEME = 'DARK_STYLE'
 
 ACTIVE_COLOR = '#dF4F1F'
+ACTIVE_COLOR_2 = 'black'
 HOVER_COLOR = 'green'
 FONT_TYPE = 'Arial'
 
@@ -50,8 +52,34 @@ class CustomTheme(ttk.Style):
                         }
 
             })
+        self.style.theme_create(DARK_THEME, parent=STYLE_NAME, settings={
+            '.': {'configure': {'font': FONT}},  # TODO: it is too general
+            'Big.TLabel': {'configure': {'font': BIG_FONT_BOLD}},
+            'Bold.TLabel': {'configure': {'font': FONT_BOLD}},
+            'Medium.Bold.TLabel': {'configure': {'font': MEDIUM_FONT_BOLD}},
+            "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns'}},
+            "Vertical.TNotebook.Tab": {"configure": {'width': 12, 'padding': [30, 30], 'borderwidth': 3,
+                                                     'focuscolor': "#dd4814", 'font': BIG_FONT},
+                                       # usuwa tę brzydką ramkę
+                                       "map": {"background": [("selected", ACTIVE_COLOR_2)],
+                                               'font': [('selected', BIG_FONT_BOLD)],
+                                               "expand": [("selected", [1, 1, 1, 0])],
+                                               'foreground': [("selected", 'white')]}},
+            'Main.TNotebook.Tab': {'configure': {'width': 10, 'padding': [5, 5]}},
+            'Custom.Treeview': {'configure': {'highlightthickness': 0, 'bd': 0, 'font': ('Arial', 11)}},
+            'Custom.Treeview.Heading': {'configure': {'font': ('Arial', 13, 'bold')}},
+            # 'TButton': {'map': {'highlightbackground': ACTIVE_COLOR}}
+            # 'TButton': {'configure': {'padding': [50, 0, 50, 0], 'border': '10', 'borderwidth': 100, 'relief': tk.SOLID},
+            'TButton': {'configure': {'padding': [30, 0, 30, 0], 'relief': tk.SOLID},
+                        # 'map': {'foreground': [('pressed', 'white'), ('active', 'blue')],
+                        'map': {'foreground': [('pressed', 'black')],
+                                'background': [('pressed', '!disabled', ACTIVE_COLOR), ('active', 'white')],
+                                 #'font': [('active', FONT_BOLD)]},
+                                }
+                        },
+            'TFrame': {'configure': ''}
 
-        # self.style.layout("Custom.Treeview", [('Custom.Treeview.treearea', {'sticky': 'nswe'})])  # Remove the borders
+        })
 
     def use(self):
-        self.style.theme_use(STYLE_NAME)
+        self.style.theme_use(DARK_THEME)

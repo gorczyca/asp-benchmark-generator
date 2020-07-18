@@ -1,6 +1,6 @@
 import tkinter as tk
+from tkinter import ttk
 from typing import Optional
-
 
 from pubsub import pub
 
@@ -22,14 +22,14 @@ WINDOW_TITLE = 'Benchmark Generator'
 UNSAVED_CHANGES_SYMBOL = '*'
 
 
-class View(tk.Frame):
+class View(ttk.Frame):
     """Class holds all references for widgets.
 
     Attributes:
         __menu:
     """
     def __init__(self, controller, main_window, *args, **kwargs):
-        tk.Frame.__init__(self, main_window, *args, **kwargs)
+        ttk.Frame.__init__(self, main_window, *args, **kwargs)
         self.__controller = controller
         self.__main_window = main_window
 
@@ -80,13 +80,15 @@ class View(tk.Frame):
         self.__window_title = window_title
 
     def __set_geometry(self):
-        self.__main_window.wm_attributes('-zoomed', 1)
-        # try:
-        #     self.__main_window.wm_state('zoomed')   # TODO: requires tests / catching exception is a bad solution
-        # except tk.TclError as e:
-        #     screen_width = self.__main_window.winfo_screenwidth()
-        #     screen_height = self.__main_window.winfo_screenheight()
-        #     self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
+        try:
+            self.__main_window.wm_state('zoomed')   # TODO: requires tests / catching exception is a bad solution
+        except tk.TclError as e:
+            try:
+                self.__main_window.wm_attributes('-zoomed', 1)
+            except tk.TclError as e:
+                screen_width = self.__main_window.winfo_screenwidth()
+                screen_height = self.__main_window.winfo_screenheight()
+                self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
 
 
 

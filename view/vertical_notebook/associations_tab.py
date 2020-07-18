@@ -43,7 +43,7 @@ class AssociationsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__left_frame = tk.Frame(self.frame, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+        self.__left_frame = ttk.Frame(self.frame, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
         self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var,

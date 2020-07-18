@@ -48,38 +48,38 @@ class SelectPortsWindow(BaseFrame,
                                                      extract_text=lambda prt: prt.name,
                                                      on_select_callback=self.__on_select_listbox_left,
                                                      columns=[Column('#0', 'Port', stretch=tk.YES)])
-        self.__mid_frame = tk.Frame(self.__window)
+        self.__mid_frame = ttk.Frame(self.__window)
 
         self.__remove_port_button = ttk.Button(self.__mid_frame, text='<<', command=self.__remove_from_selected)
         self.__add_port_button = ttk.Button(self.__mid_frame, text='>>', command=self.__add_to_selected)
 
-        self.__right_frame = tk.Frame(self.__window)
-        self.__selected_ports_label = ttk.Label(self.__right_frame, text='Selected ports:', style='Big.TLabel',
-                                                anchor=tk.CENTER)
+        self.__right_frame = ttk.Frame(self.__window)
+        # self.__selected_ports_label = ttk.Label(self.__right_frame, text='Selected ports:', style='Big.TLabel',
+        #                                        anchor=tk.CENTER)
         self.__ports_right_listbox = ScrollbarListbox(self.__right_frame, values=self.__ports_right,
                                                       extract_id=lambda prt: prt.id_,
                                                       extract_text=lambda prt: prt.name,
                                                       on_select_callback=self.__on_select_listbox_right,
-                                                      columns=[Column('#0', 'Port', stretch=tk.YES)])
-        self.__buttons_frame = tk.Frame(self.__right_frame)
+                                                      columns=[Column('#0', 'Selected ports', stretch=tk.YES)])
+        self.__buttons_frame = ttk.Frame(self.__right_frame)
         self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
         self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.__window.destroy)
 
     def _setup_layout(self) -> None:
         self.__ports_left_listbox.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
         self.__mid_frame.grid(row=0, column=1)
-        self.__remove_port_button.grid(row=1, column=0)
-        self.__add_port_button.grid(row=2, column=0)
+        self.__remove_port_button.grid(row=1, column=0, pady=CONTROL_PAD_Y)
+        self.__add_port_button.grid(row=2, column=0, pady=CONTROL_PAD_Y)
 
         self.__right_frame.grid(row=0, column=2, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
-        self.__selected_ports_label.grid(row=0, column=0, sticky=tk.EW, pady=CONTROL_PAD_Y)
-        self.__ports_right_listbox.grid(row=1, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        # self.__selected_ports_label.grid(row=0, column=0, sticky=tk.EW, pady=CONTROL_PAD_Y)
+        self.__ports_right_listbox.grid(row=0, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__buttons_frame.grid(row=2, column=0, sticky=tk.NSEW)
         self.__ok_button.grid(row=0, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__cancel_button.grid(row=0, column=1, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
         self.__right_frame.grid_columnconfigure(0, weight=1)
-        self.__right_frame.grid_rowconfigure(1, weight=1)
+        self.__right_frame.grid_rowconfigure(0, weight=1)
 
         self.__window.rowconfigure(0, weight=1)
         self.__window.columnconfigure(0, weight=2, uniform='fred')
