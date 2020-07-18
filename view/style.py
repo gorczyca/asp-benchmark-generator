@@ -22,6 +22,9 @@ MEDIUM_FONT_BOLD = (FONT_TYPE, 15, 'bold')
 VERTICAL_TAB_HEIGHT = 720
 VERTICAL_TAB_WIDTH = 1080
 
+FRAME_PAD_X = 10
+FRAME_PAD_Y = 10
+
 
 class CustomTheme(ttk.Style):
     def __init__(self, master=None):
@@ -77,7 +80,7 @@ class CustomTheme(ttk.Style):
                                  #'font': [('active', FONT_BOLD)]},
                                 }
                         },
-            'TFrame': {'configure': ''}
+            'TFrame': {'configure': {'padding': [FRAME_PAD_Y, FRAME_PAD_X]}}
 
         })
 
