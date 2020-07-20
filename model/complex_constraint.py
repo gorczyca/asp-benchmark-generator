@@ -19,3 +19,13 @@ class ComplexConstraint:
         self.consequent: List[SimpleConstraint] = consequent if consequent is not None else []
         self.consequent_all: bool = consequent_all
 
+    @classmethod
+    def from_json(cls, data):
+        """Necessary to create an instance from JSON"""
+        # Convert dictionary to object
+        antecedent = [] if not data['antecedent'] else list(map(SimpleConstraint.from_json, data['antecedent']))
+        data['antecedent'] = antecedent
+        consequent = [] if not data['consequent'] else list(map(SimpleConstraint.from_json, data['consequent']))
+        data['consequent'] = consequent
+        return cls(**data)
+

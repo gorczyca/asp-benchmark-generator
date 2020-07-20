@@ -12,7 +12,8 @@ from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.hierarchy_tree import HierarchyTree
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
-from view.style import FONT
+from view import style
+
 
 SELECT_COMPONENTS_WINDOW_NAME = 'Simple constraint'
 
@@ -48,7 +49,7 @@ class SimpleConstraintWindow(BaseFrame,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__window = tk.Toplevel(self.parent_frame)
+        self.__window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
         self.__window.grab_set()
         self.__window.title(SELECT_COMPONENTS_WINDOW_NAME)
 
@@ -74,10 +75,10 @@ class SimpleConstraintWindow(BaseFrame,
         # Name
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
         self.__name_entry_label = ttk.Label(self.__right_frame, text='Name:')
-        self.__name_entry = ttk.Entry(self.__right_frame, textvariable=self.__name_entry_var, font=FONT)
+        self.__name_entry = ttk.Entry(self.__right_frame, textvariable=self.__name_entry_var, font=style.FONT)
         # Description
         self.__description_text_label = ttk.Label(self.__right_frame, text='Description:')
-        self.__description_text = tk.Text(self.__right_frame, height=2, font=FONT)
+        self.__description_text = tk.Text(self.__right_frame, height=2, font=style.FONT)
         if self.__constraint.description:
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
 

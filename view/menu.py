@@ -1,6 +1,6 @@
 import ntpath
 import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from pubsub import pub
 
@@ -9,6 +9,7 @@ from model.helpers import json_converter
 from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.base_frame import BaseFrame
 import code_generator.code_generator as gen
+from view import style
 
 JSON_EXTENSION = '.json'
 LP_EXTENSION = '.lp'
@@ -19,9 +20,9 @@ class Menu(BaseFrame, HasControllerAccess):
         BaseFrame.__init__(self, parent_frame)
         HasControllerAccess.__init__(self, parent)
 
-        self.__menu = tk.Menu(parent_frame, *args, **kwargs)
+        self.__menu = tk.Menu(parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY, *args, **kwargs)   # Cannot change it on Windows / OSX
 
-        file_menu = tk.Menu(tearoff=0)
+        file_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
         file_menu.add_command(label='New', command=self.__new)
         file_menu.add_separator()
         file_menu.add_command(label='Open', command=self.__open)
@@ -29,9 +30,9 @@ class Menu(BaseFrame, HasControllerAccess):
         file_menu.add_command(label='Save as...', command=self.__save_as)
 
         # TODO: finish the rest
-        edit_menu = tk.Menu(tearoff=0)
-        help_menu = tk.Menu(tearoff=0)
-        about_menu = tk.Menu(tearoff=0)
+        edit_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
+        help_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
+        about_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
 
         self.__menu.add_cascade(label='File', menu=file_menu)
         self.__menu.add_cascade(label='Edit', menu=edit_menu)
@@ -45,7 +46,8 @@ class Menu(BaseFrame, HasControllerAccess):
         # TODO:
         root_name = simpledialog.askstring('Enter root name', f'Enter name for root component.')
         if root_name:
-            code = gen.generate_code(self.controller.model, root_name)
+            code, instances_dictionary = gen.generate_code(self.controller.model, root_name)
+            self.controller.instances_dictionary = instances_dictionary
             file = filedialog.asksaveasfile(mode='w', defaultextension=LP_EXTENSION)
             if file is not None:  # TODO: czy to potrzebne
                 file.write(code)
@@ -87,7 +89,7 @@ class Menu(BaseFrame, HasControllerAccess):
             self.controller.model = model
             file_name = Menu.__extract_file_name(file.name)
             pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
-            pub.sendMessage(actions.HIERARCHY_CREATED)
+            pub.sendMessage(actions.MODEL_LOADED)
 
     def __save(self):
         json_string = json_converter.model_to_json(self.controller.model)

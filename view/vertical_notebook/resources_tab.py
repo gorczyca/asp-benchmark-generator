@@ -110,6 +110,7 @@ class ResourcesTab(Tab,
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
+        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
         pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
         pub.subscribe(self._build_tree, actions.HIERARCHY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
@@ -166,9 +167,9 @@ class ResourcesTab(Tab,
             self._hierarchy_tree.grid_forget()
 
     def __on_model_loaded(self):
-        # TODO: move to other function
         resources_names = self.controller.model.get_all_resources_names()
         self.__resource_combobox['values'] = sorted(resources_names)
+        self._build_tree()
 
     def _destroy_tree(self) -> None:
         self._hierarchy_tree.destroy_()

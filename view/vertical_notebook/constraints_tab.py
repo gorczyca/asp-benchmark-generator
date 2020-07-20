@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Optional, Any
 
+from pubsub import pub
+
 from exceptions import ConstraintError
 from model.simple_constraint import SimpleConstraint
 from view.abstract.has_common_setup import HasCommonSetup
@@ -14,8 +16,10 @@ from view.scrollbars_listbox import ScrollbarListbox
 from view.simple_constraint_window import SimpleConstraintWindow
 from view.tree_view_column import Column
 from view.common import trim_string, change_controls_state
+import actions
 
 TAB_NAME = 'Constraints'
+LABEL_LENGTH = 15
 
 CONTROL_PAD_Y = 3
 
@@ -72,7 +76,7 @@ class ConstraintsTab(Tab,
         self.frame.rowconfigure(0, weight=1)
 
     def _subscribe_to_listeners(self) -> None:
-        pass
+        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
 
     def _reset(self) -> None:
         pass
@@ -81,7 +85,7 @@ class ConstraintsTab(Tab,
         selected_ctr: Any = self.controller.model.get_constraint_by_id(ctr_id)
         if selected_ctr:    # TODO: should be unnecesary
             self.__selected_constraint = selected_ctr
-            self.__ctr_label_var.set(trim_string(selected_ctr.name))
+            self.__ctr_label_var.set(trim_string(selected_ctr.name, length=LABEL_LENGTH))
             # Enable buttons
             change_controls_state([
                 self.__edit_constraint_button,
@@ -95,7 +99,7 @@ class ConstraintsTab(Tab,
             self.__constraints_listbox.add_item(ctr, index=index)
             # Set selected constraint to the newly created constraint
             self.__selected_constraint = ctr
-            self.__ctr_label_var.set(trim_string(ctr.name))
+            self.__ctr_label_var.set(trim_string(ctr.name, length=LABEL_LENGTH))
             # Enable buttons
             change_controls_state([
                 self.__edit_constraint_button,
@@ -109,7 +113,7 @@ class ConstraintsTab(Tab,
         index = self.controller.model.get_constraint_index(ctr)     # TODO: check, does it work?
         self.__constraints_listbox.rename_item(ctr, index=index)    # If name has changed
         # Update constraint label
-        self.__ctr_label_var.set(trim_string(ctr.name))
+        self.__ctr_label_var.set(trim_string(ctr.name, length=LABEL_LENGTH))
 
     def __add_constraint(self, complex_=False):
         ctr_names = [c.name for c in self.controller.model.get_all_constraints()]
@@ -139,3 +143,7 @@ class ConstraintsTab(Tab,
                 self.__edit_constraint_button,
                 self.__remove_constraint_button
             ], state=tk.DISABLED)
+
+    def __on_model_loaded(self):
+        ctrs = self.controller.model.get_all_constraints()
+        self.__constraints_listbox.set_items(ctrs)

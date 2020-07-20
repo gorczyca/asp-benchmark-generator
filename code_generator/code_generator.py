@@ -52,7 +52,7 @@ def generate_code(model: Model, root_name: str):
     ports_def = __generate_ports_ontology_definitions()
     ports_code = __generate_ports_code(model)
     simple_constraints_code, complex_constraints_code = __generate_constraints_code(model, root_name)
-    instances_code = __generate_instances_code(model)
+    instances_code, instances_dictionary = __generate_instances_code(model, root_name)
 
     return f'{info} \n{root_code}' \
            f'\n%\n% Hierarchy ontology definitions\n%\n{hierarchy_def}\n%\n% Component hierarchy\n%\n{hierarchy_code}' \
@@ -61,7 +61,7 @@ def generate_code(model: Model, root_name: str):
            f'\n%\n% Ports ontology definitions\n%\n{ports_def}\n%\n% Ports\n%\n{ports_code}' \
            f'\n%\n% Constraints\n%\n%\n% Simple constraints\n%\n{simple_constraints_code}' \
            f'\n%\n% Complex constraints\n%\n{complex_constraints_code}' \
-           f'\n%\n% Instances\n%\n{instances_code}'
+           f'\n%\n% Instances\n%\n{instances_code}', instances_dictionary
 
 
 def __generate_code_info():
@@ -121,7 +121,7 @@ def __generate_associations_code(model: Model, root_name: str) -> str:
 
 def __generate_resources_ontology_definitions() -> str:
     definitions = ''
-    definitions += f'{RES_SYMBOL}({RES_VARIABLE}), #sum {{{M_VARIABLE}, {CMP_VARIABLE} : ' \
+    definitions += f':- {RES_SYMBOL}({RES_VARIABLE}), #sum {{{M_VARIABLE}, {CMP_VARIABLE} : ' \
                    f'{PRD_SYMBOL}({CMP_VARIABLE}, {RES_VARIABLE}, {M_VARIABLE}), {IN_SYMBOL}({CMP_VARIABLE}) }} < 0.\n'
     return definitions
 
@@ -129,7 +129,8 @@ def __generate_resources_ontology_definitions() -> str:
 def __generate_resource_code(model: Model) -> str:
     res_code = ''
     for r in model.resources:
-        res_code += f'{RES_SYMBOL}({RES_VARIABLE}) :- {r.name}({RES_VARIABLE}).{NEWLINE_SYMBOL}'
+        res_code += f'{RES_SYMBOL}({RES_VARIABLE}) :- {r.name}({RES_VARIABLE}).\n'
+        res_code += f'{r.name}("{r.name}").\n\n'
     for c in model.hierarchy:
         if c.produces:
             for res_id, amount in c.produces.items():
@@ -200,26 +201,36 @@ def __generate_constraints_ontology_definitions() -> str:
 def __generate_simple_constraint_distinct_partial_code(ctr: SimpleConstraint, model: Model) -> str:
     ctr_code = ''
     components = model.get_components_by_ids(ctr.components_ids)
+    components_count = len(components)
     for i, cmp in enumerate(components):
         var_no = i + 2
-        ctr_code += f'{cmp.name} : {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}), {cmp.name}({var_no});\n'
+        ctr_code += f'\t{cmp.name} : {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}), {cmp.name}({var_no})'
+        if i == components_count-1:
+            ctr_code += '\n' # Do not put the ';' sign after last part
+        else:
+            ctr_code += ';\n'
     min_ = '' if not ctr.min_ else ctr.min_
     max_ = '' if not ctr.max_ else ctr.max_
     # C1 is always reserved for the root component
-    ctr_code = f'{min_} {COUNT_DIRECTIVE} {{ \n{ctr_code} }} {max_}'
+    ctr_code = f'{min_} {COUNT_DIRECTIVE} {{\n{ctr_code}}} {max_}'
     return ctr_code
 
 
 def __generate_simple_constraint_partial_code(ctr: SimpleConstraint, model: Model) -> str:
     ctr_code = ''
     components = model.get_components_by_ids(ctr.components_ids)
+    components_count = len(components)
     for i, cmp in enumerate(components):
         var_no = i + 2
-        ctr_code += f'{PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}) : {cmp.name}({CMP_VARIABLE}{var_no});\n'
+        ctr_code += f'\t{PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}) : {cmp.name}({CMP_VARIABLE}{var_no})'
+        if i == components_count-1:
+            ctr_code += '\n'  # Do not put the ';' sign after last part
+        else:
+            ctr_code += ';\n'
     min_ = '' if not ctr.min_ else ctr.min_
     max_ = '' if not ctr.max_ else ctr.max_
     # C1 is always reserved for the root component
-    ctr_code = f'{min_} {{ \n{ctr_code} }} {max_}'
+    ctr_code = f'{min_} {{\n{ctr_code}}} {max_}'
     return ctr_code
 
 
@@ -228,7 +239,7 @@ def __generate_simple_constraints_code(model: Model, root_name: str) -> str:
     for ctr in model.simple_constraints:
         partial_ctr_code = __generate_simple_constraint_distinct_partial_code(ctr, model) if ctr.distinct \
             else __generate_simple_constraint_partial_code(ctr, model)
-        ctrs_code += f'{root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_SYMBOL} {partial_ctr_code}.\n'
+        ctrs_code += f':- {root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_SYMBOL} {partial_ctr_code}.\n'
     return ctrs_code
 
 
@@ -258,7 +269,7 @@ def __generate_complex_constraints_code(model: Model, root_name: str) -> str:
         antecedent_complete_code = __generate_implication_complete_part(antecedent_head, antecedents_heads, ctr.antecedent_all)
         consequent_head = f'{ctr.name.replace(" ", "_")}_consequent'
         consequent_complete_code = __generate_implication_complete_part(consequent_head, consequents_heads, ctr.consequent_all)
-        complete_implication = f'{antecedent_head}, {DEFAULT_NEGATION_SYMBOL} {consequent_head}.'
+        complete_implication = f'{antecedent_head}, {DEFAULT_NEGATION_SYMBOL} {consequent_head}.\n'
         # TODO: add comments to generated code
         ctrs_code += f'{antecedents_code}\n' \
                      f'{consequents_code}\n' \
@@ -286,16 +297,20 @@ def __generate_instances_with_symmetry_breaking(cmp: Component, offset: int) -> 
     return cmp_instance_code
 
 
-def __generate_instances_code(model: Model) -> str:
+def __generate_instances_code(model: Model, root_name: str) -> str:
     inst_code = ''
+    inst_dict = {range(1): root_name}   # Initialize with root with no = 0
+    inst_code += f'{root_name}(0).\t% ROOT\n\n'
     offset = 0
     for cmp in model.get_leaf_components():
         if cmp.count:
+            inst_dict[range(offset+1, offset+cmp.count)] = cmp.name
             cmp_instance_code = __generate_instances_with_symmetry_breaking(cmp, offset) if cmp.symmetry_breaking \
                 else f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
+            cmp_instance_code += '\n'
             inst_code += cmp_instance_code
             offset += cmp.count
-    return inst_code
+    return inst_code, inst_dict
 
 
 

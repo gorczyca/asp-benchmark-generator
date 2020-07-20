@@ -43,7 +43,7 @@ class AssociationsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__left_frame = ttk.Frame(self.frame, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+        self.__left_frame = ttk.Frame(self.frame)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
         self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var,
@@ -103,6 +103,8 @@ class AssociationsTab(Tab,
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
+        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
+        # TODO:
         pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
         pub.subscribe(self._build_tree, actions.HIERARCHY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
@@ -124,7 +126,7 @@ class AssociationsTab(Tab,
             self.__disable_widgets()
             self.__has_association_checkbox_var.set(False)
         self.__cmp_label_var.set(selected_cmp.name)
-        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW)
+        self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X) # show
 
     @property
     def _columns(self) -> List[Column]:
@@ -141,6 +143,9 @@ class AssociationsTab(Tab,
             min_ = cmp.association.min_ if cmp.association.min_ is not None else ''
             max_ = cmp.association.max_ if cmp.association.max_ is not None else ''
         return has_association, min_, max_
+
+    def __on_model_loaded(self):
+        self._build_tree()
 
     def _build_tree(self) -> None:
         if self._hierarchy_tree:

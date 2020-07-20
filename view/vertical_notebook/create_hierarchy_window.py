@@ -39,7 +39,7 @@ class CreateHierarchyWindow(BaseFrame,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.window = tk.Toplevel(self.parent_frame)
+        self.window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
         self.window.grab_set()
         self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
 

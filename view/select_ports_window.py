@@ -8,6 +8,7 @@ from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.has_controller_access import HasControllerAccess
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
+from view import style
 
 SELECT_PORTS_WINDOW_NAME = 'Select ports to be compatible with {0}'
 SELECT_PORTS_WINDOW_SIZE = '1080x720'
@@ -35,7 +36,7 @@ class SelectPortsWindow(BaseFrame,
         self.__selected_port_left: Optional[Port] = None
         self.__selected_port_right: Optional[Port] = None
 
-        self.__window = tk.Toplevel(self.parent_frame)
+        self.__window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
         self.__window.grab_set()
         self.__window.title(SELECT_PORTS_WINDOW_NAME.format(selected_port.name))
         self.__set_geometry()

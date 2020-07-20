@@ -1,4 +1,4 @@
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Dict, Any
 import tkinter as tk
 
 from model.model import Model
@@ -22,6 +22,7 @@ class Controller:
 
         self.file: Optional[TextIO] = None
         self.saved: bool = True
+        self.instances_dictionary: Optional[Dict[Any, str]] = None
 
     @property
     def model(self): return self.__model

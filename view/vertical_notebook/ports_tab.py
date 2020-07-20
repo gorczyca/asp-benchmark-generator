@@ -193,10 +193,10 @@ class PortsTab(Tab,
         if not self.__selected_port:    # If no port is selected
             self._hierarchy_tree.grid_forget()  # Hide the tree
 
-    # TODO:
     def __on_model_loaded(self):
         ports_names = self.controller.model.get_all_ports_names()
         self.__port_combobox['values'] = sorted(ports_names)
+        self._build_tree()
 
     def _destroy_tree(self) -> None:
         pass
@@ -262,6 +262,8 @@ class PortsTab(Tab,
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self) -> None:
+        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
+        # TODO:
         pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
         pub.subscribe(self._build_tree, actions.HIERARCHY_EDITED)   # TODO: are both necessary?
         pub.subscribe(self._reset, actions.RESET)

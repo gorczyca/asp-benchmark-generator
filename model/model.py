@@ -43,6 +43,8 @@ class Model:
         data['hierarchy'] = list(map(Component.from_json, data['hierarchy']))
         data['resources'] = list(map(Resource.from_json, data['resources']))    # Convert dictionary to object
         data['ports'] = list(map(Port.from_json, data['ports']))
+        data['simple_constraints'] = list(map(SimpleConstraint.from_json, data['simple_constraints']))
+        data['complex_constraints'] = list(map(ComplexConstraint.from_json, data['complex_constraints']))
         return cls(**data)  # TODO: better
 
     # Hierarchy
@@ -193,6 +195,36 @@ class Model:
                 edited_cmps.append(c)
         return edited_cmps
 
+    # Instances
+    def set_instances_count_of_all_components_children(self, cmp: Component, count: int) -> List[Component]:
+        """
+        # TODO:
+        :param cmp:
+        :param count:
+        :return:
+        """
+        def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
+            # TODO: take it outside
+            """Returns an array of Component children that are leaves (obtained recursively)
+
+            :param cmp_: Current component to check whether is a leaf or not
+            :param hierarchy_: Hierarchy of all components
+            :param leaves_: Current list of leaves
+            """
+            # TODO: take this function out, to be able to get to component's children from anywhere
+            if cmp_.is_leaf:
+                leaves_.append(cmp_)
+            else:
+                for c_ in hierarchy_:
+                    if c_.parent_id == cmp_.id_:
+                        __get_components_leaf_children(c_, hierarchy_, leaves_)
+
+        leaf_children = []
+        __get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        for c in leaf_children:
+            c.count = count
+        return leaf_children
+
     # Resources
     def get_all_resources_names(self) -> List[str]:
         """Returns a list with all resources names."""
@@ -287,6 +319,7 @@ class Model:
         :returns: List of Component's children that are leaves.
         """
         def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
+            # TODO: take it outside
             """Returns an array of Component children that are leaves (obtained recursively)
 
             :param cmp_: Current component to check whether is a leaf or not

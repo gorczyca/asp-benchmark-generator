@@ -11,6 +11,7 @@ from view.abstract.has_controller_access import HasControllerAccess
 from view.scrollbars_listbox import ScrollbarListbox
 from view.simple_constraint_window import SimpleConstraintWindow
 from view.common import change_controls_state
+from view import style
 
 SELECT_COMPONENTS_WINDOW_NAME = 'Complex constraint'
 
@@ -51,7 +52,7 @@ class ComplexConstraintWindow(BaseFrame,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__window = tk.Toplevel(self.parent_frame)
+        self.__window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
         self.__window.grab_set()
         self.__window.title(SELECT_COMPONENTS_WINDOW_NAME)
         # Name

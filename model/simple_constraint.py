@@ -18,3 +18,8 @@ class SimpleConstraint:
         self.contains: bool = contains    # TODO: remove (should be unnecessary)
         self.distinct: bool = distinct
 
+    @classmethod
+    def from_json(cls, data):
+        """Necessary to create an instance from JSON"""
+        return cls(**data)
+

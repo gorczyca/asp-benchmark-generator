@@ -25,6 +25,15 @@ VERTICAL_TAB_WIDTH = 1080
 FRAME_PAD_X = 10
 FRAME_PAD_Y = 10
 
+BACKGROUND_COLOR_PRIMARY = '#f5f6fa'
+BACKGROUND_COLOR_SECONDARY = '#ffffff'
+
+ADDITIONAL_COLOR_PRIMARY = '#0A3D62'
+ADDITIONAL_COLOR_SECONDARY = '#0A3D62'
+
+FONT_COLOR_PRIMARY = '#2c3e50'
+FONT_COLOR_SECONDARY = '#f5f6fa'
+
 
 class CustomTheme(ttk.Style):
     def __init__(self, master=None):
@@ -52,7 +61,7 @@ class CustomTheme(ttk.Style):
                         'map': {'foreground': [('pressed', 'white')],
                                 'background': [('pressed', '!disabled', ACTIVE_COLOR), ('active', 'white')],
                                 'font': [('active', FONT_BOLD)]},
-                        }
+                        },
 
             })
         self.style.theme_create(DARK_THEME, parent=STYLE_NAME, settings={
@@ -60,28 +69,52 @@ class CustomTheme(ttk.Style):
             'Big.TLabel': {'configure': {'font': BIG_FONT_BOLD}},
             'Bold.TLabel': {'configure': {'font': FONT_BOLD}},
             'Medium.Bold.TLabel': {'configure': {'font': MEDIUM_FONT_BOLD}},
-            "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns'}},
+            "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns',
+                                                 'background': BACKGROUND_COLOR_PRIMARY}},
             "Vertical.TNotebook.Tab": {"configure": {'width': 12, 'padding': [30, 30], 'borderwidth': 3,
-                                                     'focuscolor': "#dd4814", 'font': BIG_FONT},
-                                       # usuwa tę brzydką ramkę
-                                       "map": {"background": [("selected", ACTIVE_COLOR_2)],
-                                               'font': [('selected', BIG_FONT_BOLD)],
+                                                     'focuscolor': ADDITIONAL_COLOR_PRIMARY,  # remove ugly border
+                                                     'font': BIG_FONT,
+                                                     'background': BACKGROUND_COLOR_PRIMARY},
+                                       "map": {"background": [("selected", ADDITIONAL_COLOR_PRIMARY)],
+                                               # 'font': [('selected', BIG_FONT_BOLD)],
                                                "expand": [("selected", [1, 1, 1, 0])],
-                                               'foreground': [("selected", 'white')]}},
-            'Main.TNotebook.Tab': {'configure': {'width': 10, 'padding': [5, 5]}},
-            'Custom.Treeview': {'configure': {'highlightthickness': 0, 'bd': 0, 'font': ('Arial', 11)}},
+                                               'foreground': [("selected", FONT_COLOR_SECONDARY )]}},
+            'Main.TNotebook': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
+            'Main.TNotebook.Tab': {'configure': {'width': 10, 'padding': [5, 5], 'background': BACKGROUND_COLOR_PRIMARY,
+                                                 'focuscolor': BACKGROUND_COLOR_PRIMARY,    # remove ugly border
+                                                 }},
+            'Treeview': {'configure': {'background': BACKGROUND_COLOR_PRIMARY,
+                                       'fieldbackground': BACKGROUND_COLOR_SECONDARY}},
+            'Treeview.Heading': {'configure': {'background': ADDITIONAL_COLOR_SECONDARY,
+                                               'foreground': FONT_COLOR_SECONDARY}},
+            'Custom.Treeview': {'configure': {'highlightthickness': 0, 'bd': 0, 'font': ('Arial', 11),
+                                              'background': BACKGROUND_COLOR_PRIMARY}},
             'Custom.Treeview.Heading': {'configure': {'font': ('Arial', 13, 'bold')}},
             # 'TButton': {'map': {'highlightbackground': ACTIVE_COLOR}}
             # 'TButton': {'configure': {'padding': [50, 0, 50, 0], 'border': '10', 'borderwidth': 100, 'relief': tk.SOLID},
-            'TButton': {'configure': {'padding': [30, 0, 30, 0], 'relief': tk.SOLID},
+            'TLabel': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
+            'TButton': {'configure': {'padding': [30, 0, 30, 0], 'relief': tk.SOLID,
+                                      'background': BACKGROUND_COLOR_PRIMARY,
+                                      'focuscolor': BACKGROUND_COLOR_PRIMARY    # remove ugly border
+                                      },
                         # 'map': {'foreground': [('pressed', 'white'), ('active', 'blue')],
-                        'map': {'foreground': [('pressed', 'black')],
-                                'background': [('pressed', '!disabled', ACTIVE_COLOR), ('active', 'white')],
+                        'map': {'foreground': [ # ('pressed', ADDITIONAL_COLOR),
+                                               ('active', FONT_COLOR_SECONDARY)],
+                                'background': [('pressed', '!disabled', ADDITIONAL_COLOR_PRIMARY),
+                                               ('active', ADDITIONAL_COLOR_PRIMARY)],
                                  #'font': [('active', FONT_BOLD)]},
                                 }
                         },
-            'TFrame': {'configure': {'padding': [FRAME_PAD_Y, FRAME_PAD_X]}}
-
+            'TFrame': {'configure': {'padding': [FRAME_PAD_Y, FRAME_PAD_X], 'background': BACKGROUND_COLOR_PRIMARY}},
+            'TCheckbutton': {'configure': {'background': BACKGROUND_COLOR_PRIMARY,
+                                           'focuscolor': BACKGROUND_COLOR_PRIMARY }},   # remove ugly border
+            'TScrollbar': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
+            'TCombobox': {'configure': {'background': BACKGROUND_COLOR_SECONDARY,
+                                        'selectbackground': BACKGROUND_COLOR_SECONDARY,
+                                        'selectforeground': FONT_COLOR_PRIMARY,
+                                        # 'fieldbackground': BACKGROUND_COLOR_PRIMARY
+                                        }
+                          }
         })
 
     def use(self):

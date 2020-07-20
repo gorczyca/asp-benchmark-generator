@@ -85,6 +85,8 @@ class HierarchyTab(Tab,
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self):
+        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
+        # TODO:
         pub.subscribe(self._reset, actions.RESET)
         pub.subscribe(self._build_tree, actions.HIERARCHY_CREATED)
 
@@ -101,6 +103,9 @@ class HierarchyTab(Tab,
 
     def _extract_values(self, cmp: Component) -> Tuple[Any, ...]:
         pass    # TODO: will this work?
+
+    def __on_model_loaded(self):
+        self._build_tree()
 
     def _build_tree(self) -> None:
         if self._hierarchy_tree:
