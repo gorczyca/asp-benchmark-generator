@@ -6,109 +6,89 @@ from pubsub import pub
 import actions
 from exceptions import HierarchyStringError
 from model.helpers import string_converter
-from view.abstract.has_controller_access import HasControllerAccess
-from view.abstract.base_frame import BaseFrame
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
-from view import style
+from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
+from view.abstract.window import Window
 from view.common_callbacks import select_all_text
 
-EDIT_HIERARCHY_WINDOW_NAME = 'Edit hierarchy'
-EDIT_HIERARCHY_LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
-WINDOW_WIDTH_RATIO = 0.75
-WINDOW_HEIGHT_RATIO = 0.75
+WINDOW_TITLE = 'Edit hierarchy'
+LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
 
-CONTROL_PAD_Y = 3
-
-FRAME_PAD_Y = 10
-FRAME_PAD_X = 10
 
 # TODO: not every variable has to be a class property!
 
 
-class CreateHierarchyWindow(BaseFrame,
-                            HasControllerAccess,
-                            HasCommonSetup):
-    def __init__(self, parent, parent_frame, callback):
-        BaseFrame.__init__(self, parent_frame)
-        HasControllerAccess.__init__(self, parent)
-
-        HasCommonSetup.__init__(self)
-
+class CreateHierarchyWindow(HasCommonSetup,
+                            Window):
+    def __init__(self, parent_frame, callback):
+        self.__state = State()
         self.__callback = callback
-        self.__set_geometry()
+
+        Window.__init__(self, parent_frame, WINDOW_TITLE)
+        HasCommonSetup.__init__(self)
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
-        self.window.grab_set()
-        self.window.title(EDIT_HIERARCHY_WINDOW_NAME)
+        self.__text_frame = ttk.Frame(self._window)
+        self.__x_scrollbar = ttk.Scrollbar(self.__text_frame, orient=tk.HORIZONTAL)
+        self.__y_scrollbar = ttk.Scrollbar(self.__text_frame, orient=tk.VERTICAL)
+        self.__text = tk.Text(self.__text_frame, wrap=tk.NONE, font=FONT_BOLD,
+                              xscrollcommand=self.__x_scrollbar.set, yscrollcommand=self.__y_scrollbar.set)
 
-        self.text_frame = ttk.Frame(self.window)
-        self.x_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.HORIZONTAL)
-        self.y_scrollbar = ttk.Scrollbar(self.text_frame, orient=tk.VERTICAL)
-        self.text = tk.Text(self.text_frame, wrap=tk.NONE, font=style.FONT_BOLD,
-                            xscrollcommand=self.x_scrollbar.set, yscrollcommand=self.y_scrollbar.set)
+        self.__text.focus()
+        self.__text.mark_set(tk.INSERT, 1.0)
+        self.__text.bind('<Control-a>', select_all_text)
 
-        self.text.focus()
-        self.text.mark_set(tk.INSERT, 1.0)
-        self.text.bind('<Control-a>', select_all_text)
+        if self.__state.model.hierarchy:
+            hierarchy_string = string_converter.hierarchy_to_string(self.__state.model.hierarchy)
+            self.__text.insert(1.0, hierarchy_string)
 
-        if self.controller.model.hierarchy:
-            hierarchy_string = string_converter.hierarchy_to_string(self.controller.model.hierarchy)
-            self.text.insert(1.0, hierarchy_string)
+        self.__x_scrollbar.config(command=self.__text.xview)
+        self.__y_scrollbar.config(command=self.__text.yview)
 
-        self.x_scrollbar.config(command=self.text.xview)
-        self.y_scrollbar.config(command=self.text.yview)
+        self.__label = ttk.Label(self._window, text=LABEL_TEXT, anchor=tk.W)
 
-        self.label = ttk.Label(self.window, text=EDIT_HIERARCHY_LABEL_TEXT, anchor=tk.W)
-
-        self.buttons_frame = ttk.Frame(self.window)
-        self.ok_button = ttk.Button(self.buttons_frame, text='Ok', command=self.__ok)
-        self.cancel_button = ttk.Button(self.buttons_frame, text='Cancel', command=self.window.destroy)
+        self.__buttons_frame = ttk.Frame(self._window)
+        self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
+        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self._window.destroy)
 
     def _setup_layout(self):
-        self.label.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
+        self.__label.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
 
-        self.text_frame.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
-        self.text_frame.columnconfigure(0, weight=1)
-        self.text_frame.rowconfigure(0, weight=1)
+        self.__text_frame.grid(row=1, column=0, columnspan=2, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
+        self.__text_frame.columnconfigure(0, weight=1)
+        self.__text_frame.rowconfigure(0, weight=1)
 
-        self.text.grid(column=0, row=0, sticky=tk.NSEW)
+        self.__text.grid(column=0, row=0, sticky=tk.NSEW)
 
-        self.x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.W)
-        self.y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
+        self.__x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.W)
+        self.__y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
 
-        self.ok_button.grid(row=0, column=0, sticky=tk.E, pady=5)
-        self.cancel_button.grid(row=0, column=1, sticky=tk.W, pady=5)
+        self.__ok_button.grid(row=0, column=0, sticky=tk.E, pady=5)
+        self.__cancel_button.grid(row=0, column=1, sticky=tk.W, pady=5)
 
-        self.buttons_frame.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW)
-        self.buttons_frame.columnconfigure(0, weight=1)
-        self.buttons_frame.columnconfigure(1, weight=1)
+        self.__buttons_frame.grid(row=2, column=0, columnspan=2, sticky=tk.NSEW)
+        self.__buttons_frame.columnconfigure(0, weight=1)
+        self.__buttons_frame.columnconfigure(1, weight=1)
 
-        self.window.columnconfigure(0, weight=1)
-        self.window.rowconfigure(1, weight=1)
+        self._window.columnconfigure(0, weight=1)
+        self._window.rowconfigure(1, weight=1)
+
+        self._set_geometry()
 
     # Class-specific
     def __ok(self):
-        self.window.grab_release()
-        hierarchy_string = self.text.get(1.0, tk.END)
+        self._window.grab_release()
+        hierarchy_string = self.__text.get(1.0, tk.END)
         try:
             hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
-            self.controller.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
+            self.__state.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
             pub.sendMessage(actions.HIERARCHY_CREATED)
             pub.sendMessage(actions.MODEL_CHANGED)
-            self.window.destroy()
+            self._window.destroy()
         except HierarchyStringError as e:
             messagebox.showerror('Error', e.message)
-
-    def __set_geometry(self):
-        screen_width = self.window.winfo_screenwidth()
-        screen_height = self.window.winfo_screenheight()
-        window_width = round(screen_width * WINDOW_WIDTH_RATIO)
-        window_height = round(screen_height * WINDOW_HEIGHT_RATIO)
-        x_pos = round((screen_width - window_width) / 2)
-        y_pos = round((screen_height - window_height) / 2)
-        self.window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
 
 
 

@@ -7,32 +7,23 @@ from model.complex_constraint import ComplexConstraint
 from model.simple_constraint import SimpleConstraint
 from view.abstract.base_frame import BaseFrame
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_controller_access import HasControllerAccess
+from view.abstract.window import Window
 from view.scrollbars_listbox import ScrollbarListbox
 from view.simple_constraint_window import SimpleConstraintWindow
 from view.common import change_controls_state
-from view import style
+from view.style import FRAME_PAD_Y, FRAME_PAD_X, CONTROL_PAD_Y
 
-SELECT_COMPONENTS_WINDOW_NAME = 'Complex constraint'
+WINDOW_TITLE = 'Complex constraint'
 
-CONTROL_PAD_Y = 1.5
-CONTROL_PAD_X = 1.5
-
-FRAME_PAD_Y = 10
-FRAME_PAD_X = 10
 
 WINDOW_WIDTH_RATIO = 0.8
 WINDOW_HEIGHT_RATIO = 0.8
 
 
-class ComplexConstraintWindow(BaseFrame,
-                              HasControllerAccess,
-                              HasCommonSetup):
-    def __init__(self, parent, parent_frame, callback, constraint: Optional[ComplexConstraint] = None,
+class ComplexConstraintWindow(HasCommonSetup,
+                              Window):
+    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None,
                  check_name_with: List[str] = None):
-        BaseFrame.__init__(self, parent_frame)
-        HasControllerAccess.__init__(self, parent)
-
         self.__callback = callback
         self.__check_name_with = check_name_with if check_name_with is not None else []
 
@@ -47,16 +38,13 @@ class ComplexConstraintWindow(BaseFrame,
         self.__selected_antecedent: Optional[SimpleConstraint] = None
         self.__selected_constraint_consequent: Optional[SimpleConstraint] = None
 
+        Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
-        self.__set_geometry()
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
-        self.__window.grab_set()
-        self.__window.title(SELECT_COMPONENTS_WINDOW_NAME)
         # Name
-        self.__data_frame = ttk.Frame(self.__window)
+        self.__data_frame = ttk.Frame(self._window)
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
         self.__name_entry_label = ttk.Label(self.__data_frame, text='Name:')
         self.__name_entry = ttk.Entry(self.__data_frame, textvariable=self.__name_entry_var)
@@ -66,7 +54,7 @@ class ComplexConstraintWindow(BaseFrame,
         if self.__constraint.description:
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
 
-        self.__implication_frame = ttk.Frame(self.__window)
+        self.__implication_frame = ttk.Frame(self._window)
 
         self.__antecedent_frame = ttk.Frame(self.__implication_frame)
         self.__consequent_frame = ttk.Frame(self.__implication_frame)
@@ -109,9 +97,9 @@ class ComplexConstraintWindow(BaseFrame,
                                                      command=self.__remove_consequent)
 
         # Buttons frame
-        self.__buttons_frame = ttk.Frame(self.__window)
+        self.__buttons_frame = ttk.Frame(self._window)
         self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.__window.destroy)
+        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self._window.destroy)
 
     def _setup_layout(self) -> None:
         self.__data_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
@@ -142,8 +130,8 @@ class ComplexConstraintWindow(BaseFrame,
         self.__ok_button.grid(row=0, column=0, sticky=tk.E)
         self.__cancel_button.grid(row=0, column=1, sticky=tk.W)
 
-        self.__window.rowconfigure(1, weight=1)
-        self.__window.columnconfigure(0, weight=1)
+        self._window.rowconfigure(1, weight=1)
+        self._window.columnconfigure(0, weight=1)
         self.__implication_frame.columnconfigure(0, weight=1, uniform='fred')
         self.__implication_frame.columnconfigure(1, weight=1, uniform='fred')
 
@@ -163,6 +151,8 @@ class ComplexConstraintWindow(BaseFrame,
         self.__buttons_frame.columnconfigure(0, weight=1)
         self.__buttons_frame.columnconfigure(1, weight=1)
 
+        self._set_geometry(width_ratio=WINDOW_WIDTH_RATIO, height_ratio=WINDOW_HEIGHT_RATIO)
+
     def __ok(self):
         # Update constraint values
         name = self.__name_entry_var.get()
@@ -178,7 +168,7 @@ class ComplexConstraintWindow(BaseFrame,
         self.__constraint.consequent_all = self.__consequent_all_var.get()
 
         self.__callback(self.__constraint)
-        self.__window.destroy()
+        self._window.destroy()
 
     def __on_select_antecedent(self, id_: int) -> None:
         self.__selected_antecedent = next((a for a in self.__antecedent if a.id_ == id_), None)
@@ -198,7 +188,7 @@ class ComplexConstraintWindow(BaseFrame,
 
     def __add_antecedent(self):
         ant_names = [a.name for a in self.__antecedent]
-        SimpleConstraintWindow(self, self.__window, callback=self.__on_antecedent_added, check_name_with=ant_names)
+        SimpleConstraintWindow(self._window, callback=self.__on_antecedent_added, check_name_with=ant_names)
 
     def __on_antecedent_added(self, ant: SimpleConstraint):
         self.__antecedent.append(ant)
@@ -212,7 +202,7 @@ class ComplexConstraintWindow(BaseFrame,
     def __edit_antecedent(self):
         if self.__selected_antecedent:
             ant_names = [a.name for a in self.__antecedent]
-            SimpleConstraintWindow(self, self.__window, constraint=self.__selected_antecedent,
+            SimpleConstraintWindow(self._window, constraint=self.__selected_antecedent,
                                    callback=self.__on_antecedent_edited, check_name_with=ant_names)
 
     def __remove_antecedent(self):
@@ -228,7 +218,7 @@ class ComplexConstraintWindow(BaseFrame,
 
     def __add_consequent(self):
         con_names = [c.name for c in self.__consequent]
-        SimpleConstraintWindow(self, self.__window, callback=self.__on_consequent_added, check_name_with=con_names)
+        SimpleConstraintWindow(self._window, callback=self.__on_consequent_added, check_name_with=con_names)
 
     def __on_consequent_added(self, con: SimpleConstraint):
         self.__consequent.append(con)
@@ -238,7 +228,7 @@ class ComplexConstraintWindow(BaseFrame,
     def __edit_consequent(self):
         if self.__selected_consequent:
             con_names = [c.name for c in self.__consequent]
-            SimpleConstraintWindow(self, self.__window, constraint=self.__selected_consequent,
+            SimpleConstraintWindow(self._window, constraint=self.__selected_consequent,
                                    callback=self.__on_consequent_edited, check_name_with=con_names)
 
     def __on_consequent_edited(self, con: SimpleConstraint):
@@ -254,18 +244,3 @@ class ComplexConstraintWindow(BaseFrame,
                 self.__edit_consequent_button,
                 self.__remove_consequent_button
             ], tk.DISABLED)
-
-    def __set_geometry(self):
-        screen_width = self.__window.winfo_screenwidth()
-        screen_height = self.__window.winfo_screenheight()
-        window_width = round(screen_width * WINDOW_WIDTH_RATIO)
-        window_height = round(screen_height * WINDOW_HEIGHT_RATIO)
-        x_pos = round((screen_width - window_width) / 2)
-        y_pos = round((screen_height - window_height) / 2)
-        self.__window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
-
-
-
-
-
-

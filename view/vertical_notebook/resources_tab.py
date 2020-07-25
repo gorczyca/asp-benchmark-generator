@@ -9,9 +9,9 @@ import actions
 from exceptions import ResourceError
 from model.component import Component
 from model.resource import Resource
+from state import State
 from view.tree_view_column import Column
 from view.hierarchy_tree import HierarchyTree
-from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
@@ -30,18 +30,18 @@ FRAME_PAD_X = 10
 
 
 class ResourcesTab(Tab,
-                   HasControllerAccess,
                    HasCommonSetup,
                    SubscribesToListeners,
                    HasHierarchyTree,
                    Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
         SubscribesToListeners.__init__(self)
         HasHierarchyTree.__init__(self)
+
+        self.__state = State()
 
         self.__selected_resource: Optional[Resource] = None
 
@@ -118,7 +118,7 @@ class ResourcesTab(Tab,
     # HasHierarchyTree
     def _on_select_tree_item(self, cmp_id: int) -> None:
         if self.__selected_resource:
-            selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
+            selected_cmp: Component = self.__state.model.get_component_by_id(cmp_id)
             self._selected_component = selected_cmp
 
             self.__cmp_label.grid(row=4, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)
@@ -159,7 +159,7 @@ class ResourcesTab(Tab,
         if self._hierarchy_tree:
             self._destroy_tree()
 
-        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
+        self._hierarchy_tree = HierarchyTree(self.frame, self.__state.model.hierarchy, columns=self._columns,
                                              on_select_callback=self._on_select_tree_item,
                                              extract_values=self._extract_values)
         self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
@@ -167,7 +167,7 @@ class ResourcesTab(Tab,
             self._hierarchy_tree.grid_forget()
 
     def __on_model_loaded(self):
-        resources_names = self.controller.model.get_all_resources_names()
+        resources_names = self.__state.model.get_all_resources_names()
         self.__resource_combobox['values'] = sorted(resources_names)
         self._build_tree()
 
@@ -203,7 +203,7 @@ class ResourcesTab(Tab,
     # Class-specific
     def __on_combobox_changed(self, _1, _2, _3):
         res_name = self.__resource_combobox_var.get()
-        resource = self.controller.model.get_resource_by_name(res_name)
+        resource = self.__state.model.get_resource_by_name(res_name)
         if resource:
             # Enable buttons
             controls_to_enable = [
@@ -226,14 +226,14 @@ class ResourcesTab(Tab,
                 self.__update_tree()
 
     def __update_tree(self):
-        leaf_cmps = self.controller.model.get_leaf_components()
+        leaf_cmps = self.__state.model.get_leaf_components()
         self._hierarchy_tree.update_values(leaf_cmps)
 
     def __add_resource(self):
         name = simpledialog.askstring('Add resource', f'Enter name of the new resource.')
         if name:
             try:
-                resource = self.controller.model.add_resource(name)
+                resource = self.__state.model.add_resource(name)
                 self.__selected_resource = resource
                 self.__resource_combobox['values'] = sorted((*self.__resource_combobox['values'], name))
                 self.__resource_combobox_var.set(name)
@@ -252,7 +252,7 @@ class ResourcesTab(Tab,
             if new_name:
                 try:
                     old_name = self.__selected_resource.name
-                    self.controller.model.change_resource_name(self.__selected_resource, new_name)
+                    self.__state.model.change_resource_name(self.__selected_resource, new_name)
                     updated_combobox_values = [val if val != old_name else new_name for val in
                                                [*self.__resource_combobox['values']]]
                     self.__resource_combobox['values'] = sorted(updated_combobox_values)
@@ -262,7 +262,7 @@ class ResourcesTab(Tab,
 
     def __remove_resource(self):
         if self.__selected_resource:
-            removed_res = self.controller.model.remove_resource(self.__selected_resource)
+            removed_res = self.__state.model.remove_resource(self.__selected_resource)
             updated_combobox_values = [val for val in [*self.__resource_combobox['values']] if val != removed_res.name]
             self.__resource_combobox['values'] = updated_combobox_values
             self.__selected_resource = None
@@ -307,6 +307,6 @@ class ResourcesTab(Tab,
             except tk.TclError as e:
                 print(e)
             finally:
-                updated_components = self.controller.model.set_resource_production_to_all_components_children(
+                updated_components = self.__state.model.set_resource_production_to_all_components_children(
                     self._selected_component, self.__selected_resource, value)
                 self._hierarchy_tree.update_values(updated_components)

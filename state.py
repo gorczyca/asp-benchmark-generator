@@ -11,7 +11,7 @@ class Borg:
 
 
 class State(Borg):
-    def __init__(self, arg):
+    def __init__(self):
         Borg.__init__(self)
         # self.val = arg
         self.model: Model = Model()

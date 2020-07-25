@@ -9,7 +9,6 @@ from view.main_notebook.main_notebook import MainNotebook
 from view.main_notebook.encoding_tab import EncodingTab
 from view.main_notebook.instances_tab import InstancesTab
 from view.menu import Menu
-from view.style import CustomTheme, VERTICAL_TAB_HEIGHT, VERTICAL_TAB_WIDTH
 from view.vertical_notebook.vertical_notebook import VerticalNotebook
 from view.vertical_notebook.hierarchy_tab import HierarchyTab
 from view.vertical_notebook.associations_tab import AssociationsTab
@@ -28,10 +27,10 @@ class View(ttk.Frame):
     Attributes:
         __menu:
     """
-    def __init__(self, controller, main_window, *args, **kwargs):
-        ttk.Frame.__init__(self, main_window, *args, **kwargs)
-        self.__controller = controller
+    def __init__(self, main_window):
+        ttk.Frame.__init__(self, main_window)
         self.__main_window = main_window
+        # self.__main_window.deiconify()
 
         self.__window_title: Optional[str] = None
 
@@ -43,12 +42,7 @@ class View(ttk.Frame):
         pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
         pub.subscribe(self.__init_title, actions.RESET)
 
-    @property
-    def controller(self): return self.__controller
-
     def __setup_layout(self):
-        CustomTheme().use()
-
         self.__main_window.rowconfigure(0, weight=1)
         self.__main_window.columnconfigure(0, weight=1)
 

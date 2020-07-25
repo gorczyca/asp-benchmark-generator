@@ -5,38 +5,24 @@ from tkinter import ttk, messagebox
 
 from model.component import Component
 from model.simple_constraint import SimpleConstraint
-from view.abstract.base_frame import BaseFrame
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
+from view.abstract.window import Window
 from view.hierarchy_tree import HierarchyTree
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
-from view import style
+from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, FONT
 
 
-SELECT_COMPONENTS_WINDOW_NAME = 'Simple constraint'
-
-CONTROL_PAD_Y = 1.5
-
-FRAME_PAD_Y = 10
-FRAME_PAD_X = 10
-
-WINDOW_WIDTH_RATIO = 0.75
-WINDOW_HEIGHT_RATIO = 0.75
+WINDOW_TITLE = 'Simple constraint'
 
 
-class SimpleConstraintWindow(BaseFrame,
-                             HasControllerAccess,
-                             HasCommonSetup,
-                             HasHierarchyTree):
-    def __init__(self, parent, parent_frame, callback, constraint: Optional[SimpleConstraint] = None,
+class SimpleConstraintWindow(HasCommonSetup,
+                             HasHierarchyTree,  # TODO: remove this interface
+                             Window):
+    def __init__(self, parent_frame, callback, constraint: Optional[SimpleConstraint] = None,
                  check_name_with: List[str] = None):
-        BaseFrame.__init__(self, parent_frame)
-        HasControllerAccess.__init__(self, parent)
-
-        self.__callback = callback
-
         self.__constraint: SimpleConstraint = constraint if constraint is not None \
             else SimpleConstraint()
         self.__components_ids = [] if constraint is None else [*constraint.components_ids]  # Deep copy of component ids
@@ -44,28 +30,27 @@ class SimpleConstraintWindow(BaseFrame,
         self.__selected_listbox_item: Optional[Component] = None
         self.__check_name_with: List[str] = check_name_with if check_name_with is not None else []
 
+        self.__state = State()
+        self.__callback = callback
+
+        Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
-        self.__set_geometry()
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__window = tk.Toplevel(self.parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)
-        self.__window.grab_set()
-        self.__window.title(SELECT_COMPONENTS_WINDOW_NAME)
-
         self._build_tree()
 
-        self.__mid_frame = ttk.Frame(self.__window)
+        self.__mid_frame = ttk.Frame(self._window)
         self.__add_component_button = ttk.Button(self.__mid_frame, text='>>', command=self.__add_to_selected)
         self.__add_components_recursively_button = ttk.Button(self.__mid_frame, text='>> (recursively)',
                                                               command=self.__add_to_selected_recursively)
         self.__remove_component_button = ttk.Button(self.__mid_frame, text='<<', command=self.__remove_from_selected)
 
-        self.__right_frame = ttk.Frame(self.__window)
+        self.__right_frame = ttk.Frame(self._window)
         # self.__constraints_data_frame = ttk.Frame(self.__right_frame)
         # TODO: move grid_row to a separate function and invoke it in setup_layout
         self.__components_listbox = ScrollbarListbox(self.__right_frame,
-                                                     values=self.controller.model.get_components_by_ids(
+                                                     values=self.__state.model.get_components_by_ids(
                                                          self.__constraint.components_ids),
                                                      extract_id=lambda cmp: cmp.id_,
                                                      extract_text=lambda cmp: cmp.name,
@@ -75,25 +60,16 @@ class SimpleConstraintWindow(BaseFrame,
         # Name
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
         self.__name_entry_label = ttk.Label(self.__right_frame, text='Name:')
-        self.__name_entry = ttk.Entry(self.__right_frame, textvariable=self.__name_entry_var, font=style.FONT)
+        self.__name_entry = ttk.Entry(self.__right_frame, textvariable=self.__name_entry_var, font=FONT)
         # Description
         self.__description_text_label = ttk.Label(self.__right_frame, text='Description:')
-        self.__description_text = tk.Text(self.__right_frame, height=2, font=style.FONT)
+        self.__description_text = tk.Text(self.__right_frame, height=2, font=FONT)
         if self.__constraint.description:
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
-
-        # Contains radiobutton
-        # self.__contains_var = tk.BooleanVar(value=self.__constraint.contains)
-        # self.__contains_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Contains', value=True,
-        #                                               variable=self.__contains_var)
-        # self.__does_not_contain_radiobutton = ttk.Radiobutton(self.__constraints_data_frame, text='Does not contain',
-        #                                                       value=False, variable=self.__contains_var)
-
         # Distinct checkbox
         self.__distinct_checkbox_var = tk.BooleanVar(value=self.__constraint.distinct)
         self.__distinct_checkbox_label = ttk.Label(self.__right_frame, text='Distinct?')
         self.__distinct_checkbox = ttk.Checkbutton(self.__right_frame, variable=self.__distinct_checkbox_var)
-
         # Has min checkbox
         self.__has_min_checkbox_var = tk.BooleanVar(value=self.__constraint.min_ is not None)
         self.__has_min_checkbox_var.trace('w', self.__on_has_min_changed)
@@ -118,7 +94,7 @@ class SimpleConstraintWindow(BaseFrame,
                                          textvariable=self.__max_spinbox_var)
         # Buttons frame
         self.__ok_button = ttk.Button(self.__right_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self.__window.destroy)
+        self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self._window.destroy)
 
     def _setup_layout(self) -> None:
         self._hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
@@ -153,12 +129,14 @@ class SimpleConstraintWindow(BaseFrame,
         self.__right_frame.columnconfigure(1, weight=1)
         self.__right_frame.columnconfigure(3, weight=1)
 
-        self.__window.columnconfigure(0, weight=1, uniform='fred')
-        self.__window.columnconfigure(2, weight=1, uniform='fred')
-        self.__window.rowconfigure(0, weight=1)
+        self._window.columnconfigure(0, weight=1, uniform='fred')
+        self._window.columnconfigure(2, weight=1, uniform='fred')
+        self._window.rowconfigure(0, weight=1)
+
+        self._set_geometry()
 
     def _on_select_tree_item(self, cmp_id: int) -> None:
-        self.__selected_hierarchy_tree_item = self.controller.model.get_component_by_id(cmp_id)
+        self.__selected_hierarchy_tree_item = self.__state.model.get_component_by_id(cmp_id)
 
     @property
     def _columns(self) -> List[Column]:
@@ -168,14 +146,14 @@ class SimpleConstraintWindow(BaseFrame,
         pass
 
     def _build_tree(self) -> None:
-        self._hierarchy_tree = HierarchyTree(self.__window, self.controller.model.hierarchy,
+        self._hierarchy_tree = HierarchyTree(self._window, self.__state.model.hierarchy,
                                              on_select_callback=self._on_select_tree_item)
 
     def _destroy_tree(self) -> None:
         pass
 
     def __on_select_listbox_component(self, id_: int) -> None:
-        self.__selected_listbox_item = self.controller.model.get_component_by_id(id_)
+        self.__selected_listbox_item = self.__state.model.get_component_by_id(id_)
 
     def __add_to_selected(self):
         if self.__selected_hierarchy_tree_item:
@@ -185,7 +163,7 @@ class SimpleConstraintWindow(BaseFrame,
 
     def __add_to_selected_recursively(self):
         if self.__selected_hierarchy_tree_item:
-            component_and_children = self.controller.model.get_component_and_its_children(
+            component_and_children = self.__state.model.get_component_and_its_children(
                 self.__selected_hierarchy_tree_item)
             for c in component_and_children:
                 if c.id_ not in self.__components_ids:
@@ -281,18 +259,4 @@ class SimpleConstraintWindow(BaseFrame,
                 print(e)
                 self.__constraint.max_ = None
         self.__callback(self.__constraint)
-        self.__window.destroy()
-
-    def __set_geometry(self):
-        screen_width = self.__window.winfo_screenwidth()
-        screen_height = self.__window.winfo_screenheight()
-        window_width = round(screen_width * WINDOW_WIDTH_RATIO)
-        window_height = round(screen_height * WINDOW_HEIGHT_RATIO)
-        x_pos = round((screen_width - window_width) / 2)
-        y_pos = round((screen_height - window_height) / 2)
-        self.__window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
-
-
-
-
-
+        self._window.destroy()

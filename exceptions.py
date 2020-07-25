@@ -1,30 +1,37 @@
-# TODO: create a unified way of creation of exceptions
+from abc import ABC, abstractmethod
 
 
-class HierarchyStringError(Exception):
+class CustomException(Exception, ABC):
+    @abstractmethod
+    def __init__(self, message: str = 'An error occurred.'):
+        Exception().__init__(message)
+        self.message = message
+
+
+class HierarchyStringError(CustomException):
     def __init__(self, message: str = 'Error while entering hierarchy.'):
-        super().__init__(message)
-        self.message = message
+        CustomException.__init__(self, message)
 
 
-class ComponentError(Exception):
+class ComponentError(CustomException):
     def __init__(self, message: str = 'Error while creating port.'):
-        super().__init__(message)
-        self.message = message
+        CustomException.__init__(self, message)
 
 
-class ResourceError(Exception):
+class ResourceError(CustomException):
     def __init__(self, message: str = 'Error while creating resource.'):
-        super().__init__(message)
-        self.message = message
+        CustomException.__init__(self, message)
 
 
-class PortError(Exception):
+class PortError(CustomException):
     def __init__(self, message: str = 'Error while creating port.'):
-        super().__init__(message)
-        self.message = message
+        CustomException.__init__(self, message)
 
-class ConstraintError(Exception):
+
+class ConstraintError(CustomException):
     def __init__(self, message: str = 'Error while creating constraint.'):
-        super().__init__(message)
-        self.message = message
+        CustomException.__init__(self, message)
+
+
+
+

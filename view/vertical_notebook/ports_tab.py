@@ -9,8 +9,8 @@ import actions
 from exceptions import PortError
 from model.port import Port
 from model.component import Component
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.resetable import Resetable
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
@@ -32,14 +32,12 @@ FRAME_PAD_X = 10
 
 
 class PortsTab(Tab,
-               HasControllerAccess,
                HasCommonSetup,
                SubscribesToListeners,
                HasHierarchyTree,
                Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
         SubscribesToListeners.__init__(self)
@@ -47,6 +45,8 @@ class PortsTab(Tab,
 
         self.__ports_listbox: Optional[ScrollbarListbox] = None
         self.__selected_port: Optional[Port] = None
+
+        self.__state = State()
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
@@ -146,7 +146,7 @@ class PortsTab(Tab,
     # HasHierarchyTree
     def _on_select_tree_item(self, cmp_id: int) -> None:
         if self.__selected_port:    # TODO: should be unnecessary
-            selected_cmp = self.controller.model.get_component_by_id(cmp_id)
+            selected_cmp = self.__state.model.get_component_by_id(cmp_id)
             self._selected_component = selected_cmp
 
             self.__cmp_label.grid(row=7, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)  # Show cmp label
@@ -186,7 +186,7 @@ class PortsTab(Tab,
         if self._hierarchy_tree:
             self._destroy_tree()
 
-        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
+        self._hierarchy_tree = HierarchyTree(self.frame, self.__state.model.hierarchy, columns=self._columns,
                                              on_select_callback=self._on_select_tree_item,
                                              extract_values=self._extract_values)
         self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)  # Place tree in the layout
@@ -194,7 +194,7 @@ class PortsTab(Tab,
             self._hierarchy_tree.grid_forget()  # Hide the tree
 
     def __on_model_loaded(self):
-        ports_names = self.controller.model.get_all_ports_names()
+        ports_names = self.__state.model.get_all_ports_names()
         self.__port_combobox['values'] = sorted(ports_names)
         self._build_tree()
 
@@ -211,7 +211,7 @@ class PortsTab(Tab,
         self.__apply_to_all_children_button.grid_forget()
 
         prt_name = self.__port_combobox_var.get()
-        port = self.controller.model.get_port_by_name(prt_name)
+        port = self.__state.model.get_port_by_name(prt_name)
         buttons_to_change_state_of = [
             self.__rename_port_button,
             self.__remove_port_button,
@@ -221,7 +221,7 @@ class PortsTab(Tab,
         if port:
             self.__selected_port = port
             change_controls_state(buttons_to_change_state_of, state=tk.NORMAL)
-            compatible_ports = self.controller.model.get_ports_by_ids(port.compatible_with)
+            compatible_ports = self.__state.model.get_ports_by_ids(port.compatible_with)
             self.__compatible_with_listbox.set_items(compatible_ports)  # Fill the 'compatible with' listbox
             self.__force_connection_checkbox_var.set(port.force_connection)
             if self._hierarchy_tree:    # If tree exists
@@ -233,32 +233,8 @@ class PortsTab(Tab,
             change_controls_state(buttons_to_change_state_of, state=tk.DISABLED)
 
     def __update_tree(self):
-        leaf_cmps = self.controller.model.get_leaf_components()
+        leaf_cmps = self.__state.model.get_leaf_components()
         self._hierarchy_tree.update_values(leaf_cmps)
-
-    # TODO: remove
-    # def __on_select_ports_listbox_item(self, id_: int) -> None:
-    #     prt = self.controller.model.get_port_by_id(id_)
-    #     self.__selected_port = prt
-    #     # self.__port_label_var.set(prt.name)
-    #     self.__force_connection_checkbox_var.set(prt.force_connection)
-    #     self.__enable_buttons()
-
-    # def __build_ports_listbox(self) -> None:
-    #     if self.__ports_listbox:
-    #         pass    # TODO: destroy listbox
-    #
-    #     self.__ports_listbox = ScrollbarListbox(self.frame, self.controller.model.ports,
-    #                                             columns=[Column('#0', 'Compatible with', stretch=tk.YES)],
-    #                                             on_select_callback=self.__on_select_ports_listbox_item,
-    #                                             extract_values=lambda prt: (),
-    #                                             extract_id=lambda prt: prt.id_,
-    #                                             extract_text=lambda prt: prt.name)
-    # def __extract_values_occurs_in_listbox_item(self, cmp: Component) -> Any:
-    #     amount = ''
-    #     if self.__selected_port.id_ in cmp.ports:
-    #         amount = cmp.ports[self.__selected_port.id_]
-    #     return amount
 
     # SubscribesToListeners
     def _subscribe_to_listeners(self) -> None:
@@ -278,7 +254,7 @@ class PortsTab(Tab,
         name = simpledialog.askstring('Add port', f'Enter name of the new port.')
         if name:
             try:
-                port, _ = self.controller.model.add_port(name)
+                port, _ = self.__state.model.add_port(name)
                 self.__selected_port = port
                 self.__port_combobox['values'] = sorted((*self.__port_combobox['values'], name))
                 self.__port_combobox_var.set(name)
@@ -297,7 +273,7 @@ class PortsTab(Tab,
         if new_name:
             try:
                 old_name = self.__selected_port.name
-                self.controller.model.change_port_name(self.__selected_port, new_name)
+                self.__state.model.change_port_name(self.__selected_port, new_name)
                 updated_combobox_values = [val if val != old_name else new_name for val in
                                            [*self.__port_combobox['values']]]
                 self.__port_combobox['values'] = sorted(updated_combobox_values)
@@ -307,7 +283,7 @@ class PortsTab(Tab,
 
     def __remove_port(self) -> None:
         if self.__selected_port:
-            removed_prt = self.controller.model.remove_port(self.__selected_port)
+            removed_prt = self.__state.model.remove_port(self.__selected_port)
             updated_combobox_values = [val for val in [*self.__port_combobox['values']] if val != removed_prt.name]
             self.__port_combobox['values'] = updated_combobox_values
             self.__selected_port = None
@@ -335,16 +311,16 @@ class PortsTab(Tab,
 
     def __edit_compatible_with(self):
         if self.__selected_port:
-            all_ports = self.controller.model.ports
+            all_ports = self.__state.model.ports
             compatible_ports = [p for p in all_ports if p.id_ in self.__selected_port.compatible_with]
             ports_rest = [p for p in all_ports if p not in compatible_ports and p.id_ != self.__selected_port.id_]
-            SelectPortsWindow(self, self.frame, self.__selected_port,  compatible_ports, ports_rest, callback=self.__compatible_with_edited)
+            SelectPortsWindow(self.frame, self.__selected_port,  compatible_ports, ports_rest, callback=self.__compatible_with_edited)
 
     def __compatible_with_edited(self, ports: List[Port]):
         if self.__selected_port:
             ports.sort(key=lambda x: x.name)
             self.__compatible_with_listbox.set_items(ports)
-            self.controller.model.update_ports_compatibility(self.__selected_port, ports)
+            self.__state.model.update_ports_compatibility(self.__selected_port, ports)
 
     def __on_force_connection_toggled(self, _1, _2, _3):
         if self.__selected_port:
@@ -374,6 +350,6 @@ class PortsTab(Tab,
             except tk.TclError as e:
                 print(e)
             finally:
-                updated_components = self.controller.model.set_ports_amount_to_all_components_children(
+                updated_components = self.__state.model.set_ports_amount_to_all_components_children(
                     self._selected_component, self.__selected_port, value)
                 self._hierarchy_tree.update_values(updated_components)

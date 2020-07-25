@@ -6,8 +6,8 @@ from pubsub import pub
 
 from exceptions import ConstraintError
 from model.simple_constraint import SimpleConstraint
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.resetable import Resetable
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.tab import Tab
@@ -28,19 +28,19 @@ FRAME_PAD_X = 10
 
 
 class ConstraintsTab(Tab,
-                     HasControllerAccess,
                      HasCommonSetup,
                      SubscribesToListeners,
                      Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        HasControllerAccess.__init__(self, parent)
 
         self.__constraints_listbox: Optional[ScrollbarListbox] = None
         self.__selected_constraint: Optional[Any] = None    # can be either simple or complex constraint
 
         HasCommonSetup.__init__(self)
         SubscribesToListeners.__init__(self)
+
+        self.__state = State()
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
@@ -82,7 +82,7 @@ class ConstraintsTab(Tab,
         pass
 
     def __on_select_callback(self, ctr_id: int):
-        selected_ctr: Any = self.controller.model.get_constraint_by_id(ctr_id)
+        selected_ctr: Any = self.__state.model.get_constraint_by_id(ctr_id)
         if selected_ctr:    # TODO: should be unnecesary
             self.__selected_constraint = selected_ctr
             self.__ctr_label_var.set(trim_string(selected_ctr.name, length=LABEL_LENGTH))
@@ -95,7 +95,7 @@ class ConstraintsTab(Tab,
     def __on_constraint_created(self, ctr: Any):
         # TODO: make it sorted alphabetically
         try:
-            _, index = self.controller.model.add_constraint(ctr)
+            _, index = self.__state.model.add_constraint(ctr)
             self.__constraints_listbox.add_item(ctr, index=index)
             # Set selected constraint to the newly created constraint
             self.__selected_constraint = ctr
@@ -110,31 +110,31 @@ class ConstraintsTab(Tab,
             messagebox.showerror('Add constraint error.', e.message)
 
     def __on_constraint_edited(self, ctr: Any):
-        index = self.controller.model.get_constraint_index(ctr)     # TODO: check, does it work?
+        index = self.__state.model.get_constraint_index(ctr)     # TODO: check, does it work?
         self.__constraints_listbox.rename_item(ctr, index=index)    # If name has changed
         # Update constraint label
         self.__ctr_label_var.set(trim_string(ctr.name, length=LABEL_LENGTH))
 
     def __add_constraint(self, complex_=False):
-        ctr_names = [c.name for c in self.controller.model.get_all_constraints()]
+        ctr_names = [c.name for c in self.__state.model.get_all_constraints()]
         if complex_:
-            ComplexConstraintWindow(self, self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
+            ComplexConstraintWindow(self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
         else:
-            SimpleConstraintWindow(self, self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
+            SimpleConstraintWindow(self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
 
     def __edit_constraint(self):
         if self.__selected_constraint:
-            ctr_names = [c.name for c in self.controller.model.get_all_constraints()]
+            ctr_names = [c.name for c in self.__state.model.get_all_constraints()]
             if isinstance(self.__selected_constraint, SimpleConstraint):
-                SimpleConstraintWindow(self, self.frame, constraint=self.__selected_constraint,
+                SimpleConstraintWindow(self.frame, constraint=self.__selected_constraint,
                                        callback=self.__on_constraint_edited, check_name_with=ctr_names)
             else:
-                ComplexConstraintWindow(self, self.frame, constraint=self.__selected_constraint,
+                ComplexConstraintWindow(self.frame, constraint=self.__selected_constraint,
                                         callback=self.__on_constraint_edited, check_name_with=ctr_names)
 
     def __remove_constraint(self):
         if self.__selected_constraint:
-            self.controller.model.remove_constraint(self.__selected_constraint)
+            self.__state.model.remove_constraint(self.__selected_constraint)
             self.__constraints_listbox.remove_item(self.__selected_constraint)
             self.__selected_constraint = None
             # Hide widgets
@@ -145,5 +145,5 @@ class ConstraintsTab(Tab,
             ], state=tk.DISABLED)
 
     def __on_model_loaded(self):
-        ctrs = self.controller.model.get_all_constraints()
+        ctrs = self.__state.model.get_all_constraints()
         self.__constraints_listbox.set_items(ctrs)

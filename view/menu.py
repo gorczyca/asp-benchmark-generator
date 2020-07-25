@@ -6,7 +6,7 @@ from pubsub import pub
 
 import actions
 from model.helpers import json_converter
-from view.abstract.has_controller_access import HasControllerAccess
+from state import State
 from view.abstract.base_frame import BaseFrame
 import code_generator.code_generator as gen
 from solver.solver import Solver
@@ -17,12 +17,12 @@ LP_EXTENSION = '.lp'
 CSV_EXTENSION = '.csv'
 
 
-class Menu(BaseFrame, HasControllerAccess):
+class Menu(BaseFrame):
     def __init__(self, parent, parent_frame, *args, **kwargs):
         BaseFrame.__init__(self, parent_frame)
-        HasControllerAccess.__init__(self, parent)
 
         self.__menu = tk.Menu(parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY, *args, **kwargs)   # Cannot change it on Windows / OSX
+        self.__state = State()
 
         file_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
         file_menu.add_command(label='New', command=self.__new)
@@ -65,8 +65,8 @@ class Menu(BaseFrame, HasControllerAccess):
         # TODO:
         root_name = simpledialog.askstring('Enter root name', f'Enter name for root component.')
         if root_name:
-            code, instances_dictionary = gen.generate_code(self.controller.model, root_name)
-            self.controller.instances_dictionary = instances_dictionary
+            code, instances_dictionary = gen.generate_code(self.__state.model, root_name)
+            self.__state.instances_dictionary = instances_dictionary
             file = filedialog.asksaveasfile(mode='w', defaultextension=LP_EXTENSION)
             if file is not None:  # TODO: czy to potrzebne
                 file.write(code)
@@ -75,7 +75,7 @@ class Menu(BaseFrame, HasControllerAccess):
                 messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.')
 
     def __new(self):
-        if not self.controller.saved:
+        if not self.__state.saved:
             answer = messagebox.askyesnocancel('New', 'You have some unsaved changes, '
                                                       'would you like to save them?')
             if answer is None:
@@ -85,12 +85,12 @@ class Menu(BaseFrame, HasControllerAccess):
         self.__new_()
 
     def __new_(self):
-        self.controller.saved = True
-        self.controller.model.clear()
+        self.__state.saved = True
+        self.__state.model.clear()
         pub.sendMessage(actions.RESET)
 
     def __open(self):
-        if not self.controller.saved:
+        if not self.__state.saved:
             answer = messagebox.askyesnocancel('Open', 'You have some unsaved changes, '
                                                        'would you like to save them?')
             if answer is None:
@@ -102,35 +102,35 @@ class Menu(BaseFrame, HasControllerAccess):
     def __open_(self):
         file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
         if file:
-            self.controller.file = file
+            self.__state.file = file
             json = file.read()
             model = json_converter.json_to_model(json)
-            self.controller.model = model
+            self.__state.model = model
             file_name = Menu.__extract_file_name(file.name)
             pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
             pub.sendMessage(actions.MODEL_LOADED)
 
     def __save(self):
-        json_string = json_converter.model_to_json(self.controller.model)
-        if self.controller.file:
-            with open(self.controller.file.name, 'w') as file_:
+        json_string = json_converter.model_to_json(self.__state.model)
+        if self.__state.file:
+            with open(self.__state.file.name, 'w') as file_:
                 self.__save_(file_, json_string)
         else:
             self.__save_as()
 
     def __save_as(self):
-        json_string = json_converter.model_to_json(self.controller.model)
+        json_string = json_converter.model_to_json(self.__state.model)
         file = filedialog.asksaveasfile(mode='w', defaultextension=JSON_EXTENSION)
         if file is not None:  # TODO: czy to potrzebne
             self.__save_(file, json_string)
-            self.controller.file = file
+            self.__state.file = file
             messagebox.showinfo('Saved successfully', f'Saved succesfully to\n{file.name}.')
 
     def __save_(self, file, json_string):
         file.write(json_string)
         file.close()
         file_name = Menu.__extract_file_name(file.name)
-        self.controller.saved = True
+        self.__state.saved = True
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
 
     @staticmethod

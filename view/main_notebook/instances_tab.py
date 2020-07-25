@@ -8,7 +8,7 @@ from pubsub import pub
 import actions
 import view.tree_view_item as tv_item
 from model.component import Component
-from view.abstract.has_controller_access import HasControllerAccess
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
@@ -30,18 +30,18 @@ FRAME_PAD_X = 10
 
 # TODO: Add button "Apply to all children"
 class InstancesTab(Tab,
-                   HasControllerAccess,
                    HasCommonSetup,
                    HasHierarchyTree,
                    SubscribesToListeners,
                    Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
         HasHierarchyTree.__init__(self)
         SubscribesToListeners.__init__(self)
+
+        self.__state = State()
 
     # HasCommonSetup
     def _create_widgets(self):
@@ -139,7 +139,7 @@ class InstancesTab(Tab,
         if self._hierarchy_tree:
             self._destroy_tree()
 
-        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
+        self._hierarchy_tree = HierarchyTree(self.frame, self.__state.model.hierarchy, columns=self._columns,
                                              on_select_callback=self._on_select_tree_item,
                                              extract_values=self._extract_values)
         self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
@@ -149,7 +149,7 @@ class InstancesTab(Tab,
         self._hierarchy_tree = None
 
     def _on_select_tree_item(self, cmp_id: int):
-        selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
+        selected_cmp: Component = self.__state.model.get_component_by_id(cmp_id)
         self._selected_component = selected_cmp
         self.__cmp_label_var.set(trim_string(selected_cmp.name, length=LABEL_LENGTH))
         if selected_cmp.is_leaf:
@@ -205,7 +205,7 @@ class InstancesTab(Tab,
     def __on_global_symmetry_breaking_toggled(self, _1, _2, _3):
         if self._hierarchy_tree:
             value = self.__global_symmetry_breaking_checkbox_var.get()
-            edited_cmps = self.controller.model.set_symmetry_breaking_for_all_in_hierarchy(value)
+            edited_cmps = self.__state.model.set_symmetry_breaking_for_all_in_hierarchy(value)
             self._hierarchy_tree.update_values(edited_cmps)
 
     def __on_symmetry_breaking_toggled(self, _1, _2, _3):
@@ -231,6 +231,6 @@ class InstancesTab(Tab,
             except tk.TclError as e:
                 print(e)
             finally:
-                updated_components = self.controller.model.set_instances_count_of_all_components_children(
+                updated_components = self.__state.model.set_instances_count_of_all_components_children(
                     self._selected_component, value)
                 self._hierarchy_tree.update_values(updated_components)

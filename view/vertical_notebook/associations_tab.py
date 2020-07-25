@@ -8,10 +8,10 @@ from pubsub import pub
 import actions
 from model.component import Component
 from model.association import Association
+from state import State
 from view.abstract.tab import Tab
 from view.tree_view_column import Column
 from view.hierarchy_tree import HierarchyTree
-from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_listeners import SubscribesToListeners
 from view.abstract.has_hierarchy_tree import HasHierarchyTree
@@ -28,18 +28,18 @@ FRAME_PAD_X = 10
 
 
 class AssociationsTab(Tab,
-                      HasControllerAccess,
                       HasCommonSetup,
                       SubscribesToListeners,
                       HasHierarchyTree,
                       Resetable):
     def __init__(self, parent, parent_notebook, *args, **kwargs):
         Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-        HasControllerAccess.__init__(self, parent)
 
         HasCommonSetup.__init__(self)
         SubscribesToListeners.__init__(self)
         HasHierarchyTree.__init__(self)
+
+        self.__state = State()
 
     # HasCommonSetup
     def _create_widgets(self):
@@ -111,7 +111,7 @@ class AssociationsTab(Tab,
 
     # HasHierarchyTree
     def _on_select_tree_item(self, cmp_id: int) -> None:
-        selected_cmp: Component = self.controller.model.get_component_by_id(cmp_id)
+        selected_cmp: Component = self.__state.model.get_component_by_id(cmp_id)
         self._selected_component = selected_cmp
 
         if selected_cmp.association:
@@ -151,7 +151,7 @@ class AssociationsTab(Tab,
         if self._hierarchy_tree:
             self._destroy_tree()
 
-        self._hierarchy_tree = HierarchyTree(self.frame, self.controller.model.hierarchy, columns=self._columns,
+        self._hierarchy_tree = HierarchyTree(self.frame, self.__state.model.hierarchy, columns=self._columns,
                                              on_select_callback=self._on_select_tree_item,
                                              extract_values=self._extract_values)
         self._hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
