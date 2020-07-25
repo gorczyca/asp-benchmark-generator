@@ -9,10 +9,12 @@ from model.helpers import json_converter
 from view.abstract.has_controller_access import HasControllerAccess
 from view.abstract.base_frame import BaseFrame
 import code_generator.code_generator as gen
+from solver.solver import Solver
 from view import style
 
 JSON_EXTENSION = '.json'
 LP_EXTENSION = '.lp'
+CSV_EXTENSION = '.csv'
 
 
 class Menu(BaseFrame, HasControllerAccess):
@@ -30,6 +32,13 @@ class Menu(BaseFrame, HasControllerAccess):
         file_menu.add_command(label='Save as...', command=self.__save_as)
 
         # TODO: finish the rest
+        run_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
+
+        run_menu.add_command(label='Generate', command=self.__generate)
+        run_menu.add_command(label='Solve', command=self.__solve)
+        run_menu.add_separator()
+        run_menu.add_command(label='Generate & solve', command=self.__generate_and_solve)
+
         edit_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
         help_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
         about_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
@@ -38,9 +47,19 @@ class Menu(BaseFrame, HasControllerAccess):
         self.__menu.add_cascade(label='Edit', menu=edit_menu)
         self.__menu.add_cascade(label='Help', menu=help_menu)
         self.__menu.add_cascade(label='About', menu=about_menu)
-        self.__menu.add_command(label='Generate', command=self.__generate)
+        self.__menu.add_cascade(label='Run', menu=run_menu)
 
         self.parent_frame.config(menu=self.__menu)
+
+    def __solve(self):
+        program_files_names = filedialog.askopenfilenames(defaultextension=LP_EXTENSION, title='Select ASP program files to solve.')
+        if program_files_names:
+            output_file_name = filedialog.asksaveasfilename(defaultextension=CSV_EXTENSION, title='Save output .csv file as...')
+            solver = Solver(output_file_name, *program_files_names, answer_sets_count=100, id_representation=False, show_predicates=False)
+            solver.solve()
+
+    def __generate_and_solve(self):
+        pass
 
     def __generate(self):
         # TODO:
@@ -82,7 +101,7 @@ class Menu(BaseFrame, HasControllerAccess):
 
     def __open_(self):
         file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
-        if file is not None:
+        if file:
             self.controller.file = file
             json = file.read()
             model = json_converter.json_to_model(json)

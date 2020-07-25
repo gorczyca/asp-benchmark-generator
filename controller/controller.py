@@ -5,7 +5,7 @@ from model.model import Model
 from view.view import View
 
 
-class Controller:
+class Controller1:
     """Controller is the middleman between Model and View in MVC pattern.
 
     All communication between those two are performed with the use of controller.
@@ -17,6 +17,8 @@ class Controller:
         saved: True if there are no unsaved changes; False therwise.
     """
     def __init__(self, main_window: tk.Tk):
+        self.__main_window = main_window
+
         self.__model: Model = Model()
         self.__view: View = View(self, main_window)
 

@@ -23,8 +23,9 @@ class Model:
         resources:  List of resources
         ports: List of ports
     """
-    def __init__(self, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
+    def __init__(self, root: str = None, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
                  simple_constraints: List[SimpleConstraint] = None, complex_constraints: List[ComplexConstraint] = None):
+        self.root: str = root
         self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
         self.ports: List[Port] = ports if ports is not None else []
