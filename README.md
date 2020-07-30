@@ -1,6 +1,6 @@
 # Benchmark generator
 
-#####A GUI tool for generation of configuration problem's encodings in ASP.
+##### A GUI tool for generation of configuration problem's encodings in ASP.
 
 ### Requirements
  - Python 3.7 with tkinter _(the standard GUI library for Python)_
