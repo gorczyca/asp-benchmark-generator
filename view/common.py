@@ -1,9 +1,13 @@
 import tkinter as tk
-from typing import List, Any
-
 
 STRING_MAX_LENGTH = 10
 REST_SYMBOL = '...'
+
+BOOLEAN_TO_STRING_DICT = {
+    True: 'yes',
+    False: 'no',
+    None: ''
+}
 
 
 def trim_string(string: str, length=STRING_MAX_LENGTH, rest_symbol=REST_SYMBOL) -> str:
@@ -21,6 +25,8 @@ def trim_string(string: str, length=STRING_MAX_LENGTH, rest_symbol=REST_SYMBOL) 
     return f'{string[0:length-rest_symbol_length]}{rest_symbol}'
 
 
-def change_controls_state(controls: List[Any], state=tk.NORMAL):
+def change_controls_state(state=tk.NORMAL, *controls):
     for c in controls:
         c.config(state=state)
+
+

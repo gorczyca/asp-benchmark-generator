@@ -5,7 +5,6 @@ from tkinter import ttk, messagebox
 
 from model.complex_constraint import ComplexConstraint
 from model.simple_constraint import SimpleConstraint
-from view.abstract.base_frame import BaseFrame
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.window import Window
 from view.scrollbars_listbox import ScrollbarListbox
@@ -22,8 +21,10 @@ WINDOW_HEIGHT_RATIO = 0.8
 
 class ComplexConstraintWindow(HasCommonSetup,
                               Window):
-    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None,
+    def __init__(self, parent_frame, state, callback, constraint: Optional[ComplexConstraint] = None,
                  check_name_with: List[str] = None):
+        # TODO: why do I have to pass the state here
+        self.__state = state
         self.__callback = callback
         self.__check_name_with = check_name_with if check_name_with is not None else []
 
@@ -173,22 +174,20 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __on_select_antecedent(self, id_: int) -> None:
         self.__selected_antecedent = next((a for a in self.__antecedent if a.id_ == id_), None)
         # Enable widgets
-        change_controls_state([
-            self.__edit_antecedent_button,
-            self.__remove_antecedent_button
-        ], tk.NORMAL)
+        change_controls_state(tk.NORMAL,
+                              self.__edit_antecedent_button,
+                              self.__remove_antecedent_button)
 
     def __on_select_consequent(self, id_: int) -> None:
         self.__selected_consequent = next((c for c in self.__consequent if c.id_ == id_), None)
         # Enable widgets
-        change_controls_state([
-            self.__edit_consequent_button,
-            self.__remove_consequent_button
-        ], tk.NORMAL)
+        change_controls_state(tk.NORMAL,
+                              self.__edit_consequent_button,
+                              self.__remove_consequent_button)
 
     def __add_antecedent(self):
         ant_names = [a.name for a in self.__antecedent]
-        SimpleConstraintWindow(self._window, callback=self.__on_antecedent_added, check_name_with=ant_names)
+        SimpleConstraintWindow(self._window, self.__state, callback=self.__on_antecedent_added, check_name_with=ant_names)
 
     def __on_antecedent_added(self, ant: SimpleConstraint):
         self.__antecedent.append(ant)
@@ -202,23 +201,22 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_antecedent(self):
         if self.__selected_antecedent:
             ant_names = [a.name for a in self.__antecedent]
-            SimpleConstraintWindow(self._window, constraint=self.__selected_antecedent,
+            SimpleConstraintWindow(self._window, self.__state, constraint=self.__selected_antecedent,
                                    callback=self.__on_antecedent_edited, check_name_with=ant_names)
 
     def __remove_antecedent(self):
         if self.__selected_antecedent:
             self.__antecedent.remove(self.__selected_antecedent)
-            self.__antecedent_listbox.remove_item(self.__selected_antecedent)
+            self.__antecedent_listbox.remove_item_recursively(self.__selected_antecedent)
             self.__selected_antecedent = None
             # Disable widgets
-            change_controls_state([
-                self.__edit_antecedent_button,
-                self.__remove_antecedent_button
-            ], tk.DISABLED)
+            change_controls_state(tk.DISABLED,
+                                  self.__edit_antecedent_button,
+                                  self.__remove_antecedent_button)
 
     def __add_consequent(self):
         con_names = [c.name for c in self.__consequent]
-        SimpleConstraintWindow(self._window, callback=self.__on_consequent_added, check_name_with=con_names)
+        SimpleConstraintWindow(self._window, self.__state, callback=self.__on_consequent_added, check_name_with=con_names)
 
     def __on_consequent_added(self, con: SimpleConstraint):
         self.__consequent.append(con)
@@ -228,7 +226,7 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_consequent(self):
         if self.__selected_consequent:
             con_names = [c.name for c in self.__consequent]
-            SimpleConstraintWindow(self._window, constraint=self.__selected_consequent,
+            SimpleConstraintWindow(self._window, self.__state, constraint=self.__selected_consequent,
                                    callback=self.__on_consequent_edited, check_name_with=con_names)
 
     def __on_consequent_edited(self, con: SimpleConstraint):
@@ -238,9 +236,8 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __remove_consequent(self):
         if self.__selected_consequent:
             self.__consequent.remove(self.__selected_consequent)
-            self.__consequent_listbox.remove_item(self.__selected_consequent)
+            self.__consequent_listbox.remove_item_recursively(self.__selected_consequent)
             self.__selected_consequent = None
-            change_controls_state([
-                self.__edit_consequent_button,
-                self.__remove_consequent_button
-            ], tk.DISABLED)
+            change_controls_state(tk.DISABLED,
+                                  self.__edit_consequent_button,
+                                  self.__remove_consequent_button)

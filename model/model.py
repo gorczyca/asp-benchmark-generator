@@ -1,12 +1,13 @@
 from typing import List, Optional, Tuple, Callable, Any
 
-# TODO: rename Errors
-from exceptions import HierarchyStringError, ResourceError, PortError, ConstraintError
+from exceptions import BGError
 from model.complex_constraint import ComplexConstraint
 from model.component import Component
 from model.resource import Resource
 from model.port import Port
 from model.simple_constraint import SimpleConstraint
+
+SPACE_REPLACEMENT = '_'
 
 
 class Model:
@@ -32,6 +33,10 @@ class Model:
         self.simple_constraints: List[SimpleConstraint] = simple_constraints if simple_constraints is not None else []
         self.complex_constraints: List[ComplexConstraint] = complex_constraints if complex_constraints is not None else []
 
+    @staticmethod
+    def replace_space(string: str):
+        return string.replace(' ', SPACE_REPLACEMENT)
+
     def clear(self):
         """Destroys all Model's attributes"""
         self.hierarchy = []
@@ -46,7 +51,7 @@ class Model:
         data['ports'] = list(map(Port.from_json, data['ports']))
         data['simple_constraints'] = list(map(SimpleConstraint.from_json, data['simple_constraints']))
         data['complex_constraints'] = list(map(ComplexConstraint.from_json, data['complex_constraints']))
-        return cls(**data)  # TODO: better
+        return cls(**data)
 
     # Hierarchy
     def set_hierarchy(self, hierarchy: List[Component]):
@@ -63,10 +68,17 @@ class Model:
 
         for cmp in self.hierarchy:
             if cmp.id_ not in parents_ids:
+                # Cmp is a leaf
                 cmp.is_leaf = True
                 cmp.symmetry_breaking = True
+            else:
+                # Cmp is not a leaf
+                cmp.is_leaf = False
+                cmp.symmetry_breaking = None
+                cmp.count = None
+                cmp.ports = {}  # TODO: should be None
 
-    def add_component_to_hierarchy(self, cmp_name: str, level: int, parent_id: Optional[int], is_leaf: bool) -> Component:
+    def add_component_to_hierarchy(self, cmp_name: str, level: int, parent_id: Optional[int], is_leaf: bool = True) -> Component:
         """Creates and adds new component to hierarchy.
 
         :param cmp_name: Name.
@@ -75,18 +87,17 @@ class Model:
         :param is_leaf: True if component is a leaf-component; False otherwise.
         :returns: Created component
         """
+        if not cmp_name:
+            raise BGError('Component must have a name.')
+        cmp_name = self.replace_space(cmp_name)
         cmps_names = [c.name for c in self.hierarchy]
         if cmp_name in cmps_names:
-            raise HierarchyStringError(message=f'Component with name: "{cmp_name}" already exists in the hierarchy.')
+            raise BGError(f'Component with name: "{cmp_name}" already exists in the hierarchy.')
         symmetry_breaking = True if is_leaf else None
         cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=is_leaf,
                         symmetry_breaking=symmetry_breaking)
         self.hierarchy.append(cmp)
-        if parent_id:
-            parent = self.get_component_by_id(parent_id)
-            parent.is_leaf = False      # Parent is not leaf anymore
-            parent.count = None
-            parent.symmetry_breaking = None
+        self.__set_leaves()
         return cmp
 
     def remove_component_from_hierarchy_recursively(self, cmp: Component) -> List[Component]:
@@ -114,21 +125,17 @@ class Model:
         return to_remove
 
     def get_component_and_its_children(self, cmp: Component) -> List[Component]:
-        """TODO:
-        """
         def __get_component_and_children(cmp_: Component, hierarchy_: List[Component], children_: List[Component]) -> None:
-            """TODO:
-            """
             children_.append(cmp_)
             for c in hierarchy_:
                 if c.parent_id == cmp_.id_:
-                    __get_component_and_children(c, hierarchy_, children_)   # TODO: comment
+                    __get_component_and_children(c, hierarchy_, children_)
 
         list_ = []
         __get_component_and_children(cmp, self.hierarchy, list_)
         return list_
 
-    def remove_component_from_hierarchy_preserve_children(self, cmp: Component) -> List[Component]:
+    def remove_component_from_hierarchy_preserve_children(self, cmp: Component) -> None:
         """Removes the component from hierarchy, but preserves its children.
 
         The children of the removed component are placed on their ancestor's place; Their parent_id attribute is set
@@ -137,16 +144,12 @@ class Model:
         :param cmp: Component to remove.
         :returns: List of removed components children.
         """
-        children = []
         for c in self.hierarchy:
             if c.parent_id == cmp.id_:
                 c.parent_id = cmp.parent_id
-                children.append(c)
         self.hierarchy.remove(cmp)
         self.__set_leaves()
-        return children
 
-    # TODO: get by lambda, e.g. where is_leaf is true or where id == some id ???
     def get_component_by_id(self, id_: int) -> Component:
         """Returns component, that has the specified id
 
@@ -170,38 +173,29 @@ class Model:
         """
         return [c for c in self.hierarchy if c.is_leaf]
 
-    def change_component_name(self, cmp: Component, new_name: str) -> Component:
+    def rename_component(self, cmp: Component, new_name: str) -> Component:
         """Changes name of a specified component.
 
-        Raises HierarchyStringError when a component with the new name already exists in the hierarchy.
+        Raises BGError when a component with the new name already exists in the hierarchy.
         :param cmp: Component
         :param new_name: New name for component
         :returns: Component with its name changed
         """
+        if not new_name:
+            raise BGError('Component must have a name')
         cmps_names = [c.name for c in self.hierarchy]
         if new_name in cmps_names:
-            raise HierarchyStringError(message=f'Component with name: "{new_name}" already exists in the hierarchy.')
+            raise BGError(f'Component with name: "{new_name}" already exists in the hierarchy.')
         cmp.name = new_name
         return cmp
 
-    def set_symmetry_breaking_for_all_in_hierarchy(self, symmetry_breaking) -> List[Component]:
-        """Sets the value of symmetry breaking for all element in the hierarchy.
-
-        :param symmetry_breaking: Value to set the symmetry breaking to.
-        """
-        edited_cmps = []
-        for c in self.hierarchy:
-            if c.is_leaf:
-                c.symmetry_breaking = symmetry_breaking
-                edited_cmps.append(c)
-        return edited_cmps
-
     # Instances
-    def set_instances_count_of_all_components_children(self, cmp: Component, count: int) -> List[Component]:
+    def set_instances_of_all_components_children(self, cmp: Component, count: int, symmetry_breaking: bool) -> List[Component]:
         """
         # TODO:
         :param cmp:
         :param count:
+        :param symmetry_breaking:
         :return:
         """
         def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
@@ -224,6 +218,7 @@ class Model:
         __get_components_leaf_children(cmp, self.hierarchy, leaf_children)
         for c in leaf_children:
             c.count = count
+            c.symmetry_breaking = symmetry_breaking
         return leaf_children
 
     # Resources
@@ -239,7 +234,7 @@ class Model:
         """
         resources_names = self.get_all_resources_names()
         if name in resources_names:
-            raise ResourceError(f'Resource "{name}" already exists.')
+            raise BGError(f'Resource "{name}" already exists.')
         resource = Resource(name)
         self.resources.append(resource)
         return resource
@@ -268,7 +263,7 @@ class Model:
         """
         res_names = self.get_all_resources_names()
         if new_name in res_names:
-            raise ResourceError(message=f'Resource with name: "{new_name}" already exists in the hierarchy.')
+            raise BGError(f'Resource with name: "{new_name}" already exists in the hierarchy.')
         res.name = new_name
         return res
 
@@ -351,7 +346,7 @@ class Model:
         # TODO: remove index
         port_names = [p.name for p in self.ports]
         if name in port_names:
-            raise PortError(f'Port "{name}" already exists.')
+            raise BGError(f'Port "{name}" already exists.')
         port = Port(name)
         self.ports.append(port)
         port_names_sorted = sorted([p.name for p in self.ports])
@@ -369,7 +364,7 @@ class Model:
         """
         port_names = [p.name for p in self.ports]
         if new_name in port_names:
-            raise PortError(f'Port "{new_name}" already exists.')
+            raise BGError(f'Port "{new_name}" already exists.')
         prt.name = new_name
         # TODO: do it better, sort the ports list and then take port
         port_names_sorted = sorted([p.name for p in self.ports])
@@ -454,9 +449,11 @@ class Model:
         :returns: Added constraint and index of it in the sorted alphabetically union of simple
         and complex constraints (Simple constraints are put first in the union, complex constraints later).
         """
+        if not ctr.name:
+            raise BGError('Constraint must have a name.')
         ctr_names = [*[s.name for s in self.simple_constraints], *[c.name for c in self.complex_constraints]]
         if ctr.name in ctr_names:
-            raise ConstraintError(f'Constraint with the name {ctr.name} already exists.')
+            raise BGError(f'Constraint with the name {ctr.name} already exists.')
 
         if isinstance(ctr, SimpleConstraint):
             # TODO: already insert in sorted maybe?
@@ -479,8 +476,6 @@ class Model:
         return ctr
 
     def get_constraint_index(self, ctr: Any):
-        """TODO:
-        """
         sorted_ctrs_names = [*sorted([p.name for p in self.simple_constraints]), *sorted([p.name for p in self.complex_constraints])]
         return sorted_ctrs_names.index(ctr.name)
 

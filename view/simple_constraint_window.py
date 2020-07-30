@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, Any, List, Optional
+from typing import List, Optional
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -7,22 +7,24 @@ from model.component import Component
 from model.simple_constraint import SimpleConstraint
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.has_hierarchy_tree import HasHierarchyTree
 from view.abstract.window import Window
-from view.hierarchy_tree import HierarchyTree
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, FONT
 
 
 WINDOW_TITLE = 'Simple constraint'
+TREEVIEW_HEADING = 'Component'
 
 
 class SimpleConstraintWindow(HasCommonSetup,
-                             HasHierarchyTree,  # TODO: remove this interface
                              Window):
-    def __init__(self, parent_frame, callback, constraint: Optional[SimpleConstraint] = None,
+    def __init__(self, parent_frame, state, callback, constraint: Optional[SimpleConstraint] = None,
                  check_name_with: List[str] = None):
+        # TODO: why do I have to pass the state here
+        self.__state = state
+        self.__callback = callback
+
         self.__constraint: SimpleConstraint = constraint if constraint is not None \
             else SimpleConstraint()
         self.__components_ids = [] if constraint is None else [*constraint.components_ids]  # Deep copy of component ids
@@ -30,15 +32,18 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__selected_listbox_item: Optional[Component] = None
         self.__check_name_with: List[str] = check_name_with if check_name_with is not None else []
 
-        self.__state = State()
-        self.__callback = callback
-
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self._build_tree()
+        self.__hierarchy_tree = ScrollbarListbox(self._window,
+                                                 on_select_callback=self.__on_select_tree_item,
+                                                 heading=TREEVIEW_HEADING,
+                                                 extract_id=lambda x: x.id_,
+                                                 extract_text=lambda x: x.name,
+                                                 extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
+                                                 values=self.__state.model.hierarchy)
 
         self.__mid_frame = ttk.Frame(self._window)
         self.__add_component_button = ttk.Button(self.__mid_frame, text='>>', command=self.__add_to_selected)
@@ -47,8 +52,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__remove_component_button = ttk.Button(self.__mid_frame, text='<<', command=self.__remove_from_selected)
 
         self.__right_frame = ttk.Frame(self._window)
-        # self.__constraints_data_frame = ttk.Frame(self.__right_frame)
-        # TODO: move grid_row to a separate function and invoke it in setup_layout
+
         self.__components_listbox = ScrollbarListbox(self.__right_frame,
                                                      values=self.__state.model.get_components_by_ids(
                                                          self.__constraint.components_ids),
@@ -97,7 +101,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self._window.destroy)
 
     def _setup_layout(self) -> None:
-        self._hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+        self.__hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
         self.__mid_frame.grid(row=0, column=1)
         self.__remove_component_button.grid(row=1, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__add_component_button.grid(row=2, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
@@ -135,22 +139,8 @@ class SimpleConstraintWindow(HasCommonSetup,
 
         self._set_geometry()
 
-    def _on_select_tree_item(self, cmp_id: int) -> None:
+    def __on_select_tree_item(self, cmp_id: int) -> None:
         self.__selected_hierarchy_tree_item = self.__state.model.get_component_by_id(cmp_id)
-
-    @property
-    def _columns(self) -> List[Column]:
-        return []
-
-    def _extract_values(self, cmp: Component) -> Tuple[Any, ...]:
-        pass
-
-    def _build_tree(self) -> None:
-        self._hierarchy_tree = HierarchyTree(self._window, self.__state.model.hierarchy,
-                                             on_select_callback=self._on_select_tree_item)
-
-    def _destroy_tree(self) -> None:
-        pass
 
     def __on_select_listbox_component(self, id_: int) -> None:
         self.__selected_listbox_item = self.__state.model.get_component_by_id(id_)
@@ -173,7 +163,7 @@ class SimpleConstraintWindow(HasCommonSetup,
     def __remove_from_selected(self):
         if self.__selected_listbox_item:
             self.__components_ids.remove(self.__selected_listbox_item.id_)
-            self.__components_listbox.remove_item(self.__selected_listbox_item)
+            self.__components_listbox.remove_item_recursively(self.__selected_listbox_item)
             self.__selected_listbox_item = None
 
     def __on_has_min_changed(self, _1, _2, _3):

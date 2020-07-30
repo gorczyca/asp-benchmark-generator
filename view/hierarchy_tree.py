@@ -3,7 +3,6 @@ from tkinter import ttk
 from typing import List, Callable, Any
 
 from model.component import Component
-from view.abstract.has_common_setup import HasCommonSetup
 from view.tree_view_column import Column
 
 COL_ID_COMPONENT = '#0'
@@ -12,14 +11,16 @@ COL_NAME_COMPONENT = 'Component'
 
 # TODO: cleanup the arguments -- which suppose to be default, annotated etc.
 class HierarchyTree(ttk.Treeview):
-    def __init__(self, parent_frame, hierarchy: List[Component], columns: List[Column] = None, on_select_callback=None,
-                 extract_values: Callable[[Component], Any] = lambda cmp: [], **kwargs):
+    def __init__(self, parent_frame,
+                 hierarchy: List[Component],
+                 columns: List[Column] = None,
+                 on_select_callback=None,
+                 extract_values: Callable[[Component], Any] = lambda cmp: [],
+                 **kwargs):
         ttk.Treeview.__init__(self, parent_frame, **kwargs)
 
         self.parent_frame = parent_frame
-
         self.__tree = ttk.Treeview(self.parent_frame, style='Custom.Treeview', selectmode='extended', **kwargs)
-
         self.__extract_values = extract_values
 
         if on_select_callback:
@@ -59,7 +60,7 @@ class HierarchyTree(ttk.Treeview):
             self.__tree.move(c.id_, cmp_parent, children_count) # TODO: check with tk.END
         self.__tree.delete(cmp.id_)
 
-    def update_values(self, cmps: List[Component]):
+    def update_values(self, cmps: List[Component]): # TODO: variable number of arguments instead
         for c in cmps:
             self.__update_value(c)
 

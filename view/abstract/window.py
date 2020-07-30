@@ -6,10 +6,12 @@ from view.style import BACKGROUND_COLOR_PRIMARY, WINDOW_WIDTH_RATIO, WINDOW_HEIG
 
 class Window(ABC):
     @abstractmethod
-    def __init__(self, parent_frame, window_title):
+    def __init__(self, parent_frame, window_title, bind_enter_callback=None):
         self._window = tk.Toplevel(parent_frame, bg=BACKGROUND_COLOR_PRIMARY)
         self._window.grab_set()
         self._window.title(window_title)
+        if bind_enter_callback:
+            self._window.bind('<Return>', lambda _: bind_enter_callback())
 
     def _set_geometry(self, height=None, width=None, width_ratio=WINDOW_WIDTH_RATIO, height_ratio=WINDOW_HEIGHT_RATIO):
         screen_width = self._window.winfo_screenwidth()

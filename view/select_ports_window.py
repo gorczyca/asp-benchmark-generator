@@ -15,8 +15,9 @@ WINDOW_TITLE = 'Select ports to be compatible with {0}'
 
 class SelectPortsWindow(HasCommonSetup,
                         Window):
-    def __init__(self, parent_frame, selected_port: Port, ports_right, ports_left, callback):
-        self.__state = State()
+    def __init__(self, parent_frame, selected_port: Port, ports_right, ports_left, state, callback):
+        # TODO: why do I have to pass the state here
+        self.__state = state
         self.__callback = callback
 
         self.__ports_right: List[Port] = ports_right
@@ -88,7 +89,7 @@ class SelectPortsWindow(HasCommonSetup,
         if self.__selected_port_left:
             prt = self.__selected_port_left
             self.__ports_left.remove(prt)
-            self.__ports_left_listbox.remove_item(prt)
+            self.__ports_left_listbox.remove_item_recursively(prt)
             self.__selected_port_left = None
             self.__ports_right.append(prt)
             # TODO: sort objects maybe?
@@ -101,7 +102,7 @@ class SelectPortsWindow(HasCommonSetup,
         if self.__selected_port_right:
             prt = self.__selected_port_right
             self.__ports_right.remove(prt)
-            self.__ports_right_listbox.remove_item(prt)
+            self.__ports_right_listbox.remove_item_recursively(prt)
             self.__selected_port_right = None
             self.__ports_left.append(prt)
             # TODO: sort objects maybe?

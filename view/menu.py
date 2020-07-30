@@ -7,7 +7,6 @@ from pubsub import pub
 import actions
 from model.helpers import json_converter
 from state import State
-from view.abstract.base_frame import BaseFrame
 import code_generator.code_generator as gen
 from solver.solver import Solver
 from view import style
@@ -17,11 +16,10 @@ LP_EXTENSION = '.lp'
 CSV_EXTENSION = '.csv'
 
 
-class Menu(BaseFrame):
-    def __init__(self, parent, parent_frame, *args, **kwargs):
-        BaseFrame.__init__(self, parent_frame)
+class Menu:
+    def __init__(self, parent_frame):
 
-        self.__menu = tk.Menu(parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY, *args, **kwargs)   # Cannot change it on Windows / OSX
+        self.__menu = tk.Menu(parent_frame, bg=style.BACKGROUND_COLOR_PRIMARY)   # Cannot change it on Windows / OSX
         self.__state = State()
 
         file_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
@@ -49,7 +47,7 @@ class Menu(BaseFrame):
         self.__menu.add_cascade(label='About', menu=about_menu)
         self.__menu.add_cascade(label='Run', menu=run_menu)
 
-        self.parent_frame.config(menu=self.__menu)
+        parent_frame.config(menu=self.__menu)
 
     def __solve(self):
         program_files_names = filedialog.askopenfilenames(defaultextension=LP_EXTENSION, title='Select ASP program files to solve.')

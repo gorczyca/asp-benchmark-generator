@@ -5,7 +5,6 @@ from model.component import Component
 from model.port import Port
 from model.simple_constraint import SimpleConstraint
 
-NEWLINE_SYMBOL = '\n'
 DEFAULT_NEGATION_SYMBOL = 'not'
 COUNT_DIRECTIVE = '#count'
 UNKNOWN_VARIABLE = '_'
@@ -39,8 +38,6 @@ CMB_SYMBOL = 'cmb'
 PO_SYMBOL = 'po'
 CN_SYMBOL = 'cn'
 
-# TODO: remove this newline symbol
-
 
 def generate_code(model: Model, root_name: str):
     info = __generate_code_info()
@@ -68,13 +65,13 @@ def generate_code(model: Model, root_name: str):
 
 
 def __generate_code_info():
-    return f'%{NEWLINE_SYMBOL}% THIS CODE IS AUTOMATICALLY GENERATED{NEWLINE_SYMBOL}%{NEWLINE_SYMBOL}'
+    return f'%\n% THIS CODE IS AUTOMATICALLY GENERATED\n%\n'
 
 
 def __generate_root_code(root_name: str) -> str:
     root_code = ''
-    root_code += f'{ROOT_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).{NEWLINE_SYMBOL}'
-    root_code += f'{CMP_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).{NEWLINE_SYMBOL}'
+    root_code += f'{ROOT_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).\n'
+    root_code += f'{CMP_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).\n'
     return root_code
 
 
@@ -86,7 +83,7 @@ def __generate_hierarchy_code(model: Model) -> str:
             parent: Component = model.get_component_by_id(c.parent_id)
             parent_name = parent.name   # If there is a parent, overwrite :parent_name:
 
-        hierarchy_code += f'{parent_name}({CMP_VARIABLE}) :- {c.name}({CMP_VARIABLE}).{NEWLINE_SYMBOL}'
+        hierarchy_code += f'{parent_name}({CMP_VARIABLE}) :- {c.name}({CMP_VARIABLE}).\n'
     return hierarchy_code
 
 
@@ -111,9 +108,9 @@ def __generate_associations_code(model: Model, root_name: str) -> str:
     associations_code = ''
     for c in model.hierarchy:
         if c.association:
-            associations_code += f'{PAN_SYMBOL}("{c.name}").{NEWLINE_SYMBOL}'
+            associations_code += f'{PAN_SYMBOL}("{c.name}").\n'
             associations_code += f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") :- ' \
-                                 f'{root_name}({CMP_VARIABLE}1), {c.name}({CMP_VARIABLE}2).{NEWLINE_SYMBOL}'
+                                 f'{root_name}({CMP_VARIABLE}1), {c.name}({CMP_VARIABLE}2).\n'
             min_ = '' if not c.association.min_ else c.association.min_
             max_ = '' if not c.association.max_ else c.association.max_
             associations_code += f'{min_} {{ {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") : ' \
@@ -139,7 +136,7 @@ def __generate_resource_code(model: Model) -> str:
             for res_id, amount in c.produces.items():
                 res = model.get_resource_by_id(res_id)
                 res_code += f'{PRD_SYMBOL}({CMP_VARIABLE}, "{res.name}", {amount}) :- ' \
-                            f'{c.name}({CMP_VARIABLE}).{NEWLINE_SYMBOL}'
+                            f'{c.name}({CMP_VARIABLE}).\n'
     return res_code
 
 
@@ -180,8 +177,8 @@ def __generate_ports_code(model: Model) -> str:
                                 f'{prt.name}({PRT_VARIABLE}1), {prt2.name}({PRT_VARIABLE}2).\n'
                 prt_individual_names = __get_port_individual_names(c, prt)
                 for prt_individual_name in prt_individual_names:
-                    prt_code += f'{PON_SYMBOL}("{prt_individual_name}").{NEWLINE_SYMBOL}'
-                    # prt_code += f'{PRT_SYMBOL}({PRT_VARIABLE}) :- {prt_individual_name}({PRT_VARIABLE}).{NEWLINE_SYMBOL}'
+                    prt_code += f'{PON_SYMBOL}("{prt_individual_name}").\n'
+                    # prt_code += f'{PRT_SYMBOL}({PRT_VARIABLE}) :- {prt_individual_name}({PRT_VARIABLE}).\n'
                     # Compatibility
                     # for compatible_with_id in prt.compatible_with:
                     #     prt2 = model.get_port_by_id(compatible_with_id)
@@ -190,7 +187,7 @@ def __generate_ports_code(model: Model) -> str:
                     #             prt_individual_names_2 = __get_port_individual_names(c2, prt2)
                     #             for prt_individual_name_2 in prt_individual_names_2:
                     #                 prt_code += f'{CMB_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) :- ' \
-                    #                             f'{prt_individual_name}({PRT_VARIABLE}1), {prt_individual_name_2}({PRT_VARIABLE}2). {NEWLINE_SYMBOL}'
+                    #                             f'{prt_individual_name}({PRT_VARIABLE}1), {prt_individual_name_2}({PRT_VARIABLE}2). \n'
                     # Port on device
                     prt_code += f'1 {{ {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}, "{prt_individual_name}") : ' \
                                 f'{prt.name}({PRT_VARIABLE}) }} 1 :- ' \
@@ -279,7 +276,6 @@ def __generate_complex_constraints_code(model: Model, root_name: str) -> str:
         consequent_head = f'{ctr.name.replace(" ", "_")}_consequent'
         consequent_complete_code = __generate_implication_complete_part(consequent_head, consequents_heads, ctr.consequent_all)
         complete_implication = f':- {antecedent_head}, {DEFAULT_NEGATION_SYMBOL} {consequent_head}.\n'
-        # TODO: add comments to generated code
         ctrs_code += f'{antecedents_code}\n' \
                      f'{consequents_code}\n' \
                      f'{antecedent_complete_code}' \
@@ -292,29 +288,24 @@ def __generate_constraints_code(model: Model, root_name: str) -> Tuple[str, str]
     # Simple constraints
     simple_constraints_code = __generate_simple_constraints_code(model, root_name)
     complex_constraints_code = __generate_complex_constraints_code(model, root_name)
-    # TODO: not working
     return simple_constraints_code, complex_constraints_code
 
 
 def __generate_instances_with_symmetry_breaking(name: str, count: int, offset: int) -> str:
     instance_code = f'{name}Domain({offset+1}..{offset+count}).\n'
-    # instance_code = f'{cmp.name}Domain({offset+1}..{offset+cmp.count}).\n'
-    # TODO: is this necessary?     #  pLower {p(X): pDomain(X)} pUpper.
     instance_code += f'0 {{{name}({INSTANCE_VARIABLE}) : {name}Domain({INSTANCE_VARIABLE})}} {count}.\n'
     instance_code += f'{name}({INSTANCE_VARIABLE}1) :- {name}Domain({INSTANCE_VARIABLE}1), ' \
-                         f'{name}Domain({INSTANCE_VARIABLE}2), {name}({INSTANCE_VARIABLE}2), ' \
-                         f'{INSTANCE_VARIABLE}1 < {INSTANCE_VARIABLE}2.\n'
+                     f'{name}Domain({INSTANCE_VARIABLE}2), {name}({INSTANCE_VARIABLE}2), ' \
+                     f'{INSTANCE_VARIABLE}1 < {INSTANCE_VARIABLE}2.\n'
     return instance_code
 
 
 def __generate_instances_code(model: Model, root_name: str) -> str:
     inst_code = ''
-    inst_dict = {range(1): root_name}   # Initialize with root with no = 0
     inst_code += f'{root_name}(0..0).\t% ROOT\n\n'
     offset = 0
     for cmp in model.get_leaf_components():
         if cmp.count:
-            inst_dict[range(offset+1, offset+cmp.count)] = cmp.name
             cmp_instance_code = __generate_instances_with_symmetry_breaking(cmp.name, cmp.count, offset) if cmp.symmetry_breaking \
                 else f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
             inst_code += cmp_instance_code
@@ -322,13 +313,12 @@ def __generate_instances_code(model: Model, root_name: str) -> str:
         for prt_id, prt_count in cmp.ports.items():
             ports_count = cmp.count * prt_count
             prt = model.get_port_by_id(prt_id)
-            inst_dict[range(offset+1, offset+ports_count)] = prt.name
             prt_instance_code = __generate_instances_with_symmetry_breaking(prt.name, ports_count, offset) if cmp.symmetry_breaking \
                 else f'{prt.name}({offset+1}..{offset+ports_count}).\n'
             offset += ports_count
             inst_code += prt_instance_code
         inst_code += '\n'
-    return inst_code, inst_dict
+    return inst_code
 
 
 

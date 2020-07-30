@@ -6,9 +6,8 @@ above.
 
 from typing import List, Tuple, Optional
 
+from exceptions import BGError
 from model.component import Component
-from exceptions import HierarchyStringError
-
 
 CHILD_SYMBOL = '\t'
 NEWLINE_SYMBOL = '\n'
@@ -47,14 +46,14 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
             continue
         level, component_name = __extract_tabs(line)
         if component_name in cmp_names:     # if names are not unique, raise error
-            raise HierarchyStringError(message=f'Hierarchy contains more than one component '
-                                               f'named "{component_name}".')
+            raise BGError(f'Hierarchy contains more than one component '
+                          f'named "{component_name}".')
         else:
             cmp_names.append(component_name)
         if len(last_on_level) < level:      # if there are too many intendations, raise error
-            raise HierarchyStringError(message=f'Cannot create a child of non-existing component. '
-                                               f'Check number of tabs in component: "{component_name} " '
-                                               f'and its ancestor.')
+            raise BGError(f'Cannot create a child of non-existing component. '
+                          f'Check number of tabs in component: "{component_name} " '
+                          f'and its ancestor.')
         component = Component(component_name, level)
 
         if len(last_on_level) > level:

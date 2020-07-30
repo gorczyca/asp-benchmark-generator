@@ -41,10 +41,7 @@ class Component:
         association = None if data['association'] is None else Association.from_json(data['association'])
         data['association'] = association
         # Convert dictionary keys from string to ints
-        # TODO: rollback to this in case of errors
-        # produces = None if data['produces'] is None else {int(key): val for key, val in data['produces'].items()}
         data['produces'] = {int(key): val for key, val in data['produces'].items()}
-        # Convert dictionary keys from string to ints
         data['ports'] = {int(key): val for key, val in data['ports'].items()}
         return cls(**data)
 

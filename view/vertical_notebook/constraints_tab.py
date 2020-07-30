@@ -4,12 +4,12 @@ from typing import Optional, Any
 
 from pubsub import pub
 
-from exceptions import ConstraintError
+from exceptions import BGError
 from model.simple_constraint import SimpleConstraint
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.resetable import Resetable
-from view.abstract.subscribes_to_listeners import SubscribesToListeners
+from view.abstract.subscribes_to_events import SubscribesToEvents
 from view.abstract.tab import Tab
 from view.complex_constraint_window import ComplexConstraintWindow
 from view.scrollbars_listbox import ScrollbarListbox
@@ -29,26 +29,24 @@ FRAME_PAD_X = 10
 
 class ConstraintsTab(Tab,
                      HasCommonSetup,
-                     SubscribesToListeners,
+                     SubscribesToEvents,
                      Resetable):
-    def __init__(self, parent, parent_notebook, *args, **kwargs):
-        Tab.__init__(self, parent_notebook, TAB_NAME, *args, **kwargs)
-
-        self.__constraints_listbox: Optional[ScrollbarListbox] = None
-        self.__selected_constraint: Optional[Any] = None    # can be either simple or complex constraint
-
-        HasCommonSetup.__init__(self)
-        SubscribesToListeners.__init__(self)
+    def __init__(self, parent_notebook):
 
         self.__state = State()
+        self.__selected_constraint: Optional[Any] = None    # can be either simple or complex constraint
+
+        Tab.__init__(self, parent_notebook, TAB_NAME)
+        HasCommonSetup.__init__(self)
+        SubscribesToEvents.__init__(self)
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__constraints_listbox = ScrollbarListbox(self.frame, columns=[Column('type', 'Type')], heading='Constraint',
+        self.__constraints_listbox = ScrollbarListbox(self._frame, columns=[Column('type', 'Type')], heading='Constraint',
                                                       extract_id=lambda crt: crt.id_, extract_text=lambda crt: crt.name,
                                                       extract_values=lambda crt: 'Simple' if isinstance(crt, SimpleConstraint) else 'Complex',
                                                       on_select_callback=self.__on_select_callback)
-        self.__right_frame = ttk.Frame(self.frame)
+        self.__right_frame = ttk.Frame(self._frame)
         # Ctr label
         self.__ctr_label_var = tk.StringVar(value='')
         self.__ctr_label = ttk.Label(self.__right_frame, textvariable=self.__ctr_label_var, style='Big.TLabel', anchor=tk.CENTER)
@@ -72,25 +70,30 @@ class ConstraintsTab(Tab,
         self.__edit_constraint_button.grid(row=3, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__remove_constraint_button.grid(row=4, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self.frame.columnconfigure(0, weight=1)
-        self.frame.rowconfigure(0, weight=1)
+        self._frame.columnconfigure(0, weight=1)
+        self._frame.rowconfigure(0, weight=1)
 
-    def _subscribe_to_listeners(self) -> None:
+    def _subscribe_to_events(self) -> None:
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
+        pub.subscribe(self._reset, actions.RESET)
 
     def _reset(self) -> None:
-        pass
+        self.__constraints_listbox.set_items([])
+        self.__selected_constraint = None
+        self.__ctr_label_var.set('')
+        change_controls_state(tk.DISABLED,
+                              self.__edit_constraint_button,
+                              self.__remove_constraint_button)
 
     def __on_select_callback(self, ctr_id: int):
-        selected_ctr: Any = self.__state.model.get_constraint_by_id(ctr_id)
-        if selected_ctr:    # TODO: should be unnecesary
+        selected_ctr = self.__state.model.get_constraint_by_id(ctr_id)
+        if selected_ctr:
             self.__selected_constraint = selected_ctr
             self.__ctr_label_var.set(trim_string(selected_ctr.name, length=LABEL_LENGTH))
             # Enable buttons
-            change_controls_state([
-                self.__edit_constraint_button,
-                self.__remove_constraint_button
-            ], state=tk.NORMAL)
+            change_controls_state(tk.NORMAL,
+                                  self.__edit_constraint_button,
+                                  self.__remove_constraint_button)
 
     def __on_constraint_created(self, ctr: Any):
         # TODO: make it sorted alphabetically
@@ -101,12 +104,11 @@ class ConstraintsTab(Tab,
             self.__selected_constraint = ctr
             self.__ctr_label_var.set(trim_string(ctr.name, length=LABEL_LENGTH))
             # Enable buttons
-            change_controls_state([
-                self.__edit_constraint_button,
-                self.__remove_constraint_button
-            ], state=tk.NORMAL)
+            change_controls_state(tk.NORMAL,
+                                  self.__edit_constraint_button,
+                                  self.__remove_constraint_button)
 
-        except ConstraintError as e:
+        except BGError as e:
             messagebox.showerror('Add constraint error.', e.message)
 
     def __on_constraint_edited(self, ctr: Any):
@@ -118,31 +120,30 @@ class ConstraintsTab(Tab,
     def __add_constraint(self, complex_=False):
         ctr_names = [c.name for c in self.__state.model.get_all_constraints()]
         if complex_:
-            ComplexConstraintWindow(self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
+            ComplexConstraintWindow(self._frame, self.__state, callback=self.__on_constraint_created, check_name_with=ctr_names)
         else:
-            SimpleConstraintWindow(self.frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
+            SimpleConstraintWindow(self._frame, self.__state, callback=self.__on_constraint_created, check_name_with=ctr_names)
 
     def __edit_constraint(self):
         if self.__selected_constraint:
             ctr_names = [c.name for c in self.__state.model.get_all_constraints()]
             if isinstance(self.__selected_constraint, SimpleConstraint):
-                SimpleConstraintWindow(self.frame, constraint=self.__selected_constraint,
+                SimpleConstraintWindow(self._frame, self.__state, constraint=self.__selected_constraint,
                                        callback=self.__on_constraint_edited, check_name_with=ctr_names)
             else:
-                ComplexConstraintWindow(self.frame, constraint=self.__selected_constraint,
+                ComplexConstraintWindow(self._frame, self.__state, constraint=self.__selected_constraint,
                                         callback=self.__on_constraint_edited, check_name_with=ctr_names)
 
     def __remove_constraint(self):
         if self.__selected_constraint:
             self.__state.model.remove_constraint(self.__selected_constraint)
-            self.__constraints_listbox.remove_item(self.__selected_constraint)
+            self.__constraints_listbox.remove_item_recursively(self.__selected_constraint)
             self.__selected_constraint = None
             # Hide widgets
             self.__ctr_label_var.set('')
-            change_controls_state([
-                self.__edit_constraint_button,
-                self.__remove_constraint_button
-            ], state=tk.DISABLED)
+            change_controls_state(tk.DISABLED,
+                                  self.__edit_constraint_button,
+                                  self.__remove_constraint_button)
 
     def __on_model_loaded(self):
         ctrs = self.__state.model.get_all_constraints()

@@ -4,9 +4,8 @@ from tkinter import ttk, messagebox
 from pubsub import pub
 
 import actions
-from exceptions import HierarchyStringError
+from exceptions import BGError
 from model.helpers import string_converter
-from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
 from view.abstract.window import Window
@@ -21,8 +20,9 @@ LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component a
 
 class CreateHierarchyWindow(HasCommonSetup,
                             Window):
-    def __init__(self, parent_frame, callback):
-        self.__state = State()
+    def __init__(self, parent_frame, state, callback):
+        # TODO: why do I have to pass the state here
+        self.__state = state
         self.__callback = callback
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
@@ -84,10 +84,11 @@ class CreateHierarchyWindow(HasCommonSetup,
         try:
             hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
             self.__state.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
-            pub.sendMessage(actions.HIERARCHY_CREATED)
+            pub.sendMessage(actions.HIERARCHY_EDITED)
             pub.sendMessage(actions.MODEL_CHANGED)
+            self.__callback()
             self._window.destroy()
-        except HierarchyStringError as e:
+        except BGError as e:
             messagebox.showerror('Error', e.message)
 
 
