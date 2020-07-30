@@ -50,6 +50,7 @@ class AssociationsTab(Tab,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
+                                                 values=self.__state.model.hierarchy,
                                                  columns=[
                                                      Column('has_association', 'Has association?'),
                                                      Column('min', 'Min'),

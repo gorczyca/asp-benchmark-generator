@@ -6,6 +6,7 @@ from pubsub import pub
 import actions
 from exceptions import BGError
 from model.helpers import string_converter
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
 from view.abstract.window import Window
@@ -15,14 +16,10 @@ WINDOW_TITLE = 'Edit hierarchy'
 LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
 
 
-# TODO: not every variable has to be a class property!
-
-
 class CreateHierarchyWindow(HasCommonSetup,
                             Window):
-    def __init__(self, parent_frame, state, callback):
-        # TODO: why do I have to pass the state here
-        self.__state = state
+    def __init__(self, parent_frame, callback):
+        self.__state = State()
         self.__callback = callback
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
@@ -79,17 +76,17 @@ class CreateHierarchyWindow(HasCommonSetup,
 
     # Class-specific
     def __ok(self):
-        self._window.grab_release()
-        hierarchy_string = self.__text.get(1.0, tk.END)
         try:
+            hierarchy_string = self.__text.get(1.0, tk.END)
             hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
             self.__state.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
             pub.sendMessage(actions.HIERARCHY_EDITED)
             pub.sendMessage(actions.MODEL_CHANGED)
             self.__callback()
+            self._window.grab_release()
             self._window.destroy()
         except BGError as e:
-            messagebox.showerror('Error', e.message)
+            messagebox.showerror('Error', e.message, parent=self._window)
 
 
 

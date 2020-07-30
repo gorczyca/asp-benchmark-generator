@@ -51,7 +51,8 @@ class ResourcesTab(Tab,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
-                                                 columns=[Column('produces', 'Produces')]
+                                                 columns=[Column('produces', 'Produces')],
+                                                 values=self.__state.model.hierarchy,
                                                  )
         self.__left_frame = ttk.Frame(self._frame)
         # Resources combobox
@@ -59,6 +60,10 @@ class ResourcesTab(Tab,
         self.__resource_combobox_var.trace('w', self.__on_combobox_changed)
         self.__resource_combobox = ttk.Combobox(self.__left_frame, state='readonly', font=FONT,
                                                 textvariable=self.__resource_combobox_var)
+        # Fill the Combobox
+        resources_names = self.__state.model.get_all_resources_names()
+        self.__resource_combobox['values'] = sorted(resources_names)
+        self.__resource_combobox_var.set(SELECT_RESOURCE)
         # C(r)ud Buttons
         self.__add_resource_button = ttk.Button(self.__left_frame, text='Add', state=tk.NORMAL,
                                                 command=self.__add_resource)
@@ -153,7 +158,7 @@ class ResourcesTab(Tab,
 
     def __extract_values(self, cmp: Component) -> Tuple[Any, ...]:
         produces = ''
-        if self.__selected_resource:  # TODO: this should be unnecessary
+        if self.__selected_resource:
             if self.__selected_resource.id_ in cmp.produces:
                 produces = cmp.produces[self.__selected_resource.id_]
         return produces,    # Coma means 1-element tuple
@@ -187,6 +192,7 @@ class ResourcesTab(Tab,
         change_controls_state(tk.DISABLED,
                               self.__rename_resource_button,
                               self.__remove_resource_button)
+        self.__hierarchy_tree.set_items([])
 
     # Class-specific
     def __on_combobox_changed(self, _1, _2, _3):
@@ -213,7 +219,7 @@ class ResourcesTab(Tab,
 
     def __update_tree(self):
         leaf_cmps = self.__state.model.get_leaf_components()
-        self.__hierarchy_tree.update_values(leaf_cmps)
+        self.__hierarchy_tree.update_values(*leaf_cmps)
 
     def __add_resource(self):
         name = simpledialog.askstring('Add resource', f'Enter name of the new resource.')

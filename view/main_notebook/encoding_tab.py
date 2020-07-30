@@ -1,12 +1,19 @@
+from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.tab import Tab
 
 TAB_NAME = 'Encoding'
 
 
-class EncodingTab(Tab):
+class EncodingTab(Tab,
+                  HasCommonSetup):
     def __init__(self, parent_notebook):
         Tab.__init__(self, parent_notebook, TAB_NAME)
-        # TODO: this class is unnecessary?
+        HasCommonSetup.__init__(self)
+
+    def _create_widgets(self) -> None:
+        pass
+
+    def _setup_layout(self) -> None:
         self._frame.rowconfigure(0, weight=1)
         self._frame.columnconfigure(0, weight=1)
 

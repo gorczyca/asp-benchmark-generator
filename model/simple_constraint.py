@@ -15,7 +15,6 @@ class SimpleConstraint:
         self.min_: Optional[int] = min_
         self.max_: Optional[int] = max_
         self.components_ids: List[int] = components_ids if components_ids is not None else []
-        self.contains: bool = contains    # TODO: remove (should be unnecessary)
         self.distinct: bool = distinct
 
     @classmethod

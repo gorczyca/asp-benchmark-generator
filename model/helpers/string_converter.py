@@ -50,7 +50,8 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
                           f'named "{component_name}".')
         else:
             cmp_names.append(component_name)
-        if len(last_on_level) < level:      # if there are too many intendations, raise error
+        if len(last_on_level) < level:      # if there are too many intendations,
+            # raise error
             raise BGError(f'Cannot create a child of non-existing component. '
                           f'Check number of tabs in component: "{component_name} " '
                           f'and its ancestor.')

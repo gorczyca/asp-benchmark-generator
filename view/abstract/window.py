@@ -21,3 +21,6 @@ class Window(ABC):
         x_pos = round((screen_width - window_width) / 2)
         y_pos = round((screen_height - window_height) / 2)
         self._window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
+
+    @property
+    def window(self): return self._window

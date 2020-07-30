@@ -54,7 +54,8 @@ class PortsTab(Tab,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
-                                                 columns=[Column('amount', 'Amount')]
+                                                 columns=[Column('amount', 'Amount')],
+                                                 values=self.__state.model.hierarchy,
                                                  )
         self.__left_frame = ttk.Frame(self._frame)
 
@@ -64,6 +65,8 @@ class PortsTab(Tab,
         # state='readonly' means you cannot write freely in the combobox
         self.__port_combobox = ttk.Combobox(self.__left_frame, state='readonly',
                                             textvariable=self.__port_combobox_var, font=FONT)
+        ports_names = self.__state.model.get_all_ports_names()
+        self.__port_combobox['values'] = sorted(ports_names)
         # C(r)ud Buttons
         self.__add_port_button = ttk.Button(self.__left_frame, text='Add', state=tk.NORMAL,
                                             command=self.__add_port)
@@ -82,7 +85,6 @@ class PortsTab(Tab,
         self.__compatible_with_edit_button = ttk.Button(self.__left_frame, text='Edit compatibility',
                                                         command=self.__edit_compatible_with, state=tk.DISABLED)
         self.__compatible_with_listbox = ScrollbarListbox(self.__left_frame,
-                                                          # grid_row=6, grid_column=0, column_span=2,
                                                           extract_text=lambda prt: prt.name,
                                                           extract_id=lambda prt: prt.id_,
                                                           columns=[Column('#0', 'Compatible with', stretch=tk.YES)])
@@ -237,6 +239,8 @@ class PortsTab(Tab,
         self.__build_tree()
         ports_names = self.__state.model.get_all_ports_names()
         self.__port_combobox['values'] = sorted(ports_names)
+        self.__resource_combobox_var.set(SELECT_PORT)
+
 
     # Resetable
     def _reset(self) -> None:
@@ -291,8 +295,6 @@ class PortsTab(Tab,
                                   self.__compatible_with_edit_button)
 
             # Hide component-specific widgets
-            # TODO: maybe do it in a similar manner to disabling controls
-            # TODO: and same with showing
             self.__cmp_label.grid_forget()
             self.__amount_spinbox_label.grid_forget()
             self.__amount_spinbox.grid_forget()
@@ -300,8 +302,7 @@ class PortsTab(Tab,
             self.__all_children_amount_spinbox.grid_forget()
             self.__apply_to_all_children_button.grid_forget()
 
-            if self.__hierarchy_tree:
-                self.__hierarchy_tree.grid_forget()
+            self.__update_tree()
 
     def __edit_compatible_with(self):
         if self.__selected_port:

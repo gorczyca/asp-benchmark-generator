@@ -45,7 +45,7 @@ class View(ttk.Frame,
 
     def _create_widgets(self) -> None:
         self.__menu = Menu(self.__main_window)
-        self.__main_notebook = MainNotebook(self.__main_window)  # TODO: get out the grid method
+        self.__main_notebook = MainNotebook(self.__main_window)
 
         self.__encoding_frame = EncodingTab(self.__main_notebook.notebook)
         self.__instances_tab = InstancesTab(self.__main_notebook.notebook)
@@ -83,10 +83,10 @@ class View(ttk.Frame,
 
     def __set_geometry(self):
         try:
-            self.__main_window.wm_state('zoomed')   # TODO: requires tests / catching exception is a bad solution
+            self.__main_window.wm_state('zoomed')   # Windows
         except tk.TclError as e:
             try:
-                self.__main_window.wm_attributes('-zoomed', 1)
+                self.__main_window.wm_attributes('-zoomed', 1)  # Linux / requires tests
             except tk.TclError as e:
                 screen_width = self.__main_window.winfo_screenwidth()
                 screen_height = self.__main_window.winfo_screenheight()

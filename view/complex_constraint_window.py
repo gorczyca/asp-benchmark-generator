@@ -4,7 +4,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from model.complex_constraint import ComplexConstraint
+from model.model import Model
 from model.simple_constraint import SimpleConstraint
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.window import Window
 from view.scrollbars_listbox import ScrollbarListbox
@@ -21,10 +23,9 @@ WINDOW_HEIGHT_RATIO = 0.8
 
 class ComplexConstraintWindow(HasCommonSetup,
                               Window):
-    def __init__(self, parent_frame, state, callback, constraint: Optional[ComplexConstraint] = None,
+    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None,
                  check_name_with: List[str] = None):
-        # TODO: why do I have to pass the state here
-        self.__state = state
+        self.__state = State()
         self.__callback = callback
         self.__check_name_with = check_name_with if check_name_with is not None else []
 
@@ -157,10 +158,19 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __ok(self):
         # Update constraint values
         name = self.__name_entry_var.get()
-        if name in self.__check_name_with:
-            messagebox.showerror('Add constraint error.', f'Constraint {name} already exists.')
+        name = Model.replace_space(name)
+        if not name:
+            messagebox.showerror('Error.', f'Constraint must have a name.', parent=self._window)
             return
-        # TODO: check required fields
+        if name in self.__check_name_with:
+            messagebox.showerror('Error.', f'Constraint {name} already exists.', parent=self._window)
+            return
+        if not self.__antecedent:
+            messagebox.showerror('Error.', f'Condition cannot be empty.', parent=self._window)
+            return
+        if not self.__consequent:
+            messagebox.showerror('Error.', f'Consequent cannot be empty.', parent=self._window)
+            return
         self.__constraint.name = name
         self.__constraint.description = self.__description_text.get(1.0, tk.END)
         self.__constraint.antecedent = self.__antecedent
@@ -169,6 +179,7 @@ class ComplexConstraintWindow(HasCommonSetup,
         self.__constraint.consequent_all = self.__consequent_all_var.get()
 
         self.__callback(self.__constraint)
+        self._window.grab_release()
         self._window.destroy()
 
     def __on_select_antecedent(self, id_: int) -> None:
@@ -187,7 +198,7 @@ class ComplexConstraintWindow(HasCommonSetup,
 
     def __add_antecedent(self):
         ant_names = [a.name for a in self.__antecedent]
-        SimpleConstraintWindow(self._window, self.__state, callback=self.__on_antecedent_added, check_name_with=ant_names)
+        SimpleConstraintWindow(self._window, callback=self.__on_antecedent_added, check_name_with=ant_names)
 
     def __on_antecedent_added(self, ant: SimpleConstraint):
         self.__antecedent.append(ant)
@@ -201,7 +212,7 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_antecedent(self):
         if self.__selected_antecedent:
             ant_names = [a.name for a in self.__antecedent]
-            SimpleConstraintWindow(self._window, self.__state, constraint=self.__selected_antecedent,
+            SimpleConstraintWindow(self._window, constraint=self.__selected_antecedent,
                                    callback=self.__on_antecedent_edited, check_name_with=ant_names)
 
     def __remove_antecedent(self):
@@ -216,7 +227,7 @@ class ComplexConstraintWindow(HasCommonSetup,
 
     def __add_consequent(self):
         con_names = [c.name for c in self.__consequent]
-        SimpleConstraintWindow(self._window, self.__state, callback=self.__on_consequent_added, check_name_with=con_names)
+        SimpleConstraintWindow(self._window, callback=self.__on_consequent_added, check_name_with=con_names)
 
     def __on_consequent_added(self, con: SimpleConstraint):
         self.__consequent.append(con)
@@ -226,7 +237,7 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_consequent(self):
         if self.__selected_consequent:
             con_names = [c.name for c in self.__consequent]
-            SimpleConstraintWindow(self._window, self.__state, constraint=self.__selected_consequent,
+            SimpleConstraintWindow(self._window, constraint=self.__selected_consequent,
                                    callback=self.__on_consequent_edited, check_name_with=con_names)
 
     def __on_consequent_edited(self, con: SimpleConstraint):

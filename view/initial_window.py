@@ -1,7 +1,9 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from json import JSONDecodeError
+from tkinter import ttk, messagebox
 
 from exceptions import BGError
+from file_operations import open_, solve
 from state import State
 from view.ask_string_window import AskStringWindow
 from view.style import CONTROL_PAD_Y, FRAME_PAD_X, FRAME_PAD_Y
@@ -27,10 +29,10 @@ class InitialWindow(HasCommonSetup,
     def _create_widgets(self) -> None:
         self.__welcome_label = ttk.Label(self._window, text=WELCOME_TEXT, anchor=tk.W)
         self.__create_new_project_button = ttk.Button(self._window, text='Create new project',
-                                                      command=self.__create_new_project)
+                                                      command=self.__on_create_new_project)
         self.__open_project_button = ttk.Button(self._window, text='Open project',
                                                 command=self.__open_project)
-        self.__solve_button = ttk.Button(self._window, text='Solve...', command=self.__solve)
+        self.__solve_button = ttk.Button(self._window, text='Solve...', command=solve)
 
     def _setup_layout(self) -> None:
         self.__welcome_label.grid(row=0, sticky=tk.NSEW, pady=(FRAME_PAD_Y, CONTROL_PAD_Y), padx=FRAME_PAD_X)
@@ -43,29 +45,22 @@ class InitialWindow(HasCommonSetup,
 
         self._set_geometry(height=WINDOW_HEIGHT, width_ratio=WINDOW_WIDTH_RATIO)
 
-    def __create_new_project(self):
-        def __callback(root_name: str):
-            if root_name:
-                self.__callback()
-                self._window.destroy()
-            else:
-                raise BGError('Root name cannot be empty.')
+    def __create_new_project(self, root_name: str):
+        if root_name:
+            self.__state.model.root_name = root_name
+            self.__callback()
+            self._window.destroy()
+        else:
+            raise BGError('Root name cannot be empty.')
 
-        AskStringWindow(self._window, __callback, window_title='Set root name',
+    def __on_create_new_project(self):
+        AskStringWindow(self._window, self.__create_new_project, window_title='Set root name',
                         prompt_text='Enter name of the root component')
 
     def __open_project(self):
-        # TODO: don't repeat yourself (same is in the menu)
-        file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
-        if file:
-            self.__state.file = file
-            json = file.read()
-            model = json_converter.json_to_model(json)
-            self.__state.model = model
-            file_name = Menu.__extract_file_name(file.name)
-            pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
-            pub.sendMessage(actions.MODEL_LOADED)
-
-    def __solve(self):
-        pass
-
+        try:
+            open_(self._window)
+            self.__callback()
+            self._window.destroy()
+        except JSONDecodeError as e:
+            messagebox.showerror('Error', f'Error while opening the project file.\n{e}')

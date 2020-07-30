@@ -14,9 +14,6 @@ class MainNotebook(HasCommonSetup):
 
     def _setup_layout(self):
         self.__notebook.grid(row=0, column=0, sticky=tk.NSEW)
-        # TODO: necessary?
-        self.__notebook.rowconfigure(0, weight=1)
-        self.__notebook.columnconfigure(0, weight=1)
 
     @property
     def notebook(self):

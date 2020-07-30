@@ -18,8 +18,6 @@ CMP_VARIABLE = 'C'
 IN_SYMBOL = 'in'
 N_VARIABLE = 'N'
 M_VARIABLE = 'M'
-SHOW_DIRECTIVE = f'#show {IN_SYMBOL}/1.'
-
 
 # Associations
 PAN_SYMBOL = 'pan'
@@ -39,19 +37,20 @@ PO_SYMBOL = 'po'
 CN_SYMBOL = 'cn'
 
 
-def generate_code(model: Model, root_name: str):
+def generate_code(model: Model):
     info = __generate_code_info()
-    root_code = __generate_root_code(root_name)
+    root_code = __generate_root_code(model)
     hierarchy_def = __generate_hierarchy_ontology_definitions()
     hierarchy_code = __generate_hierarchy_code(model)
     associations_def = __generate_associations_ontology_definitions()
-    associations_code = __generate_associations_code(model, root_name)
+    associations_code = __generate_associations_code(model)
     resource_code = __generate_resource_code(model)
     resource_def = __generate_resources_ontology_definitions()
     ports_def = __generate_ports_ontology_definitions()
     ports_code = __generate_ports_code(model)
-    simple_constraints_code, complex_constraints_code = __generate_constraints_code(model, root_name)
-    instances_code, instances_dictionary = __generate_instances_code(model, root_name)
+    simple_constraints_code, complex_constraints_code = __generate_constraints_code(model)
+    instances_code = __generate_instances_code(model)
+    show_directives = __generate_show_directives()
 
     return f'{info} \n{root_code}' \
            f'\n%\n% Hierarchy ontology definitions\n%\n{hierarchy_def}\n%\n% Component hierarchy\n%\n{hierarchy_code}' \
@@ -61,17 +60,17 @@ def generate_code(model: Model, root_name: str):
            f'\n%\n% Constraints\n%\n%\n% Simple constraints\n%\n{simple_constraints_code}' \
            f'\n%\n% Complex constraints\n%\n{complex_constraints_code}' \
            f'\n%\n% Instances\n%\n{instances_code}' \
-           f'\n\n{SHOW_DIRECTIVE}', instances_dictionary
+           f'\n\n{show_directives}'
 
 
 def __generate_code_info():
     return f'%\n% THIS CODE IS AUTOMATICALLY GENERATED\n%\n'
 
 
-def __generate_root_code(root_name: str) -> str:
+def __generate_root_code(model: Model) -> str:
     root_code = ''
-    root_code += f'{ROOT_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).\n'
-    root_code += f'{CMP_SYMBOL}({CMP_VARIABLE}) :- {root_name}({CMP_VARIABLE}).\n'
+    root_code += f'{ROOT_SYMBOL}({CMP_VARIABLE}) :- {model.root_name}({CMP_VARIABLE}).\n'
+    root_code += f'{CMP_SYMBOL}({CMP_VARIABLE}) :- {model.root_name}({CMP_VARIABLE}).\n'
     return root_code
 
 
@@ -104,18 +103,18 @@ def __generate_associations_ontology_definitions():
     return definitions
 
 
-def __generate_associations_code(model: Model, root_name: str) -> str:
+def __generate_associations_code(model: Model) -> str:
     associations_code = ''
     for c in model.hierarchy:
         if c.association:
             associations_code += f'{PAN_SYMBOL}("{c.name}").\n'
             associations_code += f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") :- ' \
-                                 f'{root_name}({CMP_VARIABLE}1), {c.name}({CMP_VARIABLE}2).\n'
+                                 f'{model.root_name}({CMP_VARIABLE}1), {c.name}({CMP_VARIABLE}2).\n'
             min_ = '' if not c.association.min_ else c.association.min_
             max_ = '' if not c.association.max_ else c.association.max_
             associations_code += f'{min_} {{ {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") : ' \
                                  f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") }} {max_} :- ' \
-                                 f'{IN_SYMBOL}({CMP_VARIABLE}1), {root_name}({CMP_VARIABLE}1).\n'
+                                 f'{IN_SYMBOL}({CMP_VARIABLE}1), {model.root_name}({CMP_VARIABLE}1).\n'
     return associations_code
 
 
@@ -165,6 +164,7 @@ def __generate_ports_code(model: Model) -> str:
         return names_
 
     prt_code = ''
+    # TODO: it doesn't work when there are more than 1 ports of a type - rollback to what was there previously
     for c in model.hierarchy:
         if c.ports:
             for prt_id in c.ports:
@@ -240,23 +240,23 @@ def __generate_simple_constraint_partial_code(ctr: SimpleConstraint, model: Mode
     return ctr_code
 
 
-def __generate_simple_constraints_code(model: Model, root_name: str) -> str:
+def __generate_simple_constraints_code(model: Model) -> str:
     ctrs_code = ''
     for ctr in model.simple_constraints:
         partial_ctr_code = __generate_simple_constraint_distinct_partial_code(ctr, model) if ctr.distinct \
             else __generate_simple_constraint_partial_code(ctr, model)
-        ctrs_code += f':- {root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_SYMBOL} {partial_ctr_code}.\n'
+        ctrs_code += f':- {model.root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_SYMBOL} {partial_ctr_code}.\n'
     return ctrs_code
 
 
-def __generate_implication_part(conditions: List[SimpleConstraint], model: Model, root_name: str) -> Tuple[str, List[str]]:
+def __generate_implication_part(conditions: List[SimpleConstraint], model: Model) -> Tuple[str, List[str]]:
     heads = []
     code = ''
     for condition in conditions:
         condition_code = __generate_simple_constraint_distinct_partial_code(condition, model) \
             if condition.distinct else __generate_simple_constraint_partial_code(condition, model)
-        head = condition.name.replace(' ', '_')  # when using names, make sure they don't contain space # TODO: do this to others as well
-        code += f'{head} :- {root_name}({CMP_VARIABLE}1), {condition_code}.\n'
+        head = condition.name.replace(' ', '_')     # when using names, make sure they don't contain space # TODO: do this to others as well
+        code += f'{head} :- {model.root_name}({CMP_VARIABLE}1), {condition_code}.\n'
         heads.append(head)
     return code, heads
 
@@ -266,11 +266,11 @@ def __generate_implication_complete_part(head: str, names: List[str], all_: bool
     return f'{head} :- {body}.\n'
 
 
-def __generate_complex_constraints_code(model: Model, root_name: str) -> str:
+def __generate_complex_constraints_code(model: Model) -> str:
     ctrs_code = ''
     for ctr in model.complex_constraints:
-        antecedents_code, antecedents_heads = __generate_implication_part(ctr.antecedent, model, root_name)
-        consequents_code, consequents_heads = __generate_implication_part(ctr.consequent, model, root_name)
+        antecedents_code, antecedents_heads = __generate_implication_part(ctr.antecedent, model)
+        consequents_code, consequents_heads = __generate_implication_part(ctr.consequent, model)
         antecedent_head = f'{ctr.name.replace(" ", "_")}_antecedent'
         antecedent_complete_code = __generate_implication_complete_part(antecedent_head, antecedents_heads, ctr.antecedent_all)
         consequent_head = f'{ctr.name.replace(" ", "_")}_consequent'
@@ -284,10 +284,9 @@ def __generate_complex_constraints_code(model: Model, root_name: str) -> str:
     return ctrs_code
 
 
-def __generate_constraints_code(model: Model, root_name: str) -> Tuple[str, str]:
-    # Simple constraints
-    simple_constraints_code = __generate_simple_constraints_code(model, root_name)
-    complex_constraints_code = __generate_complex_constraints_code(model, root_name)
+def __generate_constraints_code(model: Model) -> Tuple[str, str]:
+    simple_constraints_code = __generate_simple_constraints_code(model)
+    complex_constraints_code = __generate_complex_constraints_code(model)
     return simple_constraints_code, complex_constraints_code
 
 
@@ -300,15 +299,16 @@ def __generate_instances_with_symmetry_breaking(name: str, count: int, offset: i
     return instance_code
 
 
-def __generate_instances_code(model: Model, root_name: str) -> str:
+def __generate_instances_code(model: Model) -> str:
     inst_code = ''
-    inst_code += f'{root_name}(0..0).\t% ROOT\n\n'
+    inst_code += f'{model.root_name}(0..0).\t% ROOT\n\n'
     offset = 0
     for cmp in model.get_leaf_components():
         if cmp.count:
-            cmp_instance_code = __generate_instances_with_symmetry_breaking(cmp.name, cmp.count, offset) if cmp.symmetry_breaking \
-                else f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
-            inst_code += cmp_instance_code
+            if cmp.count > 1 and cmp.symmetry_breaking:     # Symmetry breaking only when there is more than 1 component
+                inst_code += __generate_instances_with_symmetry_breaking(cmp.name, cmp.count, offset)
+            else:
+                inst_code += f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
             offset += cmp.count
         for prt_id, prt_count in cmp.ports.items():
             ports_count = cmp.count * prt_count
@@ -319,6 +319,13 @@ def __generate_instances_code(model: Model, root_name: str) -> str:
             inst_code += prt_instance_code
         inst_code += '\n'
     return inst_code
+
+
+def __generate_show_directives() -> str:
+    dir_code = ''
+    dir_code += f'#show {IN_SYMBOL}/1.\n'
+    dir_code += f'#show {CN_SYMBOL}/2.\n'
+    return dir_code
 
 
 

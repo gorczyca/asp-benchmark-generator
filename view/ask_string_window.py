@@ -50,6 +50,7 @@ class AskStringWindow(HasCommonSetup,
         try:
             string = self.__string_entry_var.get()
             self.__callback(string)
+            self._window.grab_release()
             self._window.destroy()
         except BGError as e:
-            messagebox.showerror('Error', e.message)
+            messagebox.showerror('Error', e.message, parent=self._window)

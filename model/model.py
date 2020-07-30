@@ -24,9 +24,9 @@ class Model:
         resources:  List of resources
         ports: List of ports
     """
-    def __init__(self, root: str = None, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
+    def __init__(self, root_name: str = None, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
                  simple_constraints: List[SimpleConstraint] = None, complex_constraints: List[ComplexConstraint] = None):
-        self.root: str = root
+        self.root_name: str = root_name
         self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
         self.ports: List[Port] = ports if ports is not None else []
@@ -38,10 +38,12 @@ class Model:
         return string.replace(' ', SPACE_REPLACEMENT)
 
     def clear(self):
-        """Destroys all Model's attributes"""
+        """Clears out all Model's attributes and sets the new root name."""
         self.hierarchy = []
         self.resources = []
         self.ports = []
+        self.simple_constraints = []
+        self.complex_constraints = []
 
     @classmethod
     def from_json(cls, data):
@@ -52,6 +54,16 @@ class Model:
         data['simple_constraints'] = list(map(SimpleConstraint.from_json, data['simple_constraints']))
         data['complex_constraints'] = list(map(ComplexConstraint.from_json, data['complex_constraints']))
         return cls(**data)
+
+    # Root component
+    def set_root_name(self, root_name: str) -> None:
+        cmps_names = [c.name for c in self.hierarchy]
+        root_name = self.replace_space(root_name)
+        if not root_name:
+            raise BGError('Root component must have a name.')
+        if root_name in cmps_names:
+            raise BGError(f'Component with name: "{root_name}" already exists in the hierarchy.')
+        self.root_name = root_name
 
     # Hierarchy
     def set_hierarchy(self, hierarchy: List[Component]):
@@ -76,7 +88,8 @@ class Model:
                 cmp.is_leaf = False
                 cmp.symmetry_breaking = None
                 cmp.count = None
-                cmp.ports = {}  # TODO: should be None
+                cmp.produces = {}
+                cmp.ports = {}
 
     def add_component_to_hierarchy(self, cmp_name: str, level: int, parent_id: Optional[int], is_leaf: bool = True) -> Component:
         """Creates and adds new component to hierarchy.
@@ -93,6 +106,8 @@ class Model:
         cmps_names = [c.name for c in self.hierarchy]
         if cmp_name in cmps_names:
             raise BGError(f'Component with name: "{cmp_name}" already exists in the hierarchy.')
+        if cmp_name == self.root_name:
+            raise BGError(f'Component cannot have same name as the root component.')
         symmetry_breaking = True if is_leaf else None
         cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=is_leaf,
                         symmetry_breaking=symmetry_breaking)
@@ -189,17 +204,31 @@ class Model:
         cmp.name = new_name
         return cmp
 
+    def __get_components_leaf_children(self, cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
+        """Returns an array of Component children that are leaves (obtained recursively)
+
+        :param cmp_: Current component to check whether is a leaf or not
+        :param hierarchy_: Hierarchy of all components
+        :param leaves_: Current list of leaves
+        """
+        # TODO: take this function out, to be able to get to component's children from anywhere
+        if cmp_.is_leaf:
+            leaves_.append(cmp_)
+        else:
+            for c_ in hierarchy_:
+                if c_.parent_id == cmp_.id_:
+                    self.__get_components_leaf_children(c_, hierarchy_, leaves_)
+
     # Instances
     def set_instances_of_all_components_children(self, cmp: Component, count: int, symmetry_breaking: bool) -> List[Component]:
         """
-        # TODO:
         :param cmp:
         :param count:
         :param symmetry_breaking:
         :return:
         """
         def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
-            # TODO: take it outside
+            # TODO: remove!!!
             """Returns an array of Component children that are leaves (obtained recursively)
 
             :param cmp_: Current component to check whether is a leaf or not
@@ -215,7 +244,7 @@ class Model:
                         __get_components_leaf_children(c_, hierarchy_, leaves_)
 
         leaf_children = []
-        __get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        self.__get_components_leaf_children(cmp, self.hierarchy, leaf_children)
         for c in leaf_children:
             c.count = count
             c.symmetry_breaking = symmetry_breaking
@@ -314,24 +343,23 @@ class Model:
         :param value: Amount of produced Resource by components
         :returns: List of Component's children that are leaves.
         """
-        def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
-            # TODO: take it outside
-            """Returns an array of Component children that are leaves (obtained recursively)
-
-            :param cmp_: Current component to check whether is a leaf or not
-            :param hierarchy_: Hierarchy of all components
-            :param leaves_: Current list of leaves
-            """
-            # TODO: take this function out, to be able to get to component's children from anywhere
-            if cmp_.is_leaf:
-                leaves_.append(cmp_)
-            else:
-                for c_ in hierarchy_:
-                    if c_.parent_id == cmp_.id_:
-                        __get_components_leaf_children(c_, hierarchy_, leaves_)
+        # TODO: remove
+        # def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
+        #     """Returns an array of Component children that are leaves (obtained recursively)
+        #
+        #     :param cmp_: Current component to check whether is a leaf or not
+        #     :param hierarchy_: Hierarchy of all components
+        #     :param leaves_: Current list of leaves
+        #     """
+        #     if cmp_.is_leaf:
+        #         leaves_.append(cmp_)
+        #     else:
+        #         for c_ in hierarchy_:
+        #             if c_.parent_id == cmp_.id_:
+        #                 __get_components_leaf_children(c_, hierarchy_, leaves_)
 
         leaf_children = []
-        __get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        self.__get_components_leaf_children(cmp, self.hierarchy, leaf_children)
         for c in leaf_children:
             c.produces[res.id_] = value
         return leaf_children

@@ -55,7 +55,9 @@ class HierarchyTab(Tab,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
                                                  extract_text=lambda x: x.name,
-                                                 extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id)
+                                                 extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
+                                                 values=self.__state.model.hierarchy,
+                                                 )
         self.__right_frame = ttk.Frame(self._frame)
 
         self.__cmp_name_var = tk.StringVar()
@@ -125,18 +127,15 @@ class HierarchyTab(Tab,
 
     # Class-specific
     def __add_component(self, cmp_name: str, level: int, parent_id: Optional[int]):
-        try:
-            new_item = self.__state.model.add_component_to_hierarchy(cmp_name, level, parent_id, is_leaf=True)
-            self.__hierarchy_tree.add_item(new_item)
-            self.__selected_component = new_item
-            self.__cmp_name_var.set(new_item.name)
-            change_controls_state(tk.NORMAL,
-                                  self.__remove_button,
-                                  self.__remove_recursively_button,
-                                  self.__rename_button)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
-        except BGError as e:
-            messagebox.showerror('Add component error.', e.message)
+        new_item = self.__state.model.add_component_to_hierarchy(cmp_name, level, parent_id, is_leaf=True)
+        self.__hierarchy_tree.add_item(new_item)
+        self.__selected_component = new_item
+        self.__cmp_name_var.set(new_item.name)
+        change_controls_state(tk.NORMAL,
+                              self.__remove_button,
+                              self.__remove_recursively_button,
+                              self.__rename_button)
+        pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_add_sibling(self) -> None:
         sibling_name = BASE_COMPONENT_NAME if self.__selected_component is None else self.__selected_component.name
@@ -155,13 +154,10 @@ class HierarchyTab(Tab,
                         'Add sibling', f'Enter name of child of the {sibling_name} component.')
 
     def __rename_component(self, new_name: str):
-        try:
-            self.__state.model.rename_component(self.__selected_component, new_name)
-            self.__cmp_name_var.set(new_name)
-            self.__hierarchy_tree.rename_item(self.__selected_component)
-            pub.sendMessage(actions.HIERARCHY_EDITED)
-        except BGError as e:
-            messagebox.showerror('Rename error.', e.message)
+        self.__state.model.rename_component(self.__selected_component, new_name)
+        self.__cmp_name_var.set(new_name)
+        self.__hierarchy_tree.rename_item(self.__selected_component)
+        pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_rename(self) -> None:
         if self.__selected_component:
@@ -198,7 +194,7 @@ class HierarchyTab(Tab,
             if not answer:
                 return
 
-        CreateHierarchyWindow(self._frame, self.__state, self.__build_tree)
+        CreateHierarchyWindow(self._frame, self.__create_hierarchy)
 
 
 

@@ -15,9 +15,9 @@ WINDOW_TITLE = 'Select ports to be compatible with {0}'
 
 class SelectPortsWindow(HasCommonSetup,
                         Window):
-    def __init__(self, parent_frame, selected_port: Port, ports_right, ports_left, state, callback):
+    def __init__(self, parent_frame, selected_port: Port, ports_right, ports_left, callback):
         # TODO: why do I have to pass the state here
-        self.__state = state
+        self.__state = State()
         self.__callback = callback
 
         self.__ports_right: List[Port] = ports_right

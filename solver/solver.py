@@ -38,12 +38,12 @@ def get_instance_name(instances_dictionary, id_):
 
 class Solver:
     def __init__(self, output_file_name, *program_files_names, id_representation=True, show_predicates=True,
-                 answer_sets_count=0, on_model_callback=None):
+                 answer_sets_count=0, shown_atoms_only=False, on_model_callback=None):
         self.__control = clingo.Control()
-        for file in program_files_names:
-            self.__control.load(file)
+        self.__program_files_names = program_files_names
+        self.__shown_atoms_only = shown_atoms_only
 
-        self.__instances_dictionary = get_instances_dictionary(*program_files_names)
+        self.__instances_dictionary = None
 
         self.__output_file_name = output_file_name
         self.__output_csv_file_writer = None
@@ -56,23 +56,29 @@ class Solver:
         self.__output_csv_file_writer = None
 
     def __extract_answer_set(self, answer_set):
-        row = []
-        for symbol in answer_set.symbols(shown=True):
-            symbol_args = [sym.number for sym in symbol.arguments]
-            if not self.__id_representation:
-                symbol_args = [get_instance_name(self.__instances_dictionary, id_) for id_ in symbol_args]
-            symbol_args_str = ARGUMENT_DELIMITER.join([sym for sym in symbol_args])
-            if not self.__show_predicates:
-                row.append(symbol_args_str)
-            else:
-                row.append(f'{symbol.name}({symbol_args_str})')
-        return row
+        if self.__shown_atoms_only:
+            row = []
+            for symbol in answer_set.symbols(shown=True):
+                symbol_args = [sym.number for sym in symbol.arguments]
+                if not self.__id_representation:
+                    symbol_args = [get_instance_name(self.__instances_dictionary, id_) for id_ in symbol_args]
+                symbol_args_str = ARGUMENT_DELIMITER.join([sym for sym in symbol_args])
+                if not self.__show_predicates:
+                    row.append(symbol_args_str)
+                else:
+                    row.append(f'{symbol.name}({symbol_args_str})')
+            return row
+        else:
+            return answer_set.symbols(atoms=True)
 
     def __on_answer_set(self, answer_set):
         row = self.__extract_answer_set(answer_set)
         self.__output_csv_file_writer.writerow(row)
 
     def solve(self):
+        for file in self.__program_files_names:
+            self.__control.load(file)
+        self.__instances_dictionary = get_instances_dictionary(*self.__program_files_names)
         self.__control.ground([('base', [])])
         self.__control.configuration.solve.models = self.__answer_sets_count
         with open(self.__output_file_name, 'w', newline='') as output_csv_file:

@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from model.component import Component
+from model.model import Model
 from model.simple_constraint import SimpleConstraint
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -19,10 +20,9 @@ TREEVIEW_HEADING = 'Component'
 
 class SimpleConstraintWindow(HasCommonSetup,
                              Window):
-    def __init__(self, parent_frame, state, callback, constraint: Optional[SimpleConstraint] = None,
+    def __init__(self, parent_frame, callback, constraint: Optional[SimpleConstraint] = None,
                  check_name_with: List[str] = None):
-        # TODO: why do I have to pass the state here
-        self.__state = state
+        self.__state = State()
         self.__callback = callback
 
         self.__constraint: SimpleConstraint = constraint if constraint is not None \
@@ -83,8 +83,8 @@ class SimpleConstraintWindow(HasCommonSetup,
         min_var_value = self.__constraint.min_ if self.__constraint.min_ is not None else ''
         self.__min_spinbox_var = tk.IntVar(value=min_var_value)
         self.__min_spinbox_var.trace('w', self.__on_min_changed)
-        self.__min_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, state=tk.DISABLED,
-                                         textvariable=self.__min_spinbox_var)
+        self.__min_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, textvariable=self.__min_spinbox_var,
+                                         state=tk.NORMAL if self.__constraint.min_ is not None else tk.DISABLED)
         # Has max checkbox
         self.__has_max_checkbox_var = tk.BooleanVar(value=self.__constraint.max_ is not None)
         self.__has_max_checkbox_var.trace('w', self.__on_has_max_changed)
@@ -94,8 +94,8 @@ class SimpleConstraintWindow(HasCommonSetup,
         max_var_value = self.__constraint.max_ if self.__constraint.max_ is not None else ''
         self.__max_spinbox_var = tk.IntVar(value=max_var_value)
         self.__max_spinbox_var.trace('w', self.__on_max_changed)
-        self.__max_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, state=tk.DISABLED,
-                                         textvariable=self.__max_spinbox_var)
+        self.__max_spinbox = ttk.Spinbox(self.__right_frame, from_=0, to=math.inf, textvariable=self.__max_spinbox_var,
+                                         state=tk.NORMAL if self.__constraint.max_ is not None else tk.DISABLED)
         # Buttons frame
         self.__ok_button = ttk.Button(self.__right_frame, text='Ok', command=self.__ok)
         self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self._window.destroy)
@@ -171,11 +171,9 @@ class SimpleConstraintWindow(HasCommonSetup,
         if has_min:
             self.__min_spinbox.config(state=tk.ACTIVE)
             self.__min_spinbox_var.set(0)
-            # self.__constraint.min_ = 0
         else:
             self.__min_spinbox_var.set('')
             self.__min_spinbox.config(state=tk.DISABLED)
-            # self.__constraint.min_ = None
 
     def __on_has_max_changed(self, _1, _2, _3):
         has_max = self.__has_max_checkbox_var.get()
@@ -185,68 +183,75 @@ class SimpleConstraintWindow(HasCommonSetup,
             if has_min:
                 min_ = self.__min_spinbox_var.get()
                 self.__max_spinbox_var.set(min_)
-                # self.__constraint.max_ = min_
             else:
                 self.__max_spinbox_var.set(0)
                 self.__constraint.max_ = 0
         else:
             self.__max_spinbox_var.set('')
             self.__max_spinbox.config(state=tk.DISABLED)
-            # self.__constraint.max_ = None
 
     def __on_min_changed(self, _1, _2, _3):
         try:
             min_ = self.__min_spinbox_var.get()
-            # self.__constraint.min_ = min_
             has_max = self.__has_max_checkbox_var.get()
             if has_max:
                 max_ = self.__max_spinbox_var.get()
                 if min_ > max_:
                     self.__max_spinbox_var.set(min_)
-                    # self.__constraint.max_ = min_
         except tk.TclError as e:
             print(e)
-            # self.__constraint.min_ = None
 
     def __on_max_changed(self, _1, _2, _3):
         try:
             max_ = self.__max_spinbox_var.get()
-            # self.__constraint.max = max_
             has_min = self.__has_min_checkbox_var.get()
             if has_min:
                 min_ = self.__min_spinbox_var.get()
                 if min_ > max_:
                     self.__min_spinbox_var.set(max_)
-                    # self.__constraint.min_ = max_
         except tk.TclError as e:
             print(e)
-            # self.__constraint.max_ = None
 
     def __ok(self):
         # Update constraint values
         name = self.__name_entry_var.get()
-        if name in self.__check_name_with:
-            messagebox.showerror('Add constraint error.', f'Constraint {name} already exists.')
+        name = Model.replace_space(name)
+        if not name:
+            messagebox.showerror('Error.', f'Constraint must have a name.', parent=self._window)
             return
-        self.__constraint.name = name
-        self.__constraint.description = self.__description_text.get(1.0, tk.END)
-        self.__constraint.components_ids = self.__components_ids
-        # self.__constraint.contains = self.__contains_var.get()
-        self.__constraint.distinct = self.__distinct_checkbox_var.get()
-
+        if name in self.__check_name_with:
+            messagebox.showerror('Error.', f'Constraint {name} already exists.', parent=self._window)
+            return
+        if not self.__components_ids:
+            messagebox.showerror('Error.', f'Constraint must contain components.', parent=self._window)
+            return
+        min_ = None
+        max_ = None
         if self.__has_min_checkbox_var.get():   # If component has min
             try:
                 min_ = self.__min_spinbox_var.get()
-                self.__constraint.min_ = min_
             except tk.TclError as e:
                 print(e)
-                self.__constraint.min_ = None
+                min_ = None
         if self.__has_max_checkbox_var.get():   # If component has max
             try:
                 max_ = self.__max_spinbox_var.get()
-                self.__constraint.max_ = max_
             except tk.TclError as e:
                 print(e)
-                self.__constraint.max_ = None
+                max_ = None
+
+        if min_ is None and max_ is None:
+            messagebox.showerror('Error.', f'Constraint has to have at least 1 bound.', parent=self._window)
+            return
+
+        # Rewrite values if they are correct
+        self.__constraint.name = name
+        self.__constraint.description = self.__description_text.get(1.0, tk.END)
+        self.__constraint.components_ids = self.__components_ids
+        self.__constraint.distinct = self.__distinct_checkbox_var.get()
+        self.__constraint.min_ = min_
+        self.__constraint.max_ = max_
+
         self.__callback(self.__constraint)
+        self._window.grab_release()
         self._window.destroy()
