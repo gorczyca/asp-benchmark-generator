@@ -36,6 +36,11 @@ CMB_SYMBOL = 'cmb'
 PO_SYMBOL = 'po'
 CN_SYMBOL = 'cn'
 
+DOMAIN_STRING = 'Domain'
+
+# TODO: symmetry breaking does not work!!!
+# TODO: TRY CHANGING IN INSTEAD OF DOMAIN
+
 
 def generate_code(model: Model):
     info = __generate_code_info()
@@ -96,9 +101,13 @@ def __generate_associations_ontology_definitions():
     definitions = ''
     definitions += f'{IN_SYMBOL}({CMP_VARIABLE}2) :- {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, {N_VARIABLE}), ' \
                    f'{CMP_SYMBOL}({CMP_VARIABLE}1), {CMP_SYMBOL}({CMP_VARIABLE}2), {PAN_SYMBOL}({N_VARIABLE}).\n'
-    definitions += f':- {CMP_SYMBOL}({CMP_VARIABLE}2), 2 {{ {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, {N_VARIABLE}) : {CMP_SYMBOL}({CMP_VARIABLE}1), {PAN_SYMBOL}({N_VARIABLE}) }}.\n'
-    definitions += f'{PPAT_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2) :- {PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, _).\n'
-    definitions += f'{PPAT_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}3) :- {PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, _), {CMP_SYMBOL}({CMP_VARIABLE}3), {PPAT_SYMBOL}({CMP_VARIABLE}2, {CMP_VARIABLE}3).\n'
+    definitions += f':- {CMP_SYMBOL}({CMP_VARIABLE}2), 2 {{ {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, ' \
+                   f'{N_VARIABLE}) : {CMP_SYMBOL}({CMP_VARIABLE}1), {PAN_SYMBOL}({N_VARIABLE}) }}.\n'
+    definitions += f'{PPAT_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2) :- ' \
+                   f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, {N_VARIABLE}), {PAN_SYMBOL}({N_VARIABLE}).\n'
+    definitions += f'{PPAT_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}3) :- {PPA_SYMBOL}({CMP_VARIABLE}1, ' \
+                   f'{CMP_VARIABLE}2, {N_VARIABLE}), {CMP_SYMBOL}({CMP_VARIABLE}3), {PPAT_SYMBOL}({CMP_VARIABLE}2, ' \
+                   f'{CMP_VARIABLE}3), {PAN_SYMBOL}({N_VARIABLE}).\n'
     definitions += f':- {PPAT_SYMBOL}({CMP_VARIABLE}, {CMP_VARIABLE}), {CMP_SYMBOL}({CMP_VARIABLE}).\n'
     return definitions
 
@@ -153,16 +162,21 @@ def __generate_ports_ontology_definitions() -> str:
     definitions += f':- {CMP_SYMBOL}({CMP_VARIABLE}), {PRT_SYMBOL}({PRT_VARIABLE}1), {PON_SYMBOL}({N_VARIABLE}1), ' \
                    f'{PRT_SYMBOL}({PRT_VARIABLE}2), {PON_SYMBOL}({N_VARIABLE}2), {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}1, {N_VARIABLE}1), ' \
                    f'{PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}2, {N_VARIABLE}2), {CN_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2).\n'
+    # TODO: rule added by me. CAUTION
+    definitions += f':- {PRT_SYMBOL}({PRT_VARIABLE}), 2 {{ {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}, {N_VARIABLE}) : ' \
+                   f'{CMP_SYMBOL}({CMP_VARIABLE}), {PON_SYMBOL}({N_VARIABLE}) }}. % TODO: my own rule, check it! \n'
     return definitions
 
 
-def __generate_ports_code(model: Model) -> str:
-    def __get_port_individual_names(cmp_: Component, prt_: Port) -> List[str]:
-        names_ = []
-        for i_ in range(cmp_.ports[prt_.id_]):
-            names_.append(f'{cmp_.name}_{prt_.name}_{i_}')
-        return names_
+def __get_port_individual_names(cmp: Component, prt: Port) -> List[str]:
+    names = []
+    for i in range(cmp.ports[prt.id_]):
+        names.append(f'{cmp.name}_{prt.name}_{i}')
+    return names
 
+
+# TODO: do usuniecia
+def __generate_ports_code_2(model: Model) -> str:
     prt_code = ''
     # TODO: it doesn't work when there are more than 1 ports of a type - rollback to what was there previously
     for c in model.hierarchy:
@@ -200,6 +214,38 @@ def __generate_ports_code(model: Model) -> str:
     return prt_code
 
 
+def __generate_ports_code(model: Model) -> str:
+    prt_code = ''
+    for c in model.hierarchy:
+        if c.ports:
+            for prt_id in c.ports:
+                prt = model.get_port_by_id(prt_id)
+                prt_individual_names = __get_port_individual_names(c, prt)
+                for prt_individual_name in prt_individual_names:
+                    prt_code += f'{PRT_SYMBOL}({PRT_VARIABLE}) :- {prt_individual_name}({PRT_VARIABLE}).\n'
+                    prt_code += f'{PON_SYMBOL}("{prt_individual_name}").\n'
+                    # Port on a device
+                    prt_code += f'1 {{ {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}, "{prt_individual_name}") : ' \
+                                f'{prt_individual_name}({PRT_VARIABLE}) }} 1 :- ' \
+                                f'{IN_SYMBOL}({CMP_VARIABLE}), {c.name}({CMP_VARIABLE}).\n'
+                    # Force connection
+                    if prt.force_connection:
+                        prt_code += f':- {c.name}({CMP_VARIABLE}), {prt_individual_name}({PRT_VARIABLE}1), ' \
+                                    f'{PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}1, "{prt_individual_name}"), ' \
+                                    f'{{ {CN_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) : {PRT_SYMBOL}({PRT_VARIABLE}2) }} 0.\n'
+                    # Compatibility
+                    for compatible_with_id in prt.compatible_with:
+                        prt2 = model.get_port_by_id(compatible_with_id)
+                        for c2 in model.hierarchy:
+                            if compatible_with_id in c2.ports:
+                                prt_individual_names_2 = __get_port_individual_names(c2, prt2)
+                                for prt_individual_name_2 in prt_individual_names_2:
+                                    prt_code += f'{CMB_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) :- ' \
+                                                f'{prt_individual_name}({PRT_VARIABLE}1), {prt_individual_name_2}({PRT_VARIABLE}2). \n'
+
+    return prt_code
+
+
 def __generate_constraints_ontology_definitions() -> str:
     pass
 
@@ -212,7 +258,7 @@ def __generate_simple_constraint_distinct_partial_code(ctr: SimpleConstraint, mo
         var_no = i + 2
         ctr_code += f'\t{cmp.name} : {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}), {cmp.name}({var_no})'
         if i == components_count-1:
-            ctr_code += '\n' # Do not put the ';' sign after last part
+            ctr_code += '\n'    # Do not put the ';' sign after last part
         else:
             ctr_code += ';\n'
     min_ = '' if not ctr.min_ else ctr.min_
@@ -291,10 +337,10 @@ def __generate_constraints_code(model: Model) -> Tuple[str, str]:
 
 
 def __generate_instances_with_symmetry_breaking(name: str, count: int, offset: int) -> str:
-    instance_code = f'{name}Domain({offset+1}..{offset+count}).\n'
-    instance_code += f'0 {{{name}({INSTANCE_VARIABLE}) : {name}Domain({INSTANCE_VARIABLE})}} {count}.\n'
-    instance_code += f'{name}({INSTANCE_VARIABLE}1) :- {name}Domain({INSTANCE_VARIABLE}1), ' \
-                     f'{name}Domain({INSTANCE_VARIABLE}2), {name}({INSTANCE_VARIABLE}2), ' \
+    instance_code = f'{name}{DOMAIN_STRING}({offset+1}..{offset+count}).\n'
+    instance_code += f'0 {{{name}({INSTANCE_VARIABLE}) : {name}{DOMAIN_STRING}({INSTANCE_VARIABLE})}} {count}.\n'
+    instance_code += f'{name}({INSTANCE_VARIABLE}1) :- {name}{DOMAIN_STRING}({INSTANCE_VARIABLE}1), ' \
+                     f'{name}{DOMAIN_STRING}({INSTANCE_VARIABLE}2), {name}({INSTANCE_VARIABLE}2), ' \
                      f'{INSTANCE_VARIABLE}1 < {INSTANCE_VARIABLE}2.\n'
     return instance_code
 
@@ -311,11 +357,15 @@ def __generate_instances_code(model: Model) -> str:
                 inst_code += f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
             offset += cmp.count
         for prt_id, prt_count in cmp.ports.items():
-            ports_count = cmp.count * prt_count
             prt = model.get_port_by_id(prt_id)
-            prt_instance_code = __generate_instances_with_symmetry_breaking(prt.name, ports_count, offset) if cmp.symmetry_breaking \
-                else f'{prt.name}({offset+1}..{offset+ports_count}).\n'
-            offset += ports_count
+            prt_instance_code = ''
+            prt_individual_names = __get_port_individual_names(cmp, prt)
+            for prt_individual_name in prt_individual_names:
+                prt_instance_code += \
+                    __generate_instances_with_symmetry_breaking(prt_individual_name, cmp.count, offset) \
+                    if cmp.symmetry_breaking and cmp.count > 1 \
+                    else f'{prt_individual_name}({offset+1}..{offset+cmp.count}).\n'
+                offset += cmp.count
             inst_code += prt_instance_code
         inst_code += '\n'
     return inst_code

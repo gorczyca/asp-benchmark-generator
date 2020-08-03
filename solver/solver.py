@@ -2,6 +2,8 @@ import clingo
 import csv
 import re
 
+from code_generator.code_generator import DOMAIN_STRING
+
 
 ANSWER_SET_DELIMITER = ' '
 ARGUMENT_DELIMITER = ','
@@ -15,7 +17,9 @@ def inclusive_range(start, end):
 
 def get_instance_range_and_name(fact: str):
     fact_parts = re.split('\(|\)|\.\.', fact)
-    return inclusive_range(int(fact_parts[1]), int(fact_parts[2])), fact_parts[0]
+    # Remove the 'Domain' substring if that component has symmetry breaking
+    name = fact_parts[0].replace(DOMAIN_STRING, '')
+    return inclusive_range(int(fact_parts[1]), int(fact_parts[2])), name
 
 
 def get_instances_dictionary(*program_files_names):

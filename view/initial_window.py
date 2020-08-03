@@ -64,3 +64,6 @@ class InitialWindow(HasCommonSetup,
             self._window.destroy()
         except JSONDecodeError as e:
             messagebox.showerror('Error', f'Error while opening the project file.\n{e}')
+        except BGError as e:
+            messagebox.showerror('Error', e)
+

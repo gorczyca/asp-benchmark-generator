@@ -5,6 +5,7 @@ from tkinter import filedialog, messagebox
 from pubsub import pub
 
 import actions
+from exceptions import BGError
 from model.helpers import json_converter
 from solver.solver import Solver
 from state import State
@@ -30,6 +31,8 @@ def open_(parent_frame):
         file_name = extract_file_name(file.name)
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
         pub.sendMessage(actions.MODEL_LOADED)
+    else:
+        raise BGError('Error while opening the file.')
 
 
 def solve():
