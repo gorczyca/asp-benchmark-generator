@@ -164,7 +164,7 @@ def __generate_ports_ontology_definitions() -> str:
                    f'{PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}2, {N_VARIABLE}2), {CN_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2).\n'
     # TODO: rule added by me. CAUTION
     definitions += f':- {PRT_SYMBOL}({PRT_VARIABLE}), 2 {{ {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}, {N_VARIABLE}) : ' \
-                   f'{CMP_SYMBOL}({CMP_VARIABLE}), {PON_SYMBOL}({N_VARIABLE}) }}. % TODO: my own rule, check it! \n'
+                   f'{CMP_SYMBOL}({CMP_VARIABLE}), {PON_SYMBOL}({N_VARIABLE}) }}.\t% TODO: my own rule, check it! \n'
     return definitions
 
 
@@ -173,45 +173,6 @@ def __get_port_individual_names(cmp: Component, prt: Port) -> List[str]:
     for i in range(cmp.ports[prt.id_]):
         names.append(f'{cmp.name}_{prt.name}_{i}')
     return names
-
-
-# TODO: do usuniecia
-def __generate_ports_code_2(model: Model) -> str:
-    prt_code = ''
-    # TODO: it doesn't work when there are more than 1 ports of a type - rollback to what was there previously
-    for c in model.hierarchy:
-        if c.ports:
-            for prt_id in c.ports:
-                prt = model.get_port_by_id(prt_id)
-                prt_code += f'{PRT_SYMBOL}({PRT_VARIABLE}) :- {prt.name}({PRT_VARIABLE}).\n'
-                # Compatibility
-                for compatible_with_id in prt.compatible_with:
-                    prt2 = model.get_port_by_id(compatible_with_id)
-                    prt_code += f'{CMB_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) :- ' \
-                                f'{prt.name}({PRT_VARIABLE}1), {prt2.name}({PRT_VARIABLE}2).\n'
-                prt_individual_names = __get_port_individual_names(c, prt)
-                for prt_individual_name in prt_individual_names:
-                    prt_code += f'{PON_SYMBOL}("{prt_individual_name}").\n'
-                    # prt_code += f'{PRT_SYMBOL}({PRT_VARIABLE}) :- {prt_individual_name}({PRT_VARIABLE}).\n'
-                    # Compatibility
-                    # for compatible_with_id in prt.compatible_with:
-                    #     prt2 = model.get_port_by_id(compatible_with_id)
-                    #     for c2 in model.hierarchy:
-                    #         if compatible_with_id in c2.ports:
-                    #             prt_individual_names_2 = __get_port_individual_names(c2, prt2)
-                    #             for prt_individual_name_2 in prt_individual_names_2:
-                    #                 prt_code += f'{CMB_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) :- ' \
-                    #                             f'{prt_individual_name}({PRT_VARIABLE}1), {prt_individual_name_2}({PRT_VARIABLE}2). \n'
-                    # Port on device
-                    prt_code += f'1 {{ {PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}, "{prt_individual_name}") : ' \
-                                f'{prt.name}({PRT_VARIABLE}) }} 1 :- ' \
-                                f'{IN_SYMBOL}({CMP_VARIABLE}), {c.name}({CMP_VARIABLE}).\n'
-                    # Force connection
-                    if prt.force_connection:
-                        prt_code += f':- {c.name}({CMP_VARIABLE}), {prt.name}({PRT_VARIABLE}1), ' \
-                                    f'{PO_SYMBOL}({CMP_VARIABLE}, {PRT_VARIABLE}1, "{prt_individual_name}"), ' \
-                                    f'{{{CN_SYMBOL}({PRT_VARIABLE}1, {PRT_VARIABLE}2) : {PRT_SYMBOL}({PRT_VARIABLE}2)}} 0.\n'
-    return prt_code
 
 
 def __generate_ports_code(model: Model) -> str:
@@ -336,12 +297,26 @@ def __generate_constraints_code(model: Model) -> Tuple[str, str]:
     return simple_constraints_code, complex_constraints_code
 
 
-def __generate_instances_with_symmetry_breaking(name: str, count: int, offset: int) -> str:
+# TODO: it is not symmetry breaking, it's bounded component's number
+def __generate_components_instances_with_symmetry_breaking(name: str, count: int, offset: int) -> str:
     instance_code = f'{name}{DOMAIN_STRING}({offset+1}..{offset+count}).\n'
-    instance_code += f'0 {{{name}({INSTANCE_VARIABLE}) : {name}{DOMAIN_STRING}({INSTANCE_VARIABLE})}} {count}.\n'
-    instance_code += f'{name}({INSTANCE_VARIABLE}1) :- {name}{DOMAIN_STRING}({INSTANCE_VARIABLE}1), ' \
-                     f'{name}{DOMAIN_STRING}({INSTANCE_VARIABLE}2), {name}({INSTANCE_VARIABLE}2), ' \
-                     f'{INSTANCE_VARIABLE}1 < {INSTANCE_VARIABLE}2.\n'
+    instance_code += f'0 {{{name}({CMP_VARIABLE}) : {name}{DOMAIN_STRING}({CMP_VARIABLE})}} {count}.\n'
+    instance_code += f'{name}({CMP_VARIABLE}1) :- {name}{DOMAIN_STRING}({CMP_VARIABLE}1), ' \
+                     f'{name}{DOMAIN_STRING}({CMP_VARIABLE}2), {name}({CMP_VARIABLE}2), ' \
+                     f'{CMP_VARIABLE}1 < {CMP_VARIABLE}2.\n'
+    instance_code += f':- {IN_SYMBOL}({CMP_VARIABLE}2), {name}({CMP_VARIABLE}2), {DEFAULT_NEGATION_SYMBOL} ' \
+                     f'{IN_SYMBOL}({CMP_VARIABLE}1), {name}({CMP_VARIABLE}1), ' \
+                     f'{CMP_VARIABLE}1 < {CMP_VARIABLE}2.\t% TODO own rule for symmetry breaking, check it.\n'
+    return instance_code
+
+
+# TODO: it is not symmetry breaking, it's bounded component's number
+def __generate_ports_instances_with_symmetry_breaking(name: str, cmp: Component, prt_number: int, offset: int) -> str:
+    instance_code = f'{name}{DOMAIN_STRING}({offset+1}..{offset+cmp.count}).\t% TODO: only for solving\n'
+    instance_code += f'{name}({INSTANCE_VARIABLE}+{prt_number * cmp.count}) :- {cmp.name}({INSTANCE_VARIABLE}).\n'
+    instance_code += f':- {IN_SYMBOL}({PRT_VARIABLE}2), {name}({PRT_VARIABLE}2), {DEFAULT_NEGATION_SYMBOL} ' \
+                     f'{IN_SYMBOL}({PRT_VARIABLE}1), {name}({PRT_VARIABLE}1), ' \
+                     f'{PRT_VARIABLE}1 < {PRT_VARIABLE}2.\t% TODO own rule for symmetry breaking, check it.\n'
     return instance_code
 
 
@@ -351,22 +326,27 @@ def __generate_instances_code(model: Model) -> str:
     offset = 0
     for cmp in model.get_leaf_components():
         if cmp.count:
+            # TODO: consider removing condition "if cmp.count > 1"
             if cmp.count > 1 and cmp.symmetry_breaking:     # Symmetry breaking only when there is more than 1 component
-                inst_code += __generate_instances_with_symmetry_breaking(cmp.name, cmp.count, offset)
+                inst_code += __generate_components_instances_with_symmetry_breaking(cmp.name, cmp.count, offset)
             else:
                 inst_code += f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
             offset += cmp.count
-        for prt_id, prt_count in cmp.ports.items():
-            prt = model.get_port_by_id(prt_id)
-            prt_instance_code = ''
-            prt_individual_names = __get_port_individual_names(cmp, prt)
-            for prt_individual_name in prt_individual_names:
-                prt_instance_code += \
-                    __generate_instances_with_symmetry_breaking(prt_individual_name, cmp.count, offset) \
-                    if cmp.symmetry_breaking and cmp.count > 1 \
-                    else f'{prt_individual_name}({offset+1}..{offset+cmp.count}).\n'
-                offset += cmp.count
-            inst_code += prt_instance_code
+            prt_number = 0
+            for prt_id, prt_count in cmp.ports.items():
+                prt = model.get_port_by_id(prt_id)
+                prt_instance_code = ''
+                prt_individual_names = __get_port_individual_names(cmp, prt)
+                for prt_individual_name in prt_individual_names:
+                    prt_number += 1
+                    prt_instance_code += \
+                        __generate_ports_instances_with_symmetry_breaking(prt_individual_name, cmp, prt_number, offset)\
+                        if cmp.symmetry_breaking and cmp.count > 1 \
+                        else f'{prt_individual_name}({offset+1}..{offset+cmp.count}).\n'
+                            # TODO: 1 consider removing "cmp.count > 1"
+                            # TODO: 2 my own rule for symmetry breaking for ports, test it
+                    offset += cmp.count
+                inst_code += prt_instance_code
         inst_code += '\n'
     return inst_code
 
