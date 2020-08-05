@@ -6,7 +6,7 @@ from pubsub import pub
 
 import actions
 from exceptions import BGError
-from model.helpers import json_converter
+from model.model import Model
 from solver.solver import Solver
 from state import State
 
@@ -20,15 +20,17 @@ def extract_file_name(path):
     return tail or ntpath.basename(head)
 
 
-def open_(parent_frame):
+def open_():
     file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
     if file:
         state = State()
         state.file = file
         json = file.read()
-        model = json_converter.json_to_model(json)
+        model = Model.from_json(json)
         state.model = model
+        state.settings.add_recently_opened_project(model.root_name, file.name)
         file_name = extract_file_name(file.name)
+        file.close()
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
         pub.sendMessage(actions.MODEL_LOADED)
     else:

@@ -5,8 +5,8 @@ from pubsub import pub
 
 import actions
 from exceptions import BGError
-from file_operations import JSON_EXTENSION, extract_file_name, open_, LP_EXTENSION, CSV_EXTENSION, solve
-from model.helpers import json_converter
+from file_operations import JSON_EXTENSION, extract_file_name, open_, LP_EXTENSION, solve
+import json_converter
 from state import State
 import code_generator.code_generator as gen
 from view import style
@@ -97,10 +97,10 @@ class Menu:
                 return
             elif answer:
                 self.__on_save_as()
-        open_(self.__parent_frame)
+        open_()
 
     def __on_save(self):
-        json_string = json_converter.model_to_json(self.__state.model)
+        json_string = json_converter.get_json_string(self.__state.model)
         if self.__state.file:
             with open(self.__state.file.name, 'w') as file_:
                 self.__save(file_, json_string)
@@ -108,14 +108,15 @@ class Menu:
             self.__on_save_as()
 
     def __on_save_as(self):
-        json_string = json_converter.model_to_json(self.__state.model)
+        json_string = json_converter.get_json_string(self.__state.model)
         file = filedialog.asksaveasfile(mode='w', defaultextension=JSON_EXTENSION)
-        if file is not None:  # TODO: czy to potrzebne
+        if file is not None:
             self.__save(file, json_string)
             self.__state.file = file
-            messagebox.showinfo('Saved successfully', f'Saved succesfully to\n{file.name}.')
+            messagebox.showinfo('Saved successfully', f'Saved succesfully to\n{file.root_name}.')
 
     def __save(self, file, json_string):
+        # TODO: move from save to on_save / on_save as ?
         file.write(json_string)
         file.close()
         file_name = extract_file_name(file.name)

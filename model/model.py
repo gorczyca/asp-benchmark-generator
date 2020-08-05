@@ -1,4 +1,5 @@
-from typing import List, Optional, Tuple, Callable, Any
+from typing import List, Optional, Tuple, Any
+import json
 
 from exceptions import BGError
 from model.complex_constraint import ComplexConstraint
@@ -46,14 +47,19 @@ class Model:
         self.complex_constraints = []
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, json_string):
         """Necessary to create an instance from JSON."""
+        data = json.loads(json_string)
         data['hierarchy'] = list(map(Component.from_json, data['hierarchy']))
         data['resources'] = list(map(Resource.from_json, data['resources']))    # Convert dictionary to object
         data['ports'] = list(map(Port.from_json, data['ports']))
         data['simple_constraints'] = list(map(SimpleConstraint.from_json, data['simple_constraints']))
         data['complex_constraints'] = list(map(ComplexConstraint.from_json, data['complex_constraints']))
         return cls(**data)
+
+    # def json_to_model(json_string: str) -> Model:
+    #     """Converts the JSON string to the Hierarchy object"""
+    #     return Model.from_json(json.loads(json_string))
 
     # Root component
     def set_root_name(self, root_name: str) -> None:

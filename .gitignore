@@ -15,3 +15,4 @@ tests.py
 analyze-code.bat
 sonar-project.properties
 start-sonar.bat
+.settings.json

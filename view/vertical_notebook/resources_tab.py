@@ -52,8 +52,7 @@ class ResourcesTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
                                                  columns=[Column('produces', 'Produces')],
-                                                 values=self.__state.model.hierarchy,
-                                                 )
+                                                 values=self.__state.model.hierarchy)
         self.__left_frame = ttk.Frame(self._frame)
         # Resources combobox
         self.__resource_combobox_var = tk.StringVar(value=SELECT_RESOURCE)

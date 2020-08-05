@@ -10,7 +10,9 @@ NO_ANCESTOR = ''
 COL_ID_MAIN = '#0'
 
 DEFAULT_HEADING = 'HEADING'
+# TODO: change from heading to FOCUS e.g.
 HIGHLIGHT_TAG = 'highlight'
+HOVER_TAG = 'hover'
 
 
 class ScrollbarListbox(HasCommonSetup):
@@ -22,7 +24,9 @@ class ScrollbarListbox(HasCommonSetup):
                  extract_id: Callable[[Any], int] = None,
                  extract_text: Callable[[Any], str] = None,
                  extract_values: Callable[[Any], Any] = None,
-                 extract_ancestor: Callable[[Any], Any] = None):
+                 extract_ancestor: Callable[[Any], Any] = None,
+                 scrollbars: bool = True,
+                 hover: bool = True):
 
         self.__parent_frame = parent_frame
         self.__extract_id = extract_id
@@ -30,6 +34,8 @@ class ScrollbarListbox(HasCommonSetup):
         self.__extract_values = extract_values
         self.__extract_ancestor = extract_ancestor if extract_ancestor is not None else lambda x: NO_ANCESTOR
         self.__on_select_callback = on_select_callback
+
+        self.__scrollbars = scrollbars
 
         self.__highlighted_item_id = None
 
@@ -40,6 +46,13 @@ class ScrollbarListbox(HasCommonSetup):
 
         self.__listbox.tag_configure(HIGHLIGHT_TAG, background=BACKGROUND_COLOR_SECONDARY, foreground=FONT_COLOR_SECONDARY)
 
+        # TODO: naming
+        self.__hovered_item_id = None
+        if hover:
+            # TODO: find colour, refactor, move from here
+            self.__listbox.tag_configure(HOVER_TAG, background='red')
+            self.__listbox.bind('<Motion>', self.__hover)
+
         if columns is not None:
             column_ids = [c.id_ for c in columns]
             self.__listbox['columns'] = column_ids
@@ -48,19 +61,19 @@ class ScrollbarListbox(HasCommonSetup):
                 self.__listbox.heading(c.id_, text=c.name, anchor=c.anchor)
 
         if values is not None:
-            for v in values:
-                self.add_item(v)
+            self.set_items(values)
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
         self.__listbox_frame = ttk.Frame(self.__parent_frame)
-        self.__listbox_x_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.HORIZONTAL)
-        self.__listbox_y_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.VERTICAL)
-        self.__listbox = ttk.Treeview(self.__listbox_frame, selectmode=tk.BROWSE, style='Custom.Treeview',
-                                      xscrollcommand=self.__listbox_x_scrollbar.set,
-                                      yscrollcommand=self.__listbox_y_scrollbar.set)
-        self.__listbox_y_scrollbar.config(command=self.__listbox.yview)
-        self.__listbox_x_scrollbar.config(command=self.__listbox.xview)
+        self.__listbox = ttk.Treeview(self.__listbox_frame, selectmode=tk.BROWSE, style='Custom.Treeview')
+        if self.__scrollbars:
+            self.__listbox_x_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.HORIZONTAL)
+            self.__listbox_y_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.VERTICAL)
+            self.__listbox.config(xscrollcommand=self.__listbox_x_scrollbar.set,
+                                  yscrollcommand=self.__listbox_y_scrollbar.set)
+            self.__listbox_y_scrollbar.config(command=self.__listbox.yview)
+            self.__listbox_x_scrollbar.config(command=self.__listbox.xview)
 
         if self.__on_select_callback:
             self.__listbox.bind('<ButtonRelease-1>', self.__item_selected)
@@ -70,8 +83,9 @@ class ScrollbarListbox(HasCommonSetup):
         self.__listbox_frame.columnconfigure(0, weight=1)
 
         self.__listbox.grid(row=0, column=0, sticky=tk.NSEW)
-        self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.W)
-        self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
+        if self.__scrollbars:
+            self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.W)
+            self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
 
     def set_items(self, items: Any):
         self.__listbox.delete(*self.__listbox.get_children())   # Clear current items
@@ -116,9 +130,44 @@ class ScrollbarListbox(HasCommonSetup):
         # TODO: does not work
         id_ = self.__extract_id(item)
         if self.__highlighted_item_id is not None and self.__listbox.exists(self.__highlighted_item_id):
-            self.__listbox.item(self.__highlighted_item_id, tags=[])    # Remove highlight
+            tags_ = self.__listbox.item(self.__highlighted_item_id)['tags']
+            if HIGHLIGHT_TAG in tags_:
+                tags_.remove(HIGHLIGHT_TAG)
+                self.__listbox.item(self.__highlighted_item_id, tags=tags_)    # Remove highlight
         self.__highlighted_item_id = id_
         self.__listbox.item(id_, tags=[HIGHLIGHT_TAG])
+
+    def __hover(self, event):
+        identified_row_string = self.__listbox.identify_row(event.y)
+        if identified_row_string == '':
+            self.__remove_tag(HOVER_TAG, self.__hovered_item_id)
+            self.__hovered_item_id = None
+        else:
+            id_ = int(identified_row_string)
+            if id_ != self.__hovered_item_id:   # The hover changed
+                self.__remove_tag(HOVER_TAG, self.__hovered_item_id)
+                if id_ != self.__highlighted_item_id:
+                    self.__add_tag(HOVER_TAG, id_)
+                    self.__hovered_item_id = id_
+
+    def __remove_tag(self, tag, item_id):
+        if item_id is not None and self.__listbox.exists(item_id):
+            tags = self.__listbox.item(item_id)['tags']
+            if tag in tags:
+                tags.remove(HOVER_TAG)
+            self.__listbox.item(item_id, tags=tags)
+
+    def __add_tag(self, tag, item_id, remove_others=False):
+        tags = []
+        if remove_others:
+            tags.append(tag)
+        else:
+            tags = self.__listbox.item(item_id)['tags']
+            if not tags:
+                tags = []
+            if tag not in tags:
+                tags.append(tag)
+        self.__listbox.item(item_id, tags=tags)
 
     def __item_selected(self, _):
         if self.__highlighted_item_id is not None and self.__listbox.exists(self.__highlighted_item_id):

@@ -31,7 +31,7 @@ class SelectPortsWindow(HasCommonSetup,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__ports_left_listbox = ScrollbarListbox(self._window,  values=self.__ports_left,
+        self.__ports_left_listbox = ScrollbarListbox(self._window, values=self.__ports_left,
                                                      extract_id=lambda prt: prt.id_,
                                                      extract_text=lambda prt: prt.name,
                                                      on_select_callback=self.__on_select_listbox_left,

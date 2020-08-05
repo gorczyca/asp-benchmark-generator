@@ -55,8 +55,7 @@ class PortsTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
                                                  columns=[Column('amount', 'Amount')],
-                                                 values=self.__state.model.hierarchy,
-                                                 )
+                                                 values=self.__state.model.hierarchy)
         self.__left_frame = ttk.Frame(self._frame)
 
         # Ports combobox
@@ -313,7 +312,7 @@ class PortsTab(Tab,
 
     def __compatible_with_edited(self, ports: List[Port]):
         if self.__selected_port:
-            ports.sort(key=lambda x: x.name)
+            ports.sort(key=lambda x: x.root_name)
             self.__compatible_with_listbox.set_items(ports)
             self.__state.model.update_ports_compatibility(self.__selected_port, ports)
 

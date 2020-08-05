@@ -1,34 +1,16 @@
 from typing import Optional, TextIO
 
+from settings import Settings
 from model.model import Model
 
-
-# class Borg:
-#     _shared_state = {}
-#
-#     def __init__(self):
-#         self.__dict__ = self._shared_state
-#
-#
-# class State(Borg):
-#     def __init__(self):
-#         Borg.__init__(self)
-#         # self.val = arg
-#         self.model: Model = Model()
-#         self.file: Optional[TextIO] = None
-#         self.is_saved: bool = True
-
-    # def __str__(self): return self.val
 
 class State:
     class __State:
         def __init__(self):
-            self.model: Model = Model()
+            self.model: Optional[Model] = None
             self.file: Optional[TextIO] = None
             self.is_saved: bool = True
-
-        # def __str__(self):
-        #     return repr(self) + self.val
+            self.settings: Optional[Settings] = None
 
     instance = None
 
