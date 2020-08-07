@@ -5,12 +5,13 @@ from pubsub import pub
 
 import actions
 from exceptions import BGError
-from file_operations import JSON_EXTENSION, extract_file_name, open_, LP_EXTENSION, solve
+from file_operations import JSON_EXTENSION, extract_file_name, open_, LP_EXTENSION, solve, load_from_file
 import json_converter
 from state import State
 import code_generator.code_generator as gen
 from view import style
 from view.ask_string_window import AskStringWindow
+from view.generate_window import GenerateWindow
 
 
 class Menu:
@@ -61,6 +62,9 @@ class Menu:
         AskStringWindow(self.__parent_frame, self.__change_root_name, 'Set root name', f'Set new root name (current is {self.__state.model.root_name}).')
 
     def __generate(self):
+        GenerateWindow(self.__parent_frame, None)
+
+        return
         code = gen.generate_code(self.__state.model)
         file = filedialog.asksaveasfile(mode='w', defaultextension=LP_EXTENSION)
         if file is not None:
@@ -97,7 +101,8 @@ class Menu:
                 return
             elif answer:
                 self.__on_save_as()
-        open_()
+        file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
+        load_from_file(file)
 
     def __on_save(self):
         json_string = json_converter.get_json_string(self.__state.model)

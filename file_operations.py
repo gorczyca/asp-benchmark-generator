@@ -1,6 +1,7 @@
 import ntpath
 import sys
 from tkinter import filedialog, messagebox
+from typing import TextIO, Optional
 
 from pubsub import pub
 
@@ -22,6 +23,10 @@ def extract_file_name(path):
 
 def open_():
     file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
+    load_from_file(file)
+
+
+def load_from_file(file: Optional[TextIO]) -> None:
     if file:
         state = State()
         state.file = file

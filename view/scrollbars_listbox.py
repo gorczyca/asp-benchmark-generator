@@ -84,7 +84,7 @@ class ScrollbarListbox(HasCommonSetup):
 
         self.__listbox.grid(row=0, column=0, sticky=tk.NSEW)
         if self.__scrollbars:
-            self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.W)
+            self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.S)
             self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
 
     def set_items(self, items: Any):

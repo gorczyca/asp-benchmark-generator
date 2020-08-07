@@ -1,11 +1,11 @@
 import json
 from collections import deque
 from json import JSONDecodeError
-from tkinter import messagebox
-from typing import Deque, Optional
+from typing import Deque, Optional, Dict
 import os
 import copy
 
+from code_generator.code_generator import SYMBOLS, CN_SYMBOL, IN_SYMBOL, INSTANCES_FACTS
 from json_converter import get_json_string
 
 CONFIGURATION_FILE_NAME = './.settings.json'
@@ -24,10 +24,14 @@ class ProjectInfo:
 
 
 class Settings:
-    def __init__(self, recently_opened_projects: Deque[ProjectInfo] = None, theme_id: str = 'light'):
+    def __init__(self, recently_opened_projects: Deque[ProjectInfo] = None, theme_id: str = 'light',
+                 shown_predicates_dict: Dict[str, bool] = None):
         self.recently_opened_projects: Deque[ProjectInfo] = recently_opened_projects if recently_opened_projects is not None \
             else deque([], maxlen=MAX_RECENTLY_OPENED_PROJECTS_COUNT)
         self.theme_id: str = theme_id
+        # By default show only IN and CN predicates
+        self.shown_predicates_dict: Dict[str, bool] = shown_predicates_dict if shown_predicates_dict is not None \
+            else {s: (s == IN_SYMBOL or s == CN_SYMBOL) for s in [INSTANCES_FACTS] + SYMBOLS}
 
     @classmethod
     def get_settings(cls):
@@ -52,7 +56,7 @@ class Settings:
         with open(CONFIGURATION_FILE_NAME, 'w') as file:
             self_copy = copy.deepcopy(self)
             self_copy.recently_opened_projects = list(self.recently_opened_projects)
-            json_string = get_json_string(self_copy)
+            json_string = get_json_string(self_copy, sort=False)
             file.write(json_string)
             file.close()
 

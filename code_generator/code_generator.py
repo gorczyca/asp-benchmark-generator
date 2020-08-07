@@ -5,8 +5,9 @@ from model.component import Component
 from model.port import Port
 from model.simple_constraint import SimpleConstraint
 
-DEFAULT_NEGATION_SYMBOL = 'not'
+DEFAULT_NEGATION_OPERATOR = 'not'
 COUNT_DIRECTIVE = '#count'
+SHOW_DIRECTIVE = '#show'
 UNKNOWN_VARIABLE = '_'
 
 INSTANCE_VARIABLE = 'X'
@@ -35,6 +36,27 @@ PRT_VARIABLE = 'P'
 CMB_SYMBOL = 'cmb'
 PO_SYMBOL = 'po'
 CN_SYMBOL = 'cn'
+
+# Key in the "shown_predicates_dictionary"
+# if value is True then show instances facts
+INSTANCES_FACTS = 'Instances facts'
+
+SYMBOLS = [
+    IN_SYMBOL,
+    CN_SYMBOL,
+    CMP_SYMBOL,
+    ROOT_SYMBOL,
+    PAN_SYMBOL,
+    PPA_SYMBOL,
+    PA_SYMBOL,
+    PPAT_SYMBOL,
+    RES_SYMBOL,
+    PRD_SYMBOL,
+    PON_SYMBOL,
+    PRT_SYMBOL,
+    CMB_SYMBOL,
+    PO_SYMBOL
+]
 
 DOMAIN_STRING = 'Domain'
 
@@ -252,7 +274,7 @@ def __generate_simple_constraints_code(model: Model) -> str:
     for ctr in model.simple_constraints:
         partial_ctr_code = __generate_simple_constraint_distinct_partial_code(ctr, model) if ctr.distinct \
             else __generate_simple_constraint_partial_code(ctr, model)
-        ctrs_code += f':- {model.root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_SYMBOL} {partial_ctr_code}.\n'
+        ctrs_code += f':- {model.root_name}({CMP_VARIABLE}1), {DEFAULT_NEGATION_OPERATOR} {partial_ctr_code}.\n'
     return ctrs_code
 
 
@@ -282,7 +304,7 @@ def __generate_complex_constraints_code(model: Model) -> str:
         antecedent_complete_code = __generate_implication_complete_part(antecedent_head, antecedents_heads, ctr.antecedent_all)
         consequent_head = f'{ctr.name.replace(" ", "_")}_consequent'
         consequent_complete_code = __generate_implication_complete_part(consequent_head, consequents_heads, ctr.consequent_all)
-        complete_implication = f':- {antecedent_head}, {DEFAULT_NEGATION_SYMBOL} {consequent_head}.\n'
+        complete_implication = f':- {antecedent_head}, {DEFAULT_NEGATION_OPERATOR} {consequent_head}.\n'
         ctrs_code += f'{antecedents_code}\n' \
                      f'{consequents_code}\n' \
                      f'{antecedent_complete_code}' \
@@ -304,7 +326,7 @@ def __generate_components_instances_with_symmetry_breaking(name: str, count: int
     instance_code += f'{name}({CMP_VARIABLE}1) :- {name}{DOMAIN_STRING}({CMP_VARIABLE}1), ' \
                      f'{name}{DOMAIN_STRING}({CMP_VARIABLE}2), {name}({CMP_VARIABLE}2), ' \
                      f'{CMP_VARIABLE}1 < {CMP_VARIABLE}2.\n'
-    instance_code += f':- {IN_SYMBOL}({CMP_VARIABLE}2), {name}({CMP_VARIABLE}2), {DEFAULT_NEGATION_SYMBOL} ' \
+    instance_code += f':- {IN_SYMBOL}({CMP_VARIABLE}2), {name}({CMP_VARIABLE}2), {DEFAULT_NEGATION_OPERATOR} ' \
                      f'{IN_SYMBOL}({CMP_VARIABLE}1), {name}({CMP_VARIABLE}1), ' \
                      f'{CMP_VARIABLE}1 < {CMP_VARIABLE}2.\t% TODO own rule for symmetry breaking, check it.\n'
     return instance_code
@@ -314,7 +336,7 @@ def __generate_components_instances_with_symmetry_breaking(name: str, count: int
 def __generate_ports_instances_with_symmetry_breaking(name: str, cmp: Component, prt_number: int, offset: int) -> str:
     instance_code = f'{name}{DOMAIN_STRING}({offset+1}..{offset+cmp.count}).\t% TODO: only for solving\n'
     instance_code += f'{name}({INSTANCE_VARIABLE}+{prt_number * cmp.count}) :- {cmp.name}({INSTANCE_VARIABLE}).\n'
-    instance_code += f':- {IN_SYMBOL}({PRT_VARIABLE}2), {name}({PRT_VARIABLE}2), {DEFAULT_NEGATION_SYMBOL} ' \
+    instance_code += f':- {IN_SYMBOL}({PRT_VARIABLE}2), {name}({PRT_VARIABLE}2), {DEFAULT_NEGATION_OPERATOR} ' \
                      f'{IN_SYMBOL}({PRT_VARIABLE}1), {name}({PRT_VARIABLE}1), ' \
                      f'{PRT_VARIABLE}1 < {PRT_VARIABLE}2.\t% TODO own rule for symmetry breaking, check it.\n'
     return instance_code

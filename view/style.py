@@ -11,6 +11,7 @@ ACTIVE_COLOR_2 = 'black'
 HOVER_COLOR = 'green'
 FONT_TYPE = 'Arial'
 
+SMALL_FONT = (FONT_TYPE, 10)
 FONT = (FONT_TYPE, 13)
 FONT_BOLD = (FONT_TYPE, 13, 'bold')
 BIG_FONT = (FONT_TYPE, 18)
@@ -47,6 +48,7 @@ class CustomTheme(ttk.Style):
             'Big.TLabel': {'configure': {'font': BIG_FONT_BOLD}},
             'Bold.TLabel': {'configure': {'font': FONT_BOLD}},
             'Medium.Bold.TLabel': {'configure': {'font': MEDIUM_FONT_BOLD}},
+            'Small.TLabel': {'configure': {'font': SMALL_FONT}},
             "Vertical.TNotebook": {"configure": {"tabmargins": [10, 50, 10, 0], 'tabposition': 'wns',
                                                  'background': BACKGROUND_COLOR_PRIMARY}},
             "Vertical.TNotebook.Tab": {"configure": {'width': 12, 'padding': [30, 30], 'borderwidth': 3,
@@ -69,6 +71,7 @@ class CustomTheme(ttk.Style):
             'Custom.Treeview.Heading': {'configure': {'font': ('Arial', 13, 'bold')}},
             # 'TButton': {'map': {'highlightbackground': ACTIVE_COLOR}}
             # 'TButton': {'configure': {'padding': [50, 0, 50, 0], 'border': '10', 'borderwidth': 100, 'relief': tk.SOLID},
+            #'TLabel': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
             'TLabel': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
             'TButton': {'configure': {'padding': [30, 0, 30, 0], 'relief': tk.SOLID,
                                       'background': BACKGROUND_COLOR_PRIMARY,
