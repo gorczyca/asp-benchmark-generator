@@ -1,8 +1,15 @@
 import clingo
 import csv
 import re
+from enum import IntEnum
 
 from code_generator.code_generator import DOMAIN_STRING
+
+
+class InstanceRepresentation(IntEnum):
+    Id = 0
+    Textual = 1
+    Mixed = 2
 
 
 ANSWER_SET_DELIMITER = ' '

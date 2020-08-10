@@ -86,6 +86,8 @@ class CustomTheme(ttk.Style):
                                 }
                         },
             'TFrame': {'configure': {'padding': [FRAME_PAD_Y, FRAME_PAD_X], 'background': BACKGROUND_COLOR_PRIMARY}},
+            'TRadiobutton': {'configure': {'background': BACKGROUND_COLOR_PRIMARY,
+                                           'focuscolor': BACKGROUND_COLOR_PRIMARY}},  # remove ugly border
             'TCheckbutton': {'configure': {'background': BACKGROUND_COLOR_PRIMARY,
                                            'focuscolor': BACKGROUND_COLOR_PRIMARY }},   # remove ugly border
             'TScrollbar': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},

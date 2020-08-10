@@ -7,6 +7,7 @@ import copy
 
 from code_generator.code_generator import SYMBOLS, CN_SYMBOL, IN_SYMBOL, INSTANCES_FACTS
 from json_converter import get_json_string
+from solver.solver import InstanceRepresentation as Repr
 
 CONFIGURATION_FILE_NAME = './.settings.json'
 MAX_RECENTLY_OPENED_PROJECTS_COUNT = 15
@@ -25,13 +26,17 @@ class ProjectInfo:
 
 class Settings:
     def __init__(self, recently_opened_projects: Deque[ProjectInfo] = None, theme_id: str = 'light',
-                 shown_predicates_dict: Dict[str, bool] = None):
+                 shown_predicates_dict: Dict[str, bool] = None, answer_sets_count: int = 1,
+                 shown_predicates_only: bool = True, instance_representation: Repr = Repr.Mixed):
         self.recently_opened_projects: Deque[ProjectInfo] = recently_opened_projects if recently_opened_projects is not None \
             else deque([], maxlen=MAX_RECENTLY_OPENED_PROJECTS_COUNT)
         self.theme_id: str = theme_id
         # By default show only IN and CN predicates
         self.shown_predicates_dict: Dict[str, bool] = shown_predicates_dict if shown_predicates_dict is not None \
             else {s: (s == IN_SYMBOL or s == CN_SYMBOL) for s in [INSTANCES_FACTS] + SYMBOLS}
+        self.answer_sets_count: int = answer_sets_count
+        self.shown_predicates_only: bool = shown_predicates_only
+        self.instance_representation: Repr = instance_representation
 
     @classmethod
     def get_settings(cls):
@@ -41,6 +46,7 @@ class Settings:
                     json_string = file.read()
                     data = json.loads(json_string)
                     recent_projects_list = list(map(ProjectInfo.from_json, data['recently_opened_projects']))
+                    data['instance_representation'] = Repr(data['instance_representation'])
                     data['recently_opened_projects'] = deque(recent_projects_list,
                                                              maxlen=MAX_RECENTLY_OPENED_PROJECTS_COUNT)
                     return cls(**data)

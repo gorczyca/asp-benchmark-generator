@@ -27,6 +27,8 @@ def open_():
 
 
 def load_from_file(file: Optional[TextIO]) -> None:
+    # TODO: mess with closing & opening the file!!!
+    # TODO: also with throwing and catching exceptionss
     if file:
         state = State()
         state.file = file

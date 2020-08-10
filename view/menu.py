@@ -12,6 +12,7 @@ import code_generator.code_generator as gen
 from view import style
 from view.ask_string_window import AskStringWindow
 from view.generate_window import GenerateWindow
+from view.solve_window import SolveWindow
 
 
 class Menu:
@@ -31,7 +32,7 @@ class Menu:
         run_menu = tk.Menu(tearoff=0, bg=style.BACKGROUND_COLOR_PRIMARY)
 
         run_menu.add_command(label='Generate', command=self.__generate)
-        run_menu.add_command(label='Solve', command=solve)
+        run_menu.add_command(label='Solve', command=self.__on_solve)
         # run_menu.add_separator()
         # run_menu.add_command(label='Generate & solve', command=self.__generate_and_solve)
 
@@ -48,6 +49,9 @@ class Menu:
         self.__menu.add_cascade(label='Run', menu=run_menu)
 
         parent_frame.config(menu=self.__menu)
+
+    def __on_solve(self):
+        SolveWindow(self.__parent_frame, None)
 
     def __generate_and_solve(self):
         pass

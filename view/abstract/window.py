@@ -10,6 +10,8 @@ class Window(ABC):
         self._window = tk.Toplevel(parent_frame, bg=BACKGROUND_COLOR_PRIMARY)
         self._window.grab_set()
         self._window.title(window_title)
+        # self._window.transient(1)     # TODO:
+        # self._window.attributes('-toolwindow', 1)
         if bind_enter_callback:
             self._window.bind('<Return>', lambda _: bind_enter_callback())
 

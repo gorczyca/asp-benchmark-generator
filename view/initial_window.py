@@ -122,3 +122,4 @@ class InitialWindow(HasCommonSetup,
             messagebox.showerror('Error', f'Error while opening the project file.\n{e}')
         except BGError as e:
             messagebox.showerror('Error', e)
+
