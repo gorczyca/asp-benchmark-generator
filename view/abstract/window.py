@@ -7,6 +7,7 @@ from view.style import BACKGROUND_COLOR_PRIMARY, WINDOW_WIDTH_RATIO, WINDOW_HEIG
 class Window(ABC):
     @abstractmethod
     def __init__(self, parent_frame, window_title, bind_enter_callback=None):
+        # TODO: inherit from tk.Toplevel maybe?
         self._window = tk.Toplevel(parent_frame, bg=BACKGROUND_COLOR_PRIMARY)
         self._window.grab_set()
         self._window.title(window_title)

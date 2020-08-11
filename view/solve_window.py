@@ -1,21 +1,19 @@
-import math
-import os
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk
 
 from settings import Settings
-from solver.solver import InstanceRepresentation
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.window import Window
-from file_operations import CSV_EXTENSION
+from view.solve_frame import SolveFrame
+from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 
 WINDOW_TITLE = 'Solve a logic program...'
 
 ANSWER_SETS_FILE_SUFFIX = 'as'
 
-WINDOW_WIDTH_RATIO = 0.4
-WINDOW_HEIGHT_RATIO = 0.8
+WINDOW_WIDTH_RATIO = 0.3
+WINDOW_HEIGHT_RATIO = 0.25
 
 
 class SolveWindow(HasCommonSetup,
@@ -29,61 +27,26 @@ class SolveWindow(HasCommonSetup,
         HasCommonSetup.__init__(self)
 
     def _create_widgets(self) -> None:
-        self.__answer_sets_count_spinbox_label = ttk.Label(self._window, text='Answer sets count:')
-        self.__answer_sets_count_spinbox_var = tk.IntVar(value=self.__settings.answer_sets_count)
-        self.__answer_sets_count_spinbox = ttk.Spinbox(self._window, from_=0, to=math.inf,
-                                                       textvariable=self.__answer_sets_count_spinbox_var)
-
-        self.__representation_radiobuttons_var = tk.IntVar(value=self.__settings.instance_representation.value)
-        self.__representation_radiobuttons = []
-        for Repr in InstanceRepresentation:
-            radiobutton = ttk.Radiobutton(self._window, value=Repr.value, text=Repr.name,
-                                          variable=self.__representation_radiobuttons_var)
-            self.__representation_radiobuttons.append(radiobutton)
-
-        self.__shown_predicates_only_checkbox_var = tk.BooleanVar(value=self.__settings.shown_predicates_only)
-        self.__shown_predicates_only_checkbox_label = ttk.Label(self._window, text='Shown predicates only:')
-        self.__shown_predicates_only_checkbox = ttk.Checkbutton(self._window,
-                                                                variable=self.__shown_predicates_only_checkbox_var)
-
-        self.__generate_to_label = ttk.Label(self._window, text='Save to:')
-        self.__browse_file_button = ttk.Button(self._window, text='Browse...', command=self.__on_browse_path)
-        self.__generate_to_path_label_var = tk.StringVar(value='Set target location.')
-        self.__generate_to_path_label = ttk.Label(self._window, textvariable=self.__generate_to_path_label_var)
-
-        if self.__state.file is not None:
-            root_name = self.__state.model.root_name
-            dir_name = os.path.dirname(self.__state.file.name)
-            path = os.path.join(dir_name, f'{root_name}_{ANSWER_SETS_FILE_SUFFIX}{CSV_EXTENSION}')
-            path = os.path.normpath(path)   # Normalize the back- & front-slashes
-            self.__generate_to_path_label_var.set(path)
+        self.__main_frame = ttk.Frame(self._window)
+        self.__solve_frame = SolveFrame(self.__main_frame, self.__settings, self.__state)
+        self.__ok_button = ttk.Button(self.__main_frame, text='Ok', command=self.__ok)
+        self.__cancel_button = ttk.Button(self.__main_frame, text='Cancel', command=self._window.destroy)
 
     def _setup_layout(self) -> None:
-        self.__answer_sets_count_spinbox_label.grid(row=0, column=0)
-        self.__answer_sets_count_spinbox.grid(row=0, column=1, sticky=tk.NSEW)
+        self._set_geometry(height_ratio=WINDOW_HEIGHT_RATIO, width_ratio=WINDOW_WIDTH_RATIO)
 
-        for i, radiobutton in enumerate(self.__representation_radiobuttons):
-            radiobutton.grid(row=1, column=i*2)
+        self.__main_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
 
-        self.__shown_predicates_only_checkbox_label.grid(row=2, column=0)
-        self.__shown_predicates_only_checkbox.grid(row=2, column=1)
+        self.__solve_frame.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
+        self.__ok_button.grid(row=1, column=0, sticky=tk.EW, pady=CONTROL_PAD_Y, padx=(0, CONTROL_PAD_X))
+        self.__cancel_button.grid(row=1, column=1, sticky=tk.EW, pady=CONTROL_PAD_Y, padx=(CONTROL_PAD_X, 0))
 
-        self.__generate_to_label.grid(row=3, column=0)
-        self.__generate_to_path_label.grid(row=4, column=0)
-        self.__browse_file_button.grid(row=4, column=1)
+        self.__main_frame.rowconfigure(0, weight=1)
+        self.__main_frame.columnconfigure(0, weight=1)
+        self.__main_frame.columnconfigure(1, weight=1)
 
-    def __on_browse_path(self):
-        # TODO:
-        # filename = tkFileDialog.asksaveasfilename(defaultextension=".espace",
-        #                                           filetypes=(("espace file", "*.espace"), ("All Files", "*.*")))
-        file_path = filedialog.asksaveasfilename(defaultextension=CSV_EXTENSION, parent=self._window)
-        if file_path:
-            file_path = os.path.normpath(file_path)
-            self.__generate_to_path_label_var.set(file_path)
+        self._window.rowconfigure(0, weight=1)
+        self._window.columnconfigure(0, weight=1)
 
-
-
-
-
-
-
+    def __ok(self):
+        pass
