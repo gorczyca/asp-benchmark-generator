@@ -40,6 +40,8 @@ class View(ttk.Frame,
         pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
         pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
         pub.subscribe(self.__init_title, actions.RESET)
+        # TODO:
+        pub.subscribe(self.__update, actions.UPDATE_IDLE_TASKS)
 
         HasCommonSetup.__init__(self)
 
@@ -92,7 +94,9 @@ class View(ttk.Frame,
                 screen_height = self.__main_window.winfo_screenheight()
                 self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
 
-
+    def __update(self):
+        # TODO:
+        self.__main_window.update_idletasks()
 
 
 

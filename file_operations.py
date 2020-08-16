@@ -2,13 +2,15 @@ import ntpath
 import sys
 from tkinter import filedialog, messagebox
 from typing import TextIO, Optional
+from threading import Event
 
 from pubsub import pub
 
 import actions
 from exceptions import BGError
 from model.model import Model
-from solver.solver import Solver
+from settings import Settings
+from solver.solver import Solver, InstanceRepresentation
 from state import State
 
 JSON_EXTENSION = '.json'
@@ -51,9 +53,28 @@ def solve():
             output_file_name = filedialog.asksaveasfilename(defaultextension=CSV_EXTENSION, title='Save output .csv file as...')
             if output_file_name:
                 solver = Solver(output_file_name, *program_files_names, answer_sets_count=100,
-                                id_representation=False, show_predicates=True, shown_atoms_only=True)
+                                id_representation=False, show_predicates_symbols=True, shown_predicates_only=True)
                 solver.solve()
                 messagebox.showinfo('Solving complete', f'Answer set exported to {output_file_name}')
     except:
         messagebox.showerror('Error', f'Error while solving the file file.\n{sys.exc_info()[0]}')
+
+
+def solve_(parent_frame, input_path: str, output_path: str, answer_sets_count: int = 1,
+           instance_representation: InstanceRepresentation = InstanceRepresentation.Textual,
+           shown_predicates_only: bool = True, show_predicates_symbols: bool = True,
+           settings: Settings = None, on_progress=None, stop_event: Event = None):
+    solver = Solver(output_path, input_path, answer_sets_count=answer_sets_count,
+                    show_predicates_symbols=show_predicates_symbols, shown_predicates_only=shown_predicates_only,
+                    instance_representation=instance_representation, on_progress=on_progress, stop_event=stop_event)
+    solver.solve(parent_frame)
+    # TODO:
+    # messagebox.showinfo('Solving complete', f'Answer set exported to {output_path}', parent=parent_frame)
+    # TODO:
+    if not settings:
+        settings = Settings.get_settings()
+    settings.save_changes(program_to_solve_path=input_path, answer_sets_count=answer_sets_count,
+                          show_predicates_symbols=show_predicates_symbols, shown_predicates_only=shown_predicates_only,
+                          instance_representation=instance_representation)
+
 

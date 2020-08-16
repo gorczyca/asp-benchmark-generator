@@ -10,6 +10,7 @@ class Window(ABC):
         # TODO: inherit from tk.Toplevel maybe?
         self._window = tk.Toplevel(parent_frame, bg=BACKGROUND_COLOR_PRIMARY)
         self._window.grab_set()
+        self._window.focus()
         self._window.title(window_title)
         # self._window.transient(1)     # TODO:
         # self._window.attributes('-toolwindow', 1)
@@ -24,6 +25,3 @@ class Window(ABC):
         x_pos = round((screen_width - window_width) / 2)
         y_pos = round((screen_height - window_height) / 2)
         self._window.geometry(f'{window_width}x{window_height}+{x_pos}+{y_pos}')
-
-    @property
-    def window(self): return self._window

@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from model.model import Model
 from model.component import Component
@@ -41,22 +41,26 @@ CN_SYMBOL = 'cn'
 # if value is True then show instances facts
 INSTANCES_FACTS = 'Instances facts'
 
-SYMBOLS = [
-    IN_SYMBOL,
-    CN_SYMBOL,
-    CMP_SYMBOL,
-    ROOT_SYMBOL,
-    PAN_SYMBOL,
-    PPA_SYMBOL,
-    PA_SYMBOL,
-    PPAT_SYMBOL,
-    RES_SYMBOL,
-    PRD_SYMBOL,
-    PON_SYMBOL,
-    PRT_SYMBOL,
-    CMB_SYMBOL,
-    PO_SYMBOL
-]
+SYMBOLS_WITH_ARITIES = {
+    IN_SYMBOL: 1,
+    CN_SYMBOL: 2,
+    CMP_SYMBOL: 1,
+    ROOT_SYMBOL: 1,
+    PAN_SYMBOL: 1,
+    PPA_SYMBOL: 3,
+    PA_SYMBOL: 3,
+    PPAT_SYMBOL: 2,
+    RES_SYMBOL: 1,
+    PRD_SYMBOL: 3,
+    PON_SYMBOL: 1,
+    PRT_SYMBOL: 1,
+    CMB_SYMBOL: 2,
+    PO_SYMBOL: 3
+}
+
+# TODO: also resources predicates e.g. disk_space("disk_space").
+
+SYMBOLS = list(SYMBOLS_WITH_ARITIES.keys())
 
 DOMAIN_STRING = 'Domain'
 
@@ -64,7 +68,7 @@ DOMAIN_STRING = 'Domain'
 # TODO: TRY CHANGING IN INSTEAD OF DOMAIN
 
 
-def generate_code(model: Model):
+def generate_code(model: Model, shown_predicates_dict: Dict[str, bool]):
     info = __generate_code_info()
     root_code = __generate_root_code(model)
     hierarchy_def = __generate_hierarchy_ontology_definitions()
@@ -76,8 +80,8 @@ def generate_code(model: Model):
     ports_def = __generate_ports_ontology_definitions()
     ports_code = __generate_ports_code(model)
     simple_constraints_code, complex_constraints_code = __generate_constraints_code(model)
-    instances_code = __generate_instances_code(model)
-    show_directives = __generate_show_directives()
+    instances_code, instances_predicates = __generate_instances_code(model)
+    show_directives = __generate_show_directives(shown_predicates_dict, instances_predicates)
 
     return f'{info} \n{root_code}' \
            f'\n%\n% Hierarchy ontology definitions\n%\n{hierarchy_def}\n%\n% Component hierarchy\n%\n{hierarchy_code}' \
@@ -343,6 +347,7 @@ def __generate_ports_instances_with_symmetry_breaking(name: str, cmp: Component,
 
 
 def __generate_instances_code(model: Model) -> str:
+    inst_predicates = []
     inst_code = ''
     inst_code += f'{model.root_name}(0..0).\t% ROOT\n\n'
     offset = 0
@@ -351,8 +356,10 @@ def __generate_instances_code(model: Model) -> str:
             # TODO: consider removing condition "if cmp.count > 1"
             if cmp.count > 1 and cmp.symmetry_breaking:     # Symmetry breaking only when there is more than 1 component
                 inst_code += __generate_components_instances_with_symmetry_breaking(cmp.name, cmp.count, offset)
+                inst_predicates.append(f'{cmp.name}{DOMAIN_STRING}')
             else:
                 inst_code += f'{cmp.name}({offset+1}..{offset+cmp.count}).\n'
+            inst_predicates.append(cmp.name)
             offset += cmp.count
             prt_number = 0
             for prt_id, prt_count in cmp.ports.items():
@@ -361,22 +368,29 @@ def __generate_instances_code(model: Model) -> str:
                 prt_individual_names = __get_port_individual_names(cmp, prt)
                 for prt_individual_name in prt_individual_names:
                     prt_number += 1
-                    prt_instance_code += \
-                        __generate_ports_instances_with_symmetry_breaking(prt_individual_name, cmp, prt_number, offset)\
-                        if cmp.symmetry_breaking and cmp.count > 1 \
-                        else f'{prt_individual_name}({offset+1}..{offset+cmp.count}).\n'
-                            # TODO: 1 consider removing "cmp.count > 1"
-                            # TODO: 2 my own rule for symmetry breaking for ports, test it
+                    if cmp.symmetry_breaking and cmp.count > 1:
+                        # TODO: 1 consider removing "cmp.count > 1"
+                        prt_instance_code += __generate_ports_instances_with_symmetry_breaking(prt_individual_name, cmp, prt_number, offset)
+                        # TODO: 2 my own rule for symmetry breaking for ports, test it
+                        inst_predicates.append(f'{prt_individual_name}{DOMAIN_STRING}')
+                    else:
+                        prt_instance_code += f'{prt_individual_name}({offset+1}..{offset+cmp.count}).\n'
+                    inst_predicates.append(prt_individual_name)
                     offset += cmp.count
                 inst_code += prt_instance_code
         inst_code += '\n'
-    return inst_code
+    return inst_code, inst_predicates
 
 
-def __generate_show_directives() -> str:
+def __generate_show_directives(shown_predicates_dict: Dict[str, bool], instances_predicates: List[str]) -> str:
     dir_code = ''
-    dir_code += f'#show {IN_SYMBOL}/1.\n'
-    dir_code += f'#show {CN_SYMBOL}/2.\n'
+    if shown_predicates_dict[INSTANCES_FACTS]:
+        dir_code += '% Instances facts:\n'
+        for pred in instances_predicates:
+            dir_code += f'{SHOW_DIRECTIVE} {pred}/1.\n'
+    for symbol in SYMBOLS:
+        if shown_predicates_dict[symbol]:
+            dir_code += f'#show {symbol}/{SYMBOLS_WITH_ARITIES[symbol]}.\n'
     return dir_code
 
 
