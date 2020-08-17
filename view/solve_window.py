@@ -9,6 +9,7 @@ from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.window import Window
 from view.browse_file_path_frame import BrowseFilePathFrame
+from view.common import change_controls_state
 from view.solve_frame import SolveFrame
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 
@@ -30,7 +31,7 @@ class SolveWindow(HasCommonSetup,
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
 
-        self._window.protocol('WM_DELETE_WINDOW', self.__on_close)
+        self._window.protocol('WM_DELETE_WINDOW', lambda: self.__solve_frame.on_close(self._window))
 
     def _create_widgets(self) -> None:
         self.__main_frame = ttk.Frame(self._window)
@@ -62,14 +63,13 @@ class SolveWindow(HasCommonSetup,
         self._window.columnconfigure(0, weight=1)
 
     def __ok(self):
-        self.__solve_frame.solve(self.__solve_file_path_frame.path)
+        self.__change_window_controls_state(tk.DISABLED)
+        self.__solve_frame.solve(self.__solve_file_path_frame.path,
+                                 on_solved=lambda: self.__change_window_controls_state(tk.NORMAL))
 
-    def __on_close(self):
-        if self.__solve_frame.is_solving():
-            answer = messagebox.askyesno('Stop', 'Solving is currently in process. Are you sure you want to cancel?', parent=self._window)
-            if answer:
-                self.__solve_frame.stop_solving()
-        else:
-            self._window.destroy()
-
+    def __change_window_controls_state(self, state):
+        change_controls_state(state,
+                              self.__ok_button,
+                              self.__cancel_button)
+        self.__solve_file_path_frame.change_state(state)
 

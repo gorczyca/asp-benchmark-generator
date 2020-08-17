@@ -8,7 +8,7 @@ from settings import Settings
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.browse_file_path_frame import BrowseFilePathFrame
-from view.common import get_target_file_location
+from view.common import get_target_file_location, change_controls_state
 from view.style import BACKGROUND_COLOR_PRIMARY, CONTROL_PAD_Y, CONTROL_PAD_X
 
 GENERATED_FILE_SUFFIX = 'gen'
@@ -98,3 +98,8 @@ class GenerateFrame(ttk.Frame,
     def shown_predicates_dict(self):
         return {predicate_symbol: checkbox_var.get() for predicate_symbol, (checkbox_var, _1, _2)
                 in self.__show_predicates_checkbox_widgets_dict.items()}
+
+    def change_frame_controls_state(self, state):
+        change_controls_state(state,
+                              *[checkbox for (_0, _1, checkbox) in self.__show_predicates_checkbox_widgets_dict.values()])
+        self.__export_to_path_frame.change_state(state)

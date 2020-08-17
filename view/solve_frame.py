@@ -2,16 +2,11 @@ import math
 from threading import Thread, Event
 from tkinter import ttk, messagebox
 import tkinter as tk
-from typing import Optional
 
-from pubsub import pub
-
-import actions
 from file_operations import CSV_EXTENSION, solve_
 from settings import Settings
 from solver.solver import InstanceRepresentation
 from state import State
-from stoppable_thread import StoppableThread
 from view.abstract.has_common_setup import HasCommonSetup
 from view.browse_file_path_frame import BrowseFilePathFrame
 from view.common import get_target_file_location, change_controls_state
@@ -33,6 +28,8 @@ class SolveFrame(ttk.Frame,
 
         self.__stop_event = None
         self.__solve_thread = None
+        self.__on_solved_callback = None
+        self.__on_stopped_callback = None
 
         ttk.Frame.__init__(self, parent_frame, **kwargs)
         HasCommonSetup.__init__(self)
@@ -99,9 +96,10 @@ class SolveFrame(ttk.Frame,
         if self.__answer_sets_count > 0:
             self.__progressbar_var.set(current_answer_set_number)
 
-    def solve(self, input_path: str):
+    def solve(self, input_path: str, on_solved=None):
         self.__input_path = input_path
         self.__stop_event = Event()
+        self.__on_solved_callback = on_solved
         self.__solve_thread = Thread(target=self.__solve, args=(self.__stop_event,))
         self.__solve_thread.start()
 
@@ -120,7 +118,6 @@ class SolveFrame(ttk.Frame,
         return self.__solve_thread and self.__solve_thread.is_alive()
 
     def __solve(self, stop_event: Event):
-        # TODO: block & unblock widgets
         # TODO: DRY
         answer_sets_count = self.__answer_sets_count_spinbox_var.get()
         self.__answer_sets_count = answer_sets_count
@@ -144,6 +141,13 @@ class SolveFrame(ttk.Frame,
                stop_event=stop_event,
                on_progress=self.__on_progress)
 
+        if self.__on_stopped_callback is not None:
+            self.__on_stopped_callback()
+            return
+
+        if self.__on_solved_callback is not None:
+            self.__on_solved_callback()
+
         if answer_sets_count == 0:
             self.__progressbar.stop()
 
@@ -156,6 +160,14 @@ class SolveFrame(ttk.Frame,
 
         messagebox.showinfo('Solving complete', f'Answer set exported to {self.__export_to_path_frame.path}', parent=self)
 
+    def on_close(self, window):
+        if self.is_solving():
+            answer = messagebox.askyesno('Stop', 'Solving is currently in process. Are you sure you want to cancel?', parent=window)
+            if answer:
+                self.__on_stopped_callback = lambda: window.destroy()
+                self.stop_solving()
+        else:
+            window.destroy()
 
 
 

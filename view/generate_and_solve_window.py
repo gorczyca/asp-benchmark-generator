@@ -2,11 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from code_generator.code_generator import generate_code
-from file_operations import extract_file_name, solve_
+from file_operations import generate_
 from settings import Settings
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.window import Window
+from view.common import change_controls_state
 from view.generate_frame import GenerateFrame
 from view.solve_frame import SolveFrame
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
@@ -16,7 +17,7 @@ WINDOW_TITLE = 'Generate logic program...'
 GENERATED_FILE_SUFFIX = 'gen'
 
 WINDOW_WIDTH_RATIO = 0.3
-WINDOW_HEIGHT_RATIO = 0.6
+WINDOW_HEIGHT_RATIO = 0.65
 
 
 class GenerateAndSolveWindow(HasCommonSetup,
@@ -28,6 +29,8 @@ class GenerateAndSolveWindow(HasCommonSetup,
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
+
+        self._window.protocol('WM_DELETE_WINDOW', lambda: self.__solve_frame.on_close(self._window))
 
     def _create_widgets(self) -> None:
         self.__main_frame = ttk.Frame(self._window)
@@ -54,30 +57,17 @@ class GenerateAndSolveWindow(HasCommonSetup,
         self.__main_frame.columnconfigure(0, weight=1)
         self.__main_frame.columnconfigure(1, weight=1)
 
+    def __change_window_controls_state(self, state):
+        self.__generate_frame.change_frame_controls_state(state)
+        change_controls_state(state, self.__ok_button, self.__cancel_button)
+
     def __ok(self):
         # TODO: 1: bugs & messy
-        # TODO: 2: DRY
-        export_program_to_path = self.__generate_frame.export_to_path
-        code = generate_code(self.__state.model, self.__generate_frame.shown_predicates_dict)
-        with open(export_program_to_path, 'w') as output_file:
-            output_file.write(code)
-            output_file.close()
-            file_name = extract_file_name(export_program_to_path)
-            # messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.', parent=self._window)
-            # TODO:
-            self.__settings.save_changes(shown_predicates_dict=self.__generate_frame.shown_predicates_dict)
-            self.__solve_frame.set_progressbar_max()
-            solve_(self._window,
-                   input_path=export_program_to_path,
-                   output_path=self.__solve_frame.export_path,
-                   answer_sets_count=self.__solve_frame.answer_sets_count,
-                   instance_representation=self.__solve_frame.instance_representation,
-                   shown_predicates_only=self.__solve_frame.shown_predicates_only,
-                   show_predicates_symbols=self.__solve_frame.show_predicates_symbols,
-                   settings=self.__settings,
-                   on_progress=lambda progress: self.__solve_frame.set_progressbar_value(progress))
-
-
+        self.__change_window_controls_state(tk.DISABLED)
+        generate_(self.__generate_frame.export_to_path, self.__state.model, self.__generate_frame.shown_predicates_dict,
+                  self.__settings)
+        self.__solve_frame.solve(self.__generate_frame.export_to_path,
+                                 on_solved=lambda: self.__change_window_controls_state(tk.NORMAL))
 
 
 

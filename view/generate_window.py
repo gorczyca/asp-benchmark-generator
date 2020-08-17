@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from code_generator.code_generator import generate_code
-from file_operations import extract_file_name
+from file_operations import extract_file_name, generate_
 from settings import Settings
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -51,14 +51,9 @@ class GenerateWindow(HasCommonSetup,
         self.__main_frame.columnconfigure(1, weight=1)
 
     def __ok(self):
-        export_to_path = self.__generate_frame.export_to_path
-        code = generate_code(self.__state.model, self.__generate_frame.shown_predicates_dict)
-        with open(export_to_path, 'w') as output_file:
-            output_file.write(code)
-            output_file.close()
-            file_name = extract_file_name(export_to_path)
-            messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.', parent=self._window)
-            # TODO:
-            self.__settings.save_changes(shown_predicates_dict=self.__generate_frame.shown_predicates_dict)
+        generate_(self.__generate_frame.export_to_path, self.__state.model, self.__generate_frame.shown_predicates_dict,
+                  self.__settings)
+        file_name = extract_file_name(self.__generate_frame.export_to_path)
+        messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.', parent=self._window)
 
 

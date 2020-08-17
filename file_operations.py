@@ -1,12 +1,13 @@
 import ntpath
 import sys
 from tkinter import filedialog, messagebox
-from typing import TextIO, Optional
+from typing import TextIO, Optional, Dict
 from threading import Event
 
 from pubsub import pub
 
 import actions
+from code_generator.code_generator import generate_code
 from exceptions import BGError
 from model.model import Model
 from settings import Settings
@@ -46,6 +47,7 @@ def load_from_file(file: Optional[TextIO]) -> None:
         raise BGError('Error while opening the file.')
 
 
+# TODO: remove
 def solve():
     try:
         program_files_names = filedialog.askopenfilenames(defaultextension=LP_EXTENSION, title='Select ASP program files to solve.')
@@ -78,3 +80,10 @@ def solve_(parent_frame, input_path: str, output_path: str, answer_sets_count: i
                           instance_representation=instance_representation)
 
 
+def generate_(output_path: str, model: Model, shown_predicates_dict: Dict[str, bool], settings: Settings):
+    code = generate_code(model, shown_predicates_dict)
+    with open(output_path, 'w') as output_file:
+        output_file.write(code)
+        output_file.close()
+        # TODO:
+        settings.save_changes(shown_predicates_dict=shown_predicates_dict)
