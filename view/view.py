@@ -6,6 +6,7 @@ from pubsub import pub
 
 import actions
 from file_operations import extract_file_name
+from state import State
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_events import SubscribesToEvents
 from view.main_notebook.main_notebook import MainNotebook
@@ -34,15 +35,13 @@ class View(ttk.Frame,
     """
     def __init__(self, main_window):
         ttk.Frame.__init__(self, main_window)
-        self.__main_window = main_window
+        self.__state = State()
 
+        self.__main_window = main_window
         self.__window_title: Optional[str] = None
 
-        pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
-        pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
-        pub.subscribe(self.__init_title, actions.RESET)
-
         HasCommonSetup.__init__(self)
+        SubscribesToEvents.__init__(self)
 
     def _create_widgets(self) -> None:
         self.__menu = Menu(self.__main_window)
@@ -67,7 +66,9 @@ class View(ttk.Frame,
         self.__init_title()
 
     def _subscribe_to_events(self) -> None:
-        pass
+        pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
+        pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
+        pub.subscribe(self.__init_title, actions.RESET)
 
     def __init_title(self):
         window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'
@@ -75,11 +76,16 @@ class View(ttk.Frame,
         self.__window_title = window_title
 
     def __on_model_changed(self):
+        self.__state.is_saved = False
         self.__main_window.title(f'{UNSAVED_CHANGES_SYMBOL} {self.__window_title}')
 
     def __on_model_saved(self, file_name):
-        file_name_extracted = extract_file_name(file_name)
-        window_title = f'{file_name_extracted} - {WINDOW_TITLE}'
+        self.__state.is_saved = True
+        if not file_name:
+            file_name = NEW_FILE_NAME
+        else:
+            file_name = extract_file_name(file_name)
+        window_title = f'{file_name} - {WINDOW_TITLE}'
         self.__main_window.title(window_title)
         self.__window_title = window_title
 

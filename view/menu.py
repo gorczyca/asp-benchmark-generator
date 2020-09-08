@@ -81,10 +81,10 @@ class Menu:
 
     def __reset(self, root_name: str):
         self.__state.model.set_root_name(root_name)
-        self.__state.is_saved = True
         self.__state.model.clear()
         self.__state.file = None
         pub.sendMessage(actions.RESET)
+        pub.sendMessage(actions.MODEL_SAVED)
 
     def __on_open(self):
         if not self.__state.is_saved:
@@ -120,6 +120,5 @@ class Menu:
     def __save(self, file, json_string):
         file.write(json_string)
         file_name = extract_file_name(file.name)
-        self.__state.is_saved = True
         self.__state.settings.add_recently_opened_project(self.__state.model.root_name, file.name)
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
