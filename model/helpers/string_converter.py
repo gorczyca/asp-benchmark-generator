@@ -18,7 +18,7 @@ def __extract_tabs(line: str) -> Tuple[int, str]:
     """Returns the component name and its level based on the number of \t symbols.
 
     :param line:    Line containing \t symbols and component's name.
-    :returns:       A tuple of the form (component's level, components'name).
+    :return:       A tuple of the form (component's level, components'name).
     """
     tab_count = 0
     for letter in line:
@@ -33,7 +33,7 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
     """Converts string into Hierarchy object
 
     :param hierarchy_string:    hierarchy represented as string
-    :returns:   hierarchy's 'Hierarchy' object representation
+    :return:   hierarchy's 'Hierarchy' object representation
     """
     hierarchy_string = hierarchy_string.replace(' ' * NUMBER_OF_SPACES_EQUAL_TO_TAB,
                                                 CHILD_SYMBOL)  # make sure N spaces are converted to '\t'
@@ -72,7 +72,7 @@ def hierarchy_to_string(hierarchy: List[Component]) -> str:
     """Converts 'Hierarchy' object to string.
 
     :param hierarchy:   'Hierarchy' object to be converted to string.
-    :returns:           Hierarchy's string representation.
+    :return:           Hierarchy's string representation.
     """
     def __hierarchy_to_string(hierarchy_: List[Component], string_: str, parent_id: Optional[int]) -> str:
         """Internal function used recursively.
@@ -83,7 +83,7 @@ def hierarchy_to_string(hierarchy: List[Component]) -> str:
         :param hierarchy_: Hierarchy list too look for components in.
         :param string_: Current string representation.
         :param parent_id:   Id of a parent component whose children (and then their children) are to be added to string.
-        :returns: String after adding component's children, and then their children recursively and so forth.
+        :return: String after adding component's children, and then their children recursively and so forth.
         """
         for cmp in hierarchy_:
             if cmp.parent_id == parent_id:

@@ -5,6 +5,7 @@ from typing import Optional
 from pubsub import pub
 
 import actions
+from file_operations import extract_file_name
 from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.subscribes_to_events import SubscribesToEvents
 from view.main_notebook.main_notebook import MainNotebook
@@ -40,8 +41,6 @@ class View(ttk.Frame,
         pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
         pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
         pub.subscribe(self.__init_title, actions.RESET)
-        # TODO:
-        pub.subscribe(self.__update, actions.UPDATE_IDLE_TASKS)
 
         HasCommonSetup.__init__(self)
 
@@ -79,7 +78,8 @@ class View(ttk.Frame,
         self.__main_window.title(f'{UNSAVED_CHANGES_SYMBOL} {self.__window_title}')
 
     def __on_model_saved(self, file_name):
-        window_title = f'{file_name} - {WINDOW_TITLE}'
+        file_name_extracted = extract_file_name(file_name)
+        window_title = f'{file_name_extracted} - {WINDOW_TITLE}'
         self.__main_window.title(window_title)
         self.__window_title = window_title
 
@@ -93,12 +93,3 @@ class View(ttk.Frame,
                 screen_width = self.__main_window.winfo_screenwidth()
                 screen_height = self.__main_window.winfo_screenheight()
                 self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')
-
-    def __update(self):
-        # TODO:
-        self.__main_window.update_idletasks()
-
-
-
-
-

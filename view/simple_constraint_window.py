@@ -1,10 +1,11 @@
+import copy
 import math
-from typing import List, Optional
+from typing import Optional, Callable
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+from exceptions import BGError
 from model.component import Component
-from model.model import Model
 from model.simple_constraint import SimpleConstraint
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -20,24 +21,23 @@ TREEVIEW_HEADING = 'Component'
 
 class SimpleConstraintWindow(HasCommonSetup,
                              Window):
-    def __init__(self, parent_frame, callback, constraint: Optional[SimpleConstraint] = None,
-                 check_name_with: List[str] = None):
+    def __init__(self, parent_frame,
+                 callback: Optional[Callable],
+                 constraint: Optional[SimpleConstraint] = None):
         self.__state = State()
         self.__callback = callback
-
-        self.__constraint: SimpleConstraint = constraint if constraint is not None \
+        self.__constraint: SimpleConstraint = copy.deepcopy(constraint) if constraint is not None \
             else SimpleConstraint()
         self.__components_ids = [] if constraint is None else [*constraint.components_ids]  # Deep copy of component ids
         self.__selected_hierarchy_tree_item: Optional[Component] = None
         self.__selected_listbox_item: Optional[Component] = None
-        self.__check_name_with: List[str] = check_name_with if check_name_with is not None else []
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__hierarchy_tree = ScrollbarListbox(self._window,
+        self.__hierarchy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -45,13 +45,13 @@ class SimpleConstraintWindow(HasCommonSetup,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  values=self.__state.model.hierarchy)
 
-        self.__mid_frame = ttk.Frame(self._window)
+        self.__mid_frame = ttk.Frame(self)
         self.__add_component_button = ttk.Button(self.__mid_frame, text='>>', command=self.__add_to_selected)
         self.__add_components_recursively_button = ttk.Button(self.__mid_frame, text='>> (recursively)',
                                                               command=self.__add_to_selected_recursively)
         self.__remove_component_button = ttk.Button(self.__mid_frame, text='<<', command=self.__remove_from_selected)
 
-        self.__right_frame = ttk.Frame(self._window)
+        self.__right_frame = ttk.Frame(self)
 
         self.__components_listbox = ScrollbarListbox(self.__right_frame,
                                                      values=self.__state.model.get_components_by_ids(
@@ -59,7 +59,7 @@ class SimpleConstraintWindow(HasCommonSetup,
                                                      extract_id=lambda cmp: cmp.id_,
                                                      extract_text=lambda cmp: cmp.name,
                                                      on_select_callback=self.__on_select_listbox_component,
-                                                     columns=[Column('#0', 'Selected components', stretch=tk.YES)])
+                                                     columns=[Column('Selected components', main=True, stretch=tk.YES)])
 
         # Name
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
@@ -98,7 +98,7 @@ class SimpleConstraintWindow(HasCommonSetup,
                                          state=tk.NORMAL if self.__constraint.max_ is not None else tk.DISABLED)
         # Buttons frame
         self.__ok_button = ttk.Button(self.__right_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self._window.destroy)
+        self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
         self.__hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
@@ -133,40 +133,46 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__right_frame.columnconfigure(1, weight=1)
         self.__right_frame.columnconfigure(3, weight=1)
 
-        self._window.columnconfigure(0, weight=1, uniform='fred')
-        self._window.columnconfigure(2, weight=1, uniform='fred')
-        self._window.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1, uniform='fred')
+        self.columnconfigure(2, weight=1, uniform='fred')
+        self.rowconfigure(0, weight=1)
 
         self._set_geometry()
 
     def __on_select_tree_item(self, cmp_id: int) -> None:
-        self.__selected_hierarchy_tree_item = self.__state.model.get_component_by_id(cmp_id)
+        self.__selected_hierarchy_tree_item = self.__state.model.get_component(id_=cmp_id)
 
-    def __on_select_listbox_component(self, id_: int) -> None:
-        self.__selected_listbox_item = self.__state.model.get_component_by_id(id_)
+    def __on_select_listbox_component(self, cmp_id: int) -> None:
+        self.__selected_listbox_item = self.__state.model.get_component(id_=cmp_id)
 
     def __add_to_selected(self):
         if self.__selected_hierarchy_tree_item:
             if self.__selected_hierarchy_tree_item.id_ not in self.__components_ids:
                 self.__components_ids.append(self.__selected_hierarchy_tree_item.id_)
                 self.__components_listbox.add_item(self.__selected_hierarchy_tree_item)
+                self.__selected_listbox_item = self.__selected_hierarchy_tree_item
+                self.__selected_hierarchy_tree_item = None
 
     def __add_to_selected_recursively(self):
         if self.__selected_hierarchy_tree_item:
-            component_and_children = self.__state.model.get_component_and_its_children(
-                self.__selected_hierarchy_tree_item)
-            for c in component_and_children:
+            for c in self.__state.model.get_components_children(self.__selected_hierarchy_tree_item):
                 if c.id_ not in self.__components_ids:
                     self.__components_ids.append(c.id_)
-                    self.__components_listbox.add_item(c)
+                    self.__components_listbox.add_item(c, select_item=False)    # Append children
+            self.__components_ids.append(self.__selected_hierarchy_tree_item.id_)
+            self.__components_listbox.add_item(self.__selected_hierarchy_tree_item)
+            self.__selected_listbox_item = self.__selected_hierarchy_tree_item
+            self.__selected_hierarchy_tree_item = None
 
     def __remove_from_selected(self):
         if self.__selected_listbox_item:
             self.__components_ids.remove(self.__selected_listbox_item.id_)
             self.__components_listbox.remove_item_recursively(self.__selected_listbox_item)
+            self.__selected_hierarchy_tree_item = self.__selected_listbox_item
+            self.__hierarchy_tree.select_item(self.__selected_listbox_item)
             self.__selected_listbox_item = None
 
-    def __on_has_min_changed(self, _1, _2, _3):
+    def __on_has_min_changed(self, *_):
         has_min = self.__has_min_checkbox_var.get()
         if has_min:
             self.__min_spinbox.config(state=tk.ACTIVE)
@@ -175,7 +181,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__min_spinbox_var.set('')
             self.__min_spinbox.config(state=tk.DISABLED)
 
-    def __on_has_max_changed(self, _1, _2, _3):
+    def __on_has_max_changed(self, *_):
         has_max = self.__has_max_checkbox_var.get()
         if has_max:
             self.__max_spinbox.config(state=tk.ACTIVE)
@@ -190,7 +196,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__max_spinbox_var.set('')
             self.__max_spinbox.config(state=tk.DISABLED)
 
-    def __on_min_changed(self, _1, _2, _3):
+    def __on_min_changed(self, *_):
         try:
             min_ = self.__min_spinbox_var.get()
             has_max = self.__has_max_checkbox_var.get()
@@ -201,7 +207,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         except tk.TclError as e:
             print(e)
 
-    def __on_max_changed(self, _1, _2, _3):
+    def __on_max_changed(self, *_):
         try:
             max_ = self.__max_spinbox_var.get()
             has_min = self.__has_min_checkbox_var.get()
@@ -213,45 +219,35 @@ class SimpleConstraintWindow(HasCommonSetup,
             print(e)
 
     def __ok(self):
-        # Update constraint values
-        name = self.__name_entry_var.get()
-        name = Model.replace_space(name)
-        if not name:
-            messagebox.showerror('Error.', f'Constraint must have a name.', parent=self._window)
-            return
-        if name in self.__check_name_with:
-            messagebox.showerror('Error.', f'Constraint {name} already exists.', parent=self._window)
-            return
-        if not self.__components_ids:
-            messagebox.showerror('Error.', f'Constraint must contain components.', parent=self._window)
-            return
         min_ = None
         max_ = None
         if self.__has_min_checkbox_var.get():   # If component has min
             try:
                 min_ = self.__min_spinbox_var.get()
-            except tk.TclError as e:
-                print(e)
+            except tk.TclError:
                 min_ = None
         if self.__has_max_checkbox_var.get():   # If component has max
             try:
                 max_ = self.__max_spinbox_var.get()
-            except tk.TclError as e:
-                print(e)
+            except tk.TclError:
                 max_ = None
+        try:
+            name = self.__name_entry_var.get()
+            # Rewrite values if they are correct
+            self.__constraint.name = name
+            self.__constraint.description = self.__description_text.get(1.0, tk.END)
+            self.__constraint.components_ids = self.__components_ids
+            self.__constraint.distinct = self.__distinct_checkbox_var.get()
+            self.__constraint.min_ = min_
+            self.__constraint.max_ = max_
 
-        if min_ is None and max_ is None:
-            messagebox.showerror('Error.', f'Constraint has to have at least 1 bound.', parent=self._window)
-            return
+            #   If this SimpleConstraint is not an independent constraint, but a part of a ComplexConstraint,
+            #   name is checked against the names of other SimpleConstraints in the antecedent/consequent
+            #   of the ComplexConstraint,
+            #   Otherwise, it is checked against all the SimpleConstraint names in model.
+            self.__callback(self.__constraint)
+            self.grab_release()
+            self.destroy()
+        except BGError as e:
+            messagebox.showerror('Error', e.message, parent=self)
 
-        # Rewrite values if they are correct
-        self.__constraint.name = name
-        self.__constraint.description = self.__description_text.get(1.0, tk.END)
-        self.__constraint.components_ids = self.__components_ids
-        self.__constraint.distinct = self.__distinct_checkbox_var.get()
-        self.__constraint.min_ = min_
-        self.__constraint.max_ = max_
-
-        self.__callback(self.__constraint)
-        self._window.grab_release()
-        self._window.destroy()

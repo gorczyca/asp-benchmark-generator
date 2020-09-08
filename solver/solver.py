@@ -1,6 +1,3 @@
-from threading import Event
-from tkinter import messagebox
-
 import clingo
 import csv
 import re
@@ -30,19 +27,25 @@ def inclusive_range(start, end):
     return range(start, end + 1)
 
 
+def get_instance_range_and_name(fact: str):
+    fact_parts = re.split('\(|\)|\.\.', fact)
+    # Remove the 'Domain' substring if that component has symmetry breaking
+    name = fact_parts[0].replace(DOMAIN_STRING, '')
+    return inclusive_range(int(fact_parts[1]), int(fact_parts[2])), name
+
+
 class Solver:
-    # TODO: too many default arguments (make them either here or in solve_ function)
-    # TODO: utilize **kwargs to do it
-    def __init__(self, output_file_name, *program_files_names,
-                 instance_representation: InstanceRepresentation = InstanceRepresentation.Textual,
-                 show_predicates_symbols=True,
-                 answer_sets_count=1,
-                 shown_predicates_only=False,
-                 on_model_callback=None,
-                 on_progress=None,
-                 stop_event: Event = None):
+    def __init__(self,
+                 output_file_name,
+                 input_file_name,
+                 instance_representation: InstanceRepresentation,
+                 show_predicates_symbols,
+                 answer_sets_count,
+                 shown_predicates_only,
+                 on_progress,
+                 stop_event):
         self.__control = clingo.Control()
-        self.__program_files_names = program_files_names
+        self.__input_file_name = input_file_name
         self.__shown_atoms_only = shown_predicates_only
 
         self.__stop_event = stop_event
@@ -55,26 +58,18 @@ class Solver:
         self.__instance_representation = instance_representation
         self.__show_predicates_symbols = show_predicates_symbols
         self.__answer_sets_count = answer_sets_count
-        self.__on_answer_set_callback = self.__on_answer_set if not on_model_callback else on_model_callback
 
         self.__output_csv_file_writer = None
         self.__on_progress = on_progress
         self.__current_answer_set = 0
 
-    def __get_instance_range_and_name(self, fact: str):
-        fact_parts = re.split('\(|\)|\.\.', fact)
-        # Remove the 'Domain' substring if that component has symmetry breaking
-        name = fact_parts[0].replace(DOMAIN_STRING, '')
-        return inclusive_range(int(fact_parts[1]), int(fact_parts[2])), name
-
     def __get_instances_dictionary(self):
         fact_re = re.compile(FACT_RE)
-        for file_name in self.__program_files_names:
-            with open(file_name, mode='r') as file:
-                for line in file:
-                    if fact_re.match(line):
-                        range_, name = self.__get_instance_range_and_name(line)
-                        self.__instances_dictionary[range_] = name
+        with open(self.__input_file_name, mode='r') as file:
+            for line in file:
+                if fact_re.match(line):
+                    range_, name = get_instance_range_and_name(line)
+                    self.__instances_dictionary[range_] = name
 
     def __get_arguments_representations(self, symbol):
         symbol_arguments = []
@@ -123,14 +118,12 @@ class Solver:
             self.__current_answer_set += 1
             self.__on_progress(self.__current_answer_set)
 
-    def solve(self, parent_frame):
-        for file in self.__program_files_names:
-            self.__control.load(file)
+    def solve(self):
+        self.__control.load(self.__input_file_name)
         self.__get_instances_dictionary()
         self.__control.ground([('base', [])])
         self.__control.configuration.solve.models = self.__answer_sets_count
         with open(self.__output_file_name, 'w', newline='') as output_csv_file:
             self.__output_csv_file_writer = csv.writer(output_csv_file, delimiter=ANSWER_SET_DELIMITER)
-            self.__control.solve(on_model=self.__on_answer_set_callback)
-            output_csv_file.close()
+            self.__control.solve(on_model=self.__on_answer_set)
 

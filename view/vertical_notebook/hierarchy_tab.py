@@ -6,7 +6,6 @@ from typing import Optional
 from pubsub import pub
 
 import actions
-from exceptions import BGError
 from model.component import Component
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -16,7 +15,7 @@ from view.abstract.tab import Tab
 from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
-from view.common import change_controls_state
+from view.common import change_controls_state, trim_string
 
 TAB_NAME = 'Hierarchy'
 
@@ -100,9 +99,9 @@ class HierarchyTab(Tab,
 
     # HasHierarchyTree
     def __on_select_tree_item(self, cmp_id: int) -> None:
-        selected_component: Component = self.__state.model.get_component_by_id(cmp_id)
-        self.__selected_component = selected_component
-        self.__cmp_name_var.set(selected_component.name)
+        selected_cmp: Component = self.__state.model.get_component(id_=cmp_id)
+        self.__selected_component = selected_cmp
+        self.__cmp_name_var.set(trim_string(selected_cmp.name, length=22))
         change_controls_state(tk.NORMAL,
                               self.__remove_button,
                               self.__remove_recursively_button,
@@ -126,11 +125,12 @@ class HierarchyTab(Tab,
                               self.__rename_button)
 
     # Class-specific
-    def __add_component(self, cmp_name: str, level: int, parent_id: Optional[int]):
-        new_item = self.__state.model.add_component_to_hierarchy(cmp_name, level, parent_id, is_leaf=True)
-        self.__hierarchy_tree.add_item(new_item)
-        self.__selected_component = new_item
-        self.__cmp_name_var.set(new_item.name)
+    def __add(self, cmp_name: str, level: int, parent_id: Optional[int]):
+        cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=True, symmetry_breaking=True)
+        self.__state.model.add_component(cmp)
+        self.__hierarchy_tree.add_item(cmp)
+        self.__selected_component = cmp
+        self.__cmp_name_var.set(trim_string(cmp.name, length=22))
         change_controls_state(tk.NORMAL,
                               self.__remove_button,
                               self.__remove_recursively_button,
@@ -142,7 +142,7 @@ class HierarchyTab(Tab,
         level = 0 if self.__selected_component is None else self.__selected_component.level
         parent_id = None if self.__selected_component is None else self.__selected_component.parent_id
 
-        AskStringWindow(self._frame, lambda cmp_name: self.__add_component(cmp_name, level, parent_id),
+        AskStringWindow(self._frame, lambda cmp_name: self.__add(cmp_name, level, parent_id),
                         'Add sibling', f'Enter name of sibling of the {sibling_name} component.')
 
     def __on_add_child(self) -> None:
@@ -150,27 +150,28 @@ class HierarchyTab(Tab,
         level = 0 if self.__selected_component is None else self.__selected_component.level + 1
         parent_id = None if self.__selected_component is None else self.__selected_component.id_
 
-        AskStringWindow(self._frame, lambda cmp_name: self.__add_component(cmp_name, level, parent_id),
+        AskStringWindow(self._frame, lambda cmp_name: self.__add(cmp_name, level, parent_id),
                         'Add sibling', f'Enter name of child of the {sibling_name} component.')
 
-    def __rename_component(self, new_name: str):
-        self.__state.model.rename_component(self.__selected_component, new_name)
-        self.__cmp_name_var.set(new_name)
+    def __rename(self, new_name: str):
+        cmp = self.__state.model.rename_component(self.__selected_component, new_name)
+        self.__cmp_name_var.set(trim_string(cmp.name, length=22))
         self.__hierarchy_tree.rename_item(self.__selected_component)
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_rename(self) -> None:
         if self.__selected_component:
-            AskStringWindow(self._frame, self.__rename_component, 'Rename component',
-                            f'Enter new name for "{self.__selected_component.name}" component.')
+            AskStringWindow(self._frame, self.__rename, 'Rename component',
+                            f'Enter new name for "{self.__selected_component.name}" component.',
+                            string=self.__selected_component.name)
 
     def __on_remove(self, recursively=False) -> None:
         if self.__selected_component:
             if recursively:
-                self.__state.model.remove_component_from_hierarchy_recursively(self.__selected_component)
+                self.__state.model.remove_component_recursively(self.__selected_component)
                 self.__hierarchy_tree.remove_item_recursively(self.__selected_component)
             else:
-                self.__state.model.remove_component_from_hierarchy_preserve_children(self.__selected_component)
+                self.__state.model.remove_component_preserve_children(self.__selected_component)
                 self.__hierarchy_tree.remove_item_preserve_children(self.__selected_component)
             change_controls_state(tk.DISABLED,
                                   self.__remove_button,

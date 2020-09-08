@@ -27,7 +27,7 @@ class CreateHierarchyWindow(HasCommonSetup,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__text_frame = ttk.Frame(self._window)
+        self.__text_frame = ttk.Frame(self)
         self.__x_scrollbar = ttk.Scrollbar(self.__text_frame, orient=tk.HORIZONTAL)
         self.__y_scrollbar = ttk.Scrollbar(self.__text_frame, orient=tk.VERTICAL)
         self.__text = tk.Text(self.__text_frame, wrap=tk.NONE, font=FONT_BOLD,
@@ -44,11 +44,11 @@ class CreateHierarchyWindow(HasCommonSetup,
         self.__x_scrollbar.config(command=self.__text.xview)
         self.__y_scrollbar.config(command=self.__text.yview)
 
-        self.__label = ttk.Label(self._window, text=LABEL_TEXT, anchor=tk.W)
+        self.__label = ttk.Label(self, text=LABEL_TEXT, anchor=tk.W)
 
-        self.__buttons_frame = ttk.Frame(self._window)
+        self.__buttons_frame = ttk.Frame(self)
         self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self._window.destroy)
+        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self):
         self.__label.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
@@ -69,8 +69,8 @@ class CreateHierarchyWindow(HasCommonSetup,
         self.__buttons_frame.columnconfigure(0, weight=1)
         self.__buttons_frame.columnconfigure(1, weight=1)
 
-        self._window.columnconfigure(0, weight=1)
-        self._window.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
 
         self._set_geometry()
 
@@ -83,10 +83,10 @@ class CreateHierarchyWindow(HasCommonSetup,
             pub.sendMessage(actions.HIERARCHY_EDITED)
             pub.sendMessage(actions.MODEL_CHANGED)
             self.__callback()
-            self._window.grab_release()
-            self._window.destroy()
+            self.grab_release()
+            self.destroy()
         except BGError as e:
-            messagebox.showerror('Error', e.message, parent=self._window)
+            messagebox.showerror('Error', e.message, parent=self)
 
 
 

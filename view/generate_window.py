@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from code_generator.code_generator import generate_code
-from file_operations import extract_file_name, generate_
+from file_operations import extract_file_name, generate
 from settings import Settings
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -15,7 +15,7 @@ WINDOW_TITLE = 'Generate and solve logic program...'
 GENERATED_FILE_SUFFIX = 'gen'
 
 WINDOW_WIDTH_RATIO = 0.3
-WINDOW_HEIGHT_RATIO = 0.4
+WINDOW_HEIGHT_RATIO = 0.425
 
 
 class GenerateWindow(HasCommonSetup,
@@ -29,11 +29,11 @@ class GenerateWindow(HasCommonSetup,
         HasCommonSetup.__init__(self)
 
     def _create_widgets(self) -> None:
-        self.__main_frame = ttk.Frame(self._window)
+        self.__main_frame = ttk.Frame(self)
         self.__generate_frame = GenerateFrame(self.__main_frame, self.__settings, self.__state)
 
         self.__ok_button = ttk.Button(self.__main_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__main_frame, text='Cancel', command=self._window.destroy)
+        self.__cancel_button = ttk.Button(self.__main_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
         self._set_geometry(height_ratio=WINDOW_HEIGHT_RATIO, width_ratio=WINDOW_WIDTH_RATIO)
@@ -43,17 +43,17 @@ class GenerateWindow(HasCommonSetup,
         self.__ok_button.grid(row=1, column=0, sticky=tk.EW, pady=CONTROL_PAD_Y, padx=(0, CONTROL_PAD_X))
         self.__cancel_button.grid(row=1, column=1, sticky=tk.EW, pady=CONTROL_PAD_Y, padx=(CONTROL_PAD_X, 0))
 
-        self._window.rowconfigure(0, weight=1)
-        self._window.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
         self.__main_frame.rowconfigure(0, weight=1)
         self.__main_frame.columnconfigure(0, weight=1)
         self.__main_frame.columnconfigure(1, weight=1)
 
     def __ok(self):
-        generate_(self.__generate_frame.export_to_path, self.__state.model, self.__generate_frame.shown_predicates_dict,
-                  self.__settings)
+        generate(self.__generate_frame.export_to_path, self.__state.model, self.__generate_frame.show_all_predicates,
+                 self.__generate_frame.shown_predicates_dict)
         file_name = extract_file_name(self.__generate_frame.export_to_path)
-        messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.', parent=self._window)
+        messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.', parent=self)
 
 

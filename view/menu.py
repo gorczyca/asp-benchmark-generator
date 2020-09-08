@@ -4,11 +4,9 @@ from tkinter import filedialog, messagebox
 from pubsub import pub
 
 import actions
-from exceptions import BGError
-from file_operations import JSON_EXTENSION, extract_file_name, open_, LP_EXTENSION, solve, load_from_file
+from file_operations import JSON_EXTENSION, extract_file_name, open_project, JSON_FILE_TYPE, ALL_FILES_TYPE
 import json_converter
 from state import State
-import code_generator.code_generator as gen
 from view import style
 from view.ask_string_window import AskStringWindow
 from view.generate_and_solve_window import GenerateAndSolveWindow
@@ -52,31 +50,20 @@ class Menu:
         parent_frame.config(menu=self.__menu)
 
     def __on_solve(self):
-        SolveWindow(self.__parent_frame, None)
+        SolveWindow(self.__parent_frame)
 
     def __generate_and_solve(self):
-        GenerateAndSolveWindow(self.__parent_frame, None)
+        GenerateAndSolveWindow(self.__parent_frame)
 
     def __change_root_name(self, root_name: str):
-        try:
-            self.__state.model.set_root_name(root_name)
-        except BGError as e:
-            messagebox.showerror('Error', e.message, parent=self.__parent_frame)
+        self.__state.model.set_root_name(root_name)
 
     def __on_change_root_name(self):
-        AskStringWindow(self.__parent_frame, self.__change_root_name, 'Set root name', f'Set new root name (current is {self.__state.model.root_name}).')
+        AskStringWindow(self.__parent_frame, self.__change_root_name, 'Set root name',
+                        f'Set new root name:', string=self.__state.model.root_name)
 
     def __generate(self):
         GenerateWindow(self.__parent_frame, None)
-
-        return
-        code = gen.generate_code(self.__state.model)
-        file = filedialog.asksaveasfile(mode='w', defaultextension=LP_EXTENSION)
-        if file is not None:
-            file.write(code)
-            file.close()
-            file_name = extract_file_name(file.name)
-            messagebox.showinfo('Export successful.', f'Exported successfully to\n{file_name}.')
 
     def __on_new(self):
         if not self.__state.is_saved:
@@ -96,6 +83,7 @@ class Menu:
         self.__state.model.set_root_name(root_name)
         self.__state.is_saved = True
         self.__state.model.clear()
+        self.__state.file = None
         pub.sendMessage(actions.RESET)
 
     def __on_open(self):
@@ -106,8 +94,7 @@ class Menu:
                 return
             elif answer:
                 self.__on_save_as()
-        file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
-        load_from_file(file)
+        open_project(None)
 
     def __on_save(self):
         json_string = json_converter.get_json_string(self.__state.model)
@@ -119,16 +106,20 @@ class Menu:
 
     def __on_save_as(self):
         json_string = json_converter.get_json_string(self.__state.model)
-        file = filedialog.asksaveasfile(mode='w', defaultextension=JSON_EXTENSION)
-        if file is not None:
-            self.__save(file, json_string)
-            self.__state.file = file
-            messagebox.showinfo('Saved successfully', f'Saved succesfully to\n{file.root_name}.')
+        file_name = filedialog.asksaveasfilename(defaultextension=JSON_EXTENSION,
+                                                 filetypes=(JSON_FILE_TYPE, ALL_FILES_TYPE),
+                                                 initialfile=self.__state.model.root_name)
+        try:
+            with open(file_name, 'w') as file:
+                self.__save(file, json_string)
+                self.__state.file = file
+                messagebox.showinfo('Saved successfully', f'Saved succesfully to\n{file.name}.')
+        except FileNotFoundError as e:
+            messagebox.showerror('File not found.', str(e))
 
     def __save(self, file, json_string):
-        # TODO: move from save to on_save / on_save as ?
         file.write(json_string)
-        file.close()
         file_name = extract_file_name(file.name)
         self.__state.is_saved = True
+        self.__state.settings.add_recently_opened_project(self.__state.model.root_name, file.name)
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)

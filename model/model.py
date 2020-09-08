@@ -1,6 +1,8 @@
-from typing import List, Optional, Tuple, Any
+from typing import List, Tuple, Any
 import json
 
+from json_converter import deserialize_list
+from model.helpers import normalize_name, matches
 from exceptions import BGError
 from model.complex_constraint import ComplexConstraint
 from model.component import Component
@@ -8,22 +10,18 @@ from model.resource import Resource
 from model.port import Port
 from model.simple_constraint import SimpleConstraint
 
-SPACE_REPLACEMENT = '_'
-
 
 class Model:
-    """Serves the communication between View and Controller.
-
-    Gathers in one place all configuration's problem instance information.
+    """Gathers in one place all configuration's problem instance information.
 
     Attributes:
-        hierarchy:  Hierarchy of components. Hierarchy of components is naturally a tree structure. Because of 
-        complexity issues (to avoid recursion) it is implemented as a List with component having a pointer to its 
-        ancestor. Still, recursion could not be completely avoided (e.g. when removing a component recursively or 
-        creating a string from hierarchy)
-
+        root_name: Name of the root component.
+        hierarchy:  Hierarchy of components - tree structure, implemented as a list of components,
+            each of them having a pointer to the parent component (or None if there is no parent).
         resources:  List of resources
         ports: List of ports
+        simple_constraints: List of simple constraints
+        complex_constraints: List of complex constraints
     """
     def __init__(self, root_name: str = None, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
                  simple_constraints: List[SimpleConstraint] = None, complex_constraints: List[ComplexConstraint] = None):
@@ -33,10 +31,6 @@ class Model:
         self.ports: List[Port] = ports if ports is not None else []
         self.simple_constraints: List[SimpleConstraint] = simple_constraints if simple_constraints is not None else []
         self.complex_constraints: List[ComplexConstraint] = complex_constraints if complex_constraints is not None else []
-
-    @staticmethod
-    def replace_space(string: str):
-        return string.replace(' ', SPACE_REPLACEMENT)
 
     def clear(self):
         """Clears out all Model's attributes and sets the new root name."""
@@ -50,35 +44,35 @@ class Model:
     def from_json(cls, json_string):
         """Necessary to create an instance from JSON."""
         data = json.loads(json_string)
-        data['hierarchy'] = list(map(Component.from_json, data['hierarchy']))
-        data['resources'] = list(map(Resource.from_json, data['resources']))    # Convert dictionary to object
-        data['ports'] = list(map(Port.from_json, data['ports']))
-        data['simple_constraints'] = list(map(SimpleConstraint.from_json, data['simple_constraints']))
-        data['complex_constraints'] = list(map(ComplexConstraint.from_json, data['complex_constraints']))
+        data['hierarchy'] = deserialize_list(Component, data['hierarchy'])
+        data['resources'] = deserialize_list(Resource, data['resources'])  # Convert dictionary to object
+        data['ports'] = deserialize_list(Port, data['ports'])
+        data['simple_constraints'] = deserialize_list(SimpleConstraint, data['simple_constraints'])
+        data['complex_constraints'] = deserialize_list(ComplexConstraint, data['complex_constraints'])
         return cls(**data)
-
-    # def json_to_model(json_string: str) -> Model:
-    #     """Converts the JSON string to the Hierarchy object"""
-    #     return Model.from_json(json.loads(json_string))
 
     # Root component
     def set_root_name(self, root_name: str) -> None:
-        cmps_names = [c.name for c in self.hierarchy]
-        root_name = self.replace_space(root_name)
-        if not root_name:
-            raise BGError('Root component must have a name.')
-        if root_name in cmps_names:
+        """Sets the name of the root component.
+
+        :param root_name: Name of the root component.
+        """
+        root_name = normalize_name(root_name)
+        if root_name in self.get_all_components_names():
             raise BGError(f'Component with name: "{root_name}" already exists in the hierarchy.')
         self.root_name = root_name
 
     # Hierarchy
-    def set_hierarchy(self, hierarchy: List[Component]):
+    def set_hierarchy(self, hierarchy: List[Component]) -> None:
+        """Sets the model component's hierarchy. Then updates each component's information.
+
+        :param hierarchy: List of components representing the hierarchy.
+        """
         self.hierarchy = hierarchy
-        self.__set_leaves()
+        self.__update_hierarchy()
 
-    def __set_leaves(self) -> None:
-        """Traverses through hierarchy and sets the property is_leaf of leaf components to True.
-
+    def __update_hierarchy(self) -> None:
+        """Traverses through hierarchy and sets the default properties of "leaf" and "non-leaf" components.
         Used when hierarchy is changed.
         """
         parents_ids = [cmp.parent_id for cmp in self.hierarchy if cmp.parent_id is not None]
@@ -94,346 +88,269 @@ class Model:
                 cmp.is_leaf = False
                 cmp.symmetry_breaking = None
                 cmp.count = None
+                cmp.min_count = None
+                cmp.max_count = None
                 cmp.produces = {}
                 cmp.ports = {}
 
-    def add_component_to_hierarchy(self, cmp_name: str, level: int, parent_id: Optional[int], is_leaf: bool = True) -> Component:
+    def add_component(self, cmp: Component) -> Component:
         """Creates and adds new component to hierarchy.
 
-        :param cmp_name: Name.
-        :param level: Level.
-        :param parent_id: Id of parent.
-        :param is_leaf: True if component is a leaf-component; False otherwise.
-        :returns: Created component
+        :param cmp: Component to add to hierarchy.
+        :return: Added component.
         """
-        if not cmp_name:
-            raise BGError('Component must have a name.')
-        cmp_name = self.replace_space(cmp_name)
-        cmps_names = [c.name for c in self.hierarchy]
-        if cmp_name in cmps_names:
-            raise BGError(f'Component with name: "{cmp_name}" already exists in the hierarchy.')
-        if cmp_name == self.root_name:
+        cmp.name = normalize_name(cmp.name)
+        if cmp.name in self.get_all_components_names():
+            raise BGError(f'Component with name: "{cmp.name}" already exists in the hierarchy.')
+        elif cmp.name == self.root_name:
             raise BGError(f'Component cannot have same name as the root component.')
-        symmetry_breaking = True if is_leaf else None
-        cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=is_leaf,
-                        symmetry_breaking=symmetry_breaking)
         self.hierarchy.append(cmp)
-        self.__set_leaves()
+        self.__update_hierarchy()
         return cmp
 
-    def remove_component_from_hierarchy_recursively(self, cmp: Component) -> List[Component]:
-        """Removes the component recursively (the component itself, its children, the children of the children...).
+    def remove_component_recursively(self, cmp: Component) -> List[Component]:
+        """Removes the component recursively (the component itself, its children, the children's children etc.).
 
         :param cmp: Component to remove.
-        :returns: List of components removed from the hierarchy.
+        :return: List of components removed from the hierarchy.
         """
-        def __remove_component(cmp_: Component, hierarchy_: List[Component], to_remove_: List[Component]) -> None:
-            """Creates a list of components to remove by recursive calls to itself.
+        cmp_children = self.get_components_children(cmp)
+        cmps_to_remove = [cmp, *cmp_children]
+        self.hierarchy = [cmp for cmp in self.hierarchy if cmp not in cmps_to_remove]
+        self.__update_hierarchy()
+        return cmps_to_remove
 
-            :param cmp_: Current component to remove (and all its children recursively).
-            :param hierarchy_: Components hierarchy.
-            :param to_remove_: List of components to be removed.
+    def get_components_children(self, cmp: Component, **kwargs) -> List[Component]:
+        """Returns the list of component's children (obtained recursively).
+
+        :param cmp: Component, to return the children of.
+        :param kwargs: Additional parameters of the desired children components.
+        :return: List of component's children.
+        """
+        def __get_components_children(cmp_: Component, children_: List[Component]) -> None:
+            """Creates a list of children of the cmp_ component, be recursive calls to itself.
+
+            :param cmp_: Component, to create the children's list of.
+            :param children_: List of child components.
             """
-            to_remove_.append(cmp_)     # Add current element to list of elements to remove.
-            for c in hierarchy_:
+            for c in self.hierarchy:
                 if c.parent_id == cmp_.id_:
-                    __remove_component(c, hierarchy_, to_remove_)   # Recursively remove all the component's children
+                    if matches(c, **kwargs):
+                        children_.append(c)
+                    __get_components_children(c, children_)
 
-        to_remove = []
-        __remove_component(cmp, self.hierarchy, to_remove)
-        self.hierarchy = [cmp for cmp in self.hierarchy if cmp not in to_remove]
-        self.__set_leaves()
-        return to_remove
+        children = []
+        __get_components_children(cmp, children)
+        return children
 
-    def get_component_and_its_children(self, cmp: Component) -> List[Component]:
-        def __get_component_and_children(cmp_: Component, hierarchy_: List[Component], children_: List[Component]) -> None:
-            children_.append(cmp_)
-            for c in hierarchy_:
-                if c.parent_id == cmp_.id_:
-                    __get_component_and_children(c, hierarchy_, children_)
-
-        list_ = []
-        __get_component_and_children(cmp, self.hierarchy, list_)
-        return list_
-
-    def remove_component_from_hierarchy_preserve_children(self, cmp: Component) -> None:
+    def remove_component_preserve_children(self, cmp: Component) -> None:
         """Removes the component from hierarchy, but preserves its children.
 
         The children of the removed component are placed on their ancestor's place; Their parent_id attribute is set
         to their actual parent's parent_id attribute.
 
         :param cmp: Component to remove.
-        :returns: List of removed components children.
         """
         for c in self.hierarchy:
             if c.parent_id == cmp.id_:
                 c.parent_id = cmp.parent_id
         self.hierarchy.remove(cmp)
-        self.__set_leaves()
+        self.__update_hierarchy()
 
-    def get_component_by_id(self, id_: int) -> Component:
-        """Returns component, that has the specified id
+    def get_component(self, **kwargs) -> Component:
+        """Returns the first component whose attributes match the kwargs.
 
-        :param id_: Id of the parameter to return
-        :returns: Component with the given id.
+        :param kwargs: Desired attributes of a component.
+        :return: Component
         """
-        return next((cmp for cmp in self.hierarchy if cmp.id_ == id_), None)
+        return next((cmp for cmp in self.hierarchy if matches(cmp, **kwargs)), None)
+
+    def get_components(self, **kwargs) -> List[Component]:
+        """Returns a list of components with attributes that match the kwargs.
+
+        :param kwargs: Desired attributes of a components.
+        :return: List of components
+        """
+        return [c for c in self.hierarchy if matches(c, **kwargs)]
 
     def get_components_by_ids(self, ids: List[int]) -> List[Component]:
         """Returns a list of components that have their ids among given ids list.
 
         :param ids: List of ids of components to return.
-        :returns: List of components.
+        :return: List of components.
         """
         return [c for c in self.hierarchy if c.id_ in ids]
-
-    def get_leaf_components(self) -> List[Component]:
-        """Returns a list of component that are leaves.
-
-        :returns: List of leaf-components
-        """
-        return [c for c in self.hierarchy if c.is_leaf]
 
     def rename_component(self, cmp: Component, new_name: str) -> Component:
         """Changes name of a specified component.
 
-        Raises BGError when a component with the new name already exists in the hierarchy.
         :param cmp: Component
         :param new_name: New name for component
-        :returns: Component with its name changed
+        :return: Component with its name changed
         """
-        if not new_name:
-            raise BGError('Component must have a name')
-        cmps_names = [c.name for c in self.hierarchy]
-        if new_name in cmps_names:
+        new_name = normalize_name(new_name)
+        if new_name in self.get_all_components_names() and cmp.name != new_name:    # Allow changing name for the same
             raise BGError(f'Component with name: "{new_name}" already exists in the hierarchy.')
         cmp.name = new_name
         return cmp
 
-    def __get_components_leaf_children(self, cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
-        """Returns an array of Component children that are leaves (obtained recursively)
+    def get_all_components_names(self):
+        """Returns a list of all components names.
 
-        :param cmp_: Current component to check whether is a leaf or not
-        :param hierarchy_: Hierarchy of all components
-        :param leaves_: Current list of leaves
+        :return: List of all components names.
         """
-        # TODO: take this function out, to be able to get to component's children from anywhere
-        if cmp_.is_leaf:
-            leaves_.append(cmp_)
-        else:
-            for c_ in hierarchy_:
-                if c_.parent_id == cmp_.id_:
-                    self.__get_components_leaf_children(c_, hierarchy_, leaves_)
+        return [c.name for c in self.hierarchy]
 
-    # Instances
-    def set_instances_of_all_components_children(self, cmp: Component, count: int, symmetry_breaking: bool) -> List[Component]:
+    def set_components_leaf_children_properties(self, cmp: Component, **kwargs):
+        """Sets the attributes of the leaf children of cmp to those specified in kwargs.
+
+        :param cmp: Component whose leaf children attributes are to be changed.
+        :param kwargs: Attributes and their values to set.
+        :return: Leaf children with their attributes changed.
         """
-        :param cmp:
-        :param count:
-        :param symmetry_breaking:
-        :return:
-        """
-        def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
-            # TODO: remove!!!
-            """Returns an array of Component children that are leaves (obtained recursively)
-
-            :param cmp_: Current component to check whether is a leaf or not
-            :param hierarchy_: Hierarchy of all components
-            :param leaves_: Current list of leaves
-            """
-            # TODO: take this function out, to be able to get to component's children from anywhere
-            if cmp_.is_leaf:
-                leaves_.append(cmp_)
-            else:
-                for c_ in hierarchy_:
-                    if c_.parent_id == cmp_.id_:
-                        __get_components_leaf_children(c_, hierarchy_, leaves_)
-
-        leaf_children = []
-        self.__get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        leaf_children = self.get_components_children(cmp, is_leaf=True)
         for c in leaf_children:
-            c.count = count
-            c.symmetry_breaking = symmetry_breaking
+            for attr, val in kwargs.items():
+                setattr(c, attr, val)
         return leaf_children
+
+    def set_all_leaf_components_properties(self, **kwargs):
+        """Sets the attributes of all leaf components to those specified in kwargs.
+
+        :param kwargs: Attributes and their values to set.
+        :return: Leaf children with their attributes changed.
+        """
+        leaf_cmps = self.get_components(is_leaf=True)
+        for c in leaf_cmps:
+            for attr, val in kwargs.items():
+                setattr(c, attr, val)
+        return leaf_cmps
 
     # Resources
     def get_all_resources_names(self) -> List[str]:
-        """Returns a list with all resources names."""
+        """Returns a list of all resources names.
+
+        :return: List of all resources names.
+        """
         return [r.name for r in self.resources]
 
-    def add_resource(self, name: str) -> Resource:
-        """Creates a resource with a specified name. Raises ResourceError whenever such  resource already exists
+    def add_resource(self, res: Resource) -> Resource:
+        """Adds resource to model.
 
-        :param name: Name of the resource
-        :returns: Created Resource.
+        :param res: Resource to add.
+        :return: Added Resource.
         """
+        res.name = normalize_name(res.name)
         resources_names = self.get_all_resources_names()
-        if name in resources_names:
-            raise BGError(f'Resource "{name}" already exists.')
-        resource = Resource(name)
-        self.resources.append(resource)
-        return resource
+        if res.name in resources_names:
+            raise BGError(f'Resource "{res.name}" already exists.')
+        self.resources.append(res)
+        return res
 
-    def get_resource_by_name(self, name: str) -> Resource:
-        """Returns resource, that has the specified name
-
-        :param name: Name of the resource
-        :returns: Port with the specified name.
+    def get_resource(self, **kwargs) -> Resource:
         """
-        return next((res for res in self.resources if res.name == name), None)
 
-    def get_resource_by_id(self, id_: int) -> Resource:
-        """TODO:
-
+        :param kwargs:
+        :return:
         """
-        return next((res for res in self.resources if res.id_ == id_), None)
+        return next((res for res in self.resources if matches(res, **kwargs)), None)
 
-    def change_resource_name(self, res: Resource, new_name: str) -> Resource:
+    def rename_resource(self, res: Resource, new_name: str) -> Resource:
         """Changes name of a specified resource.
 
         Raises ResourceStringError when a resource with the new name already exists.
+
         :param res: Resource
         :param new_name: New name for resource
-        :returns: Resource with its name changed
+        :return: Resource with its name changed
         """
+        new_name = normalize_name(new_name)
         res_names = self.get_all_resources_names()
-        if new_name in res_names:
+        if new_name in res_names and res.name != new_name:  # Allow changing name for the same
             raise BGError(f'Resource with name: "{new_name}" already exists in the hierarchy.')
         res.name = new_name
         return res
 
     def remove_resource(self, res: Resource) -> Resource:
-        """Removes resource from model and all the references to it by its id in Component.produces.
+        """Removes resource from self and all the references to it by its id in Component.produces.
 
-        :param res: Resource to be removed from model.
-        :returns: Removed Resource.
+        :param res: Resource to be removed from self.
+        :return: Removed Resource.
         """
         for c in self.hierarchy:
             if res.id_ in c.produces:
-                del c.produces[res.id_]     # Remove information about production of this resource from components
+                del c.produces[res.id_]  # Remove information about production of this resource from components
 
-        self.resources.remove(res)  # Remove component itself
+        self.resources.remove(res)  # Remove component it self
         return res
-
-    def __get_components_children(self, cmp_: Component, hierarchy_: List[Component], children_: List[Component]):
-        """Returns an array of Component children (obtained recursively)
-
-        :param cmp_: Current component
-        :param hierarchy_: Hierarchy of all components
-        :param children_: Current list of children
-        """
-        # TODO: take this function out, to be able to get to component's children from anywhere
-        # TODO: its only leaves
-        if cmp_.is_leaf:
-            children_.append(cmp_)
-        else:
-            for c_ in hierarchy_:
-                if c_.parent_id == cmp_.id_:
-                    self.__get_components_children(c_, hierarchy_, children_)
-
-    def set_ports_amount_to_all_components_children(self, cmp: Component, prt: Port, value: int) \
-            -> List[Component]:
-        children = []
-        self.__get_components_children(cmp, self.hierarchy, children)
-        leaf_children = [c for c in children if c.is_leaf]
-        for c in leaf_children:
-            c.ports[prt.id_] = value
-        return leaf_children
 
     def set_resource_production_to_all_components_children(self, cmp: Component, res: Resource, value: int) \
             -> List[Component]:
         """Sets the production of a resource to specific value for all leaf-component children.
 
+        :param self
         :param cmp: Component to set the children production of.
         :param res: Production of this Resource
         :param value: Amount of produced Resource by components
-        :returns: List of Component's children that are leaves.
+        :return: List of Component's children that are leaves.
         """
-        # TODO: remove
-        # def __get_components_leaf_children(cmp_: Component, hierarchy_: List[Component], leaves_: List[Component]):
-        #     """Returns an array of Component children that are leaves (obtained recursively)
-        #
-        #     :param cmp_: Current component to check whether is a leaf or not
-        #     :param hierarchy_: Hierarchy of all components
-        #     :param leaves_: Current list of leaves
-        #     """
-        #     if cmp_.is_leaf:
-        #         leaves_.append(cmp_)
-        #     else:
-        #         for c_ in hierarchy_:
-        #             if c_.parent_id == cmp_.id_:
-        #                 __get_components_leaf_children(c_, hierarchy_, leaves_)
-
-        leaf_children = []
-        self.__get_components_leaf_children(cmp, self.hierarchy, leaf_children)
+        leaf_children = self.get_components_children(cmp, is_leaf=True)
         for c in leaf_children:
             c.produces[res.id_] = value
         return leaf_children
 
-    # Port
-    def add_port(self, name: str) -> Tuple[Port, int]:
-        """Creates a port with a specified name. Raises PortError whenever such resource already exists
+    # Ports
+    def add_port(self, prt: Port) -> Port:
+        """Adds port to model.
 
-        :param name: Name of the Port
-        :returns: tuple (Created Port, index of created port in the list of ports sorted alphabetically)
+        :param prt: Port to add to the model
+        :return: Added port.
         """
-        # TODO: remove index
-        port_names = [p.name for p in self.ports]
-        if name in port_names:
-            raise BGError(f'Port "{name}" already exists.')
-        port = Port(name)
-        self.ports.append(port)
-        port_names_sorted = sorted([p.name for p in self.ports])
-        index = port_names_sorted.index(name)
-        # TODO: remove returning index
-        return port, index
+        prt.name = normalize_name(prt.name)
+        if prt.name in self.get_all_ports_names():
+            raise BGError(f'Port "{prt.name}" already exists.')
+        self.ports.append(prt)
+        return prt
 
-    def change_port_name(self, prt: Port, new_name: str) -> Tuple[Port, int]:
-        """Changes name of a specified port.
+    def rename_port(self, prt: Port, new_name: str) -> Port:
+        """Changes port's name.
 
-        Raises PortError when a port with the new name already exists.
         :param prt: Port
         :param new_name: New name for port
-        :returns: tuple (Port, index of port with the name edited)
+        :return: Modified port.
         """
-        port_names = [p.name for p in self.ports]
-        if new_name in port_names:
+        new_name = normalize_name(new_name)
+        if new_name in self.get_all_ports_names() and prt.name != new_name:     # Allow changing name for the same
             raise BGError(f'Port "{new_name}" already exists.')
         prt.name = new_name
-        # TODO: do it better, sort the ports list and then take port
-        port_names_sorted = sorted([p.name for p in self.ports])
-        index = port_names_sorted.index(new_name)
-        # TODO: do not remove index
-        return prt, index
+        return prt
 
-    def get_port_by_id(self, id_: int) -> Port:
+    def get_port(self, **kwargs) -> Port:
         """Returns port, that has the specified id
 
-        :param id_: Id of the Port to return
-        :returns: Port with the given id.
+        :return: Port with the given id.
         """
-        return next((prt for prt in self.ports if prt.id_ == id_), None)
-
-    def get_port_by_name(self, name: str) -> Port:
-        """Returns port, that has the specified name
-
-        :param name: Name of the port
-        :returns: Port with the specified name.
-        """
-        return next((prt for prt in self.ports if prt.name == name), None)
+        return next((prt for prt in self.ports if matches(prt, **kwargs)), None)
 
     def get_ports_by_ids(self, ids: List[int]) -> List[Port]:
+        """
+
+        :param self:
+        :param ids:
+        :return:
+        """
         return [p for p in self.ports if p.id_ in ids]
 
     def remove_port(self, prt: Port) -> Port:
-        """Removes port from model and all the references to it by its id in Component.ports.
+        """Removes port from selfand all the references to it by its id in Component.ports.
 
-        :param prt: Port to be removed from model.
-        :returns: Removed Port.
+        :param self:
+        :param prt: Port to be removed from self.
+        :return: Removed Port.
         """
         for c in self.hierarchy:
             if prt.id_ in c.ports:
-                del c.ports[prt.id_]     # Remove information about ports from components
+                del c.ports[prt.id_]  # Remove information about ports from components
 
         self.ports.remove(prt)  # Remove port itself
         return prt
@@ -443,65 +360,116 @@ class Model:
         return [p.name for p in self.ports]
 
     def update_ports_compatibility(self, port, compatible_ports) -> None:
+        """
+
+        :param self:
+        :param port:
+        :param compatible_ports:
+        :return:
+        """
         compatible_ports_ids = [p.id_ for p in compatible_ports]
         # If compatibility was removed
         ports_to_remove_ids = [pid for pid in port.compatible_with if pid not in compatible_ports_ids]
         # Remove from the other ports the compatibility with this port
         for pid in ports_to_remove_ids:
-            port_ = self.get_port_by_id(pid)
+            port_ = self.get_port(id_=pid)
             port_.compatible_with.remove(port.id_)
         # Add to other ports compatibility with this port
         for pid in compatible_ports_ids:
-            port_ = self.get_port_by_id(pid)
+            port_ = self.get_port(id_=pid)
             if port.id_ not in port_.compatible_with:
                 port_.compatible_with.append(port.id_)
         port.compatible_with = compatible_ports_ids
 
-    # Constraint (Simple & Complex)
+    def set_ports_amount_to_all_components_children(self, cmp: Component, prt: Port, value: int) \
+            -> List[Component]:
+        leaf_children = self.get_components_children(cmp, is_leaf=True)
+        for c in leaf_children:
+            c.ports[prt.id_] = value
+        return leaf_children
+
     def get_all_constraints(self) -> List[Any]:
         """Returns a union of sets of simple & complex constraints.
 
-        :returns: Set of simple & complex constraints
+        :param self:
+        :return: Set of simple & complex constraints
         """
-        return [*self.simple_constraints, *self.complex_constraints]
+        return self.simple_constraints + self.complex_constraints
 
-    def get_constraint_by_id(self, id_: int):
+    def get_constraint(self, **kwargs):
         """Returns a constraint by a given id. Note: 'Constraint' might be an instance of either SimpleConstraint or ComplexConstraint
 
-        :param id_: Id of the constraint to return.
-        :returns: SimpleConstraint or ComplexConstraint instance with a given id
+        :return: SimpleConstraint or ComplexConstraint instance with a given id
         """
-        simple_ctr = next((c for c in self.simple_constraints if c.id_ == id_), None)
         # Look in the simple constraints first
+        simple_ctr = next((c for c in self.simple_constraints if matches(c, **kwargs)), None)
+        # Then look in the complex ones
         return simple_ctr if simple_ctr is not None \
-            else next((c for c in self.complex_constraints if c.id_ == id_), None)  # Then look in the complex ones
+            else next((c for c in self.complex_constraints if matches(c, **kwargs)), None)
+
+    def get_all_constraints_names(self) -> List[str]:
+        return [c.name for c in self.get_all_constraints()]
 
     def add_constraint(self, ctr: Any) -> Tuple[Any, int]:
-        """Adds constraint to the model (either to the list of simple constraints or complex).
+        """Adds constraint to the self (either to the list of simple constraints or complex).
 
-        :param ctr: Constraint to add to the model
-        :returns: Added constraint and index of it in the sorted alphabetically union of simple
+        :param ctr: Constraint to add to the self
+        :return: Added constraint and index of it in the sorted alphabetically union of simple
         and complex constraints (Simple constraints are put first in the union, complex constraints later).
         """
-        if not ctr.name:
-            raise BGError('Constraint must have a name.')
-        ctr_names = [*[s.name for s in self.simple_constraints], *[c.name for c in self.complex_constraints]]
-        if ctr.name in ctr_names:
+        new_name = normalize_name(ctr.name)
+        if ctr.name in self.get_all_constraints_names():
             raise BGError(f'Constraint with the name {ctr.name} already exists.')
+        ctr.name = new_name
 
         if isinstance(ctr, SimpleConstraint):
-            # TODO: already insert in sorted maybe?
+            if not ctr.components_ids:
+                raise BGError('Constraint must contain components.')
+            elif ctr.max_ is None and ctr.min_ is None:
+                raise BGError('Constraint has to have at least 1 bound.')
+
             self.simple_constraints.append(ctr)
-        else:
+        elif isinstance(ctr, ComplexConstraint):
+            if not ctr.antecedent:
+                raise BGError('Constraint must have antecedent.')
+            elif not ctr.consequent:
+                raise BGError('Constraint must have consequent.')
+
             self.complex_constraints.append(ctr)
-        sorted_ctrs_names = [*sorted([s.name for s in self.simple_constraints]), *sorted([c.name for c in self.complex_constraints])]
-        return ctr, sorted_ctrs_names.index(ctr.name)
+        return ctr, self.get_constraint_index(ctr)
+
+    def edit_constraint(self, edited_ctr: Any) -> Tuple[Any, int]:
+        new_name = normalize_name(edited_ctr.name)
+        current_ctr = self.get_constraint(id_=edited_ctr.id_)
+        if new_name in self.get_all_constraints_names() and edited_ctr.name != current_ctr.name:
+            raise BGError(f'Constraint with the name {edited_ctr.name} already exists.')
+        edited_ctr.name = new_name
+
+        if isinstance(edited_ctr, SimpleConstraint):
+            if not edited_ctr.components_ids:
+                raise BGError('Constraint must contain components.')
+            elif edited_ctr.max_ is None and edited_ctr.min_ is None:
+                raise BGError('Constraint has to have at least 1 bound.')
+
+            # Replace constraint
+            self.simple_constraints.remove(current_ctr)
+            self.simple_constraints.append(edited_ctr)
+        elif isinstance(edited_ctr, ComplexConstraint):
+            if not edited_ctr.antecedent:
+                raise BGError('Constraint must have antecedent.')
+            elif not edited_ctr.consequent:
+                raise BGError('Constraint must have consequent.')
+
+            # Replace constraint
+            self.complex_constraints.remove(current_ctr)
+            self.complex_constraints.append(edited_ctr)
+        return edited_ctr, self.get_constraint_index(edited_ctr)
 
     def remove_constraint(self, ctr: Any) -> Any:
-        """Removes constraint from the model (either from the list of simple constraints or complex).
+        """Removes constraint from the self (either from the list of simple constraints or complex).
 
-        :param ctr: Constraint to remove from the model.
-        :returns: Removed constraint
+        :param ctr: Constraint to remove from the self.
+        :return: Removed constraint
         """
         if isinstance(ctr, SimpleConstraint):
             self.simple_constraints.remove(ctr)
@@ -510,6 +478,15 @@ class Model:
         return ctr
 
     def get_constraint_index(self, ctr: Any):
-        sorted_ctrs_names = [*sorted([p.name for p in self.simple_constraints]), *sorted([p.name for p in self.complex_constraints])]
+        """
+
+        :param self:
+        :param ctr:
+        :return:
+        """
+        sorted_ctrs_names = sorted([p.name for p in self.simple_constraints]) + \
+                            sorted([p.name for p in self.complex_constraints])
         return sorted_ctrs_names.index(ctr.name)
+
+
 

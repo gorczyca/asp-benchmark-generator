@@ -23,13 +23,15 @@ class AskStringWindow(HasCommonSetup,
         HasCommonSetup.__init__(self)
 
     def _create_widgets(self) -> None:
-        self.__prompt_label = ttk.Label(self._window, text=self.__prompt_text, anchor=tk.W)
+        self.__prompt_label = ttk.Label(self, text=self.__prompt_text, anchor=tk.W)
 
         self.__string_entry_var = tk.StringVar(value=self.__string)
-        self.__string_entry = ttk.Entry(self._window, textvariable=self.__string_entry_var)
+        self.__string_entry = ttk.Entry(self, textvariable=self.__string_entry_var)
         self.__string_entry.focus()
-        self.__ok_button = ttk.Button(self._window, text='OK', command=self.__ok)
-        self.__cancel_button = ttk.Button(self._window, text='Cancel', command=self._window.destroy)
+        self.__string_entry.icursor(tk.END)
+
+        self.__ok_button = ttk.Button(self, text='OK', command=self.__ok)
+        self.__cancel_button = ttk.Button(self, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
         self.__prompt_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=FRAME_PAD_X, pady=(FRAME_PAD_Y, CONTROL_PAD_Y))
@@ -40,9 +42,9 @@ class AskStringWindow(HasCommonSetup,
         self.__cancel_button.grid(row=2, column=1, sticky=tk.EW, padx=(CONTROL_PAD_X, FRAME_PAD_X),
                                   pady=(CONTROL_PAD_Y, FRAME_PAD_Y))
 
-        self._window.columnconfigure(0, weight=1)
-        self._window.columnconfigure(1, weight=1)
-        self._window.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
 
         self._set_geometry(height=WINDOW_HEIGHT, width_ratio=WINDOW_WIDTH_RATIO)
 
@@ -50,7 +52,7 @@ class AskStringWindow(HasCommonSetup,
         try:
             string = self.__string_entry_var.get()
             self.__callback(string)
-            self._window.grab_release()
-            self._window.destroy()
+            self.grab_release()
+            self.destroy()
         except BGError as e:
-            messagebox.showerror('Error', e.message, parent=self._window)
+            messagebox.showerror('Error', e.message, parent=self)

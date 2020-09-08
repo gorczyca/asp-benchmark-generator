@@ -1,22 +1,26 @@
 import ntpath
-import sys
+from json import JSONDecodeError
 from tkinter import filedialog, messagebox
-from typing import TextIO, Optional, Dict
+from typing import Dict, Optional
 from threading import Event
 
 from pubsub import pub
 
 import actions
-from code_generator.code_generator import generate_code
+from code_generator import generate_code
 from exceptions import BGError
-from model.model import Model
+from model import Model
 from settings import Settings
-from solver.solver import Solver, InstanceRepresentation
+from solver import Solver, InstanceRepresentation
 from state import State
 
 JSON_EXTENSION = '.json'
 LP_EXTENSION = '.lp'
 CSV_EXTENSION = '.csv'
+
+LP_FILE_TYPE = ('ASP Logic Program file', f'*{LP_EXTENSION}')
+JSON_FILE_TYPE = ('JSON file', f'*{JSON_EXTENSION}')
+ALL_FILES_TYPE = ("All Files", "*.*")
 
 
 def extract_file_name(path):
@@ -24,66 +28,61 @@ def extract_file_name(path):
     return tail or ntpath.basename(head)
 
 
-def open_():
-    file = filedialog.askopenfile(mode='r', defaultextension=JSON_EXTENSION)
-    load_from_file(file)
+def open_project(callback):
+    file_name = filedialog.askopenfilename(filetypes=(JSON_FILE_TYPE, ALL_FILES_TYPE))
+    if file_name:
+        load_from_file(file_name, callback)
 
 
-def load_from_file(file: Optional[TextIO]) -> None:
-    # TODO: mess with closing & opening the file!!!
-    # TODO: also with throwing and catching exceptionss
-    if file:
-        state = State()
-        state.file = file
-        json = file.read()
-        model = Model.from_json(json)
-        state.model = model
-        state.settings.add_recently_opened_project(model.root_name, file.name)
-        file_name = extract_file_name(file.name)
-        file.close()
-        pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
-        pub.sendMessage(actions.MODEL_LOADED)
-    else:
-        raise BGError('Error while opening the file.')
-
-
-# TODO: remove
-def solve():
+def load_from_file(file_name: str, callback):
     try:
-        program_files_names = filedialog.askopenfilenames(defaultextension=LP_EXTENSION, title='Select ASP program files to solve.')
-        if program_files_names:
-            output_file_name = filedialog.asksaveasfilename(defaultextension=CSV_EXTENSION, title='Save output .csv file as...')
-            if output_file_name:
-                solver = Solver(output_file_name, *program_files_names, answer_sets_count=100,
-                                id_representation=False, show_predicates_symbols=True, shown_predicates_only=True)
-                solver.solve()
-                messagebox.showinfo('Solving complete', f'Answer set exported to {output_file_name}')
-    except:
-        messagebox.showerror('Error', f'Error while solving the file file.\n{sys.exc_info()[0]}')
+        with open(file_name, mode='r') as file:
+            state = State()
+            json = file.read()
+            model = Model.from_json(json)
+
+            state.file = file
+            state.model = model
+            state.settings.add_recently_opened_project(model.root_name, file_name)
+
+            if callback is not None:
+                callback()
+
+            pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
+            pub.sendMessage(actions.MODEL_LOADED)
+
+    except JSONDecodeError as e:
+        messagebox.showerror('Error', f'Error while opening the project file.\n{e}')
+    except BGError as e:
+        messagebox.showerror('Error', e)
+    except FileNotFoundError as e:
+        messagebox.showerror('File not found.', str(e))
 
 
-def solve_(parent_frame, input_path: str, output_path: str, answer_sets_count: int = 1,
-           instance_representation: InstanceRepresentation = InstanceRepresentation.Textual,
-           shown_predicates_only: bool = True, show_predicates_symbols: bool = True,
-           settings: Settings = None, on_progress=None, stop_event: Event = None):
-    solver = Solver(output_path, input_path, answer_sets_count=answer_sets_count,
-                    show_predicates_symbols=show_predicates_symbols, shown_predicates_only=shown_predicates_only,
-                    instance_representation=instance_representation, on_progress=on_progress, stop_event=stop_event)
-    solver.solve(parent_frame)
-    # TODO:
-    # messagebox.showinfo('Solving complete', f'Answer set exported to {output_path}', parent=parent_frame)
-    # TODO:
-    if not settings:
-        settings = Settings.get_settings()
-    settings.save_changes(program_to_solve_path=input_path, answer_sets_count=answer_sets_count,
-                          show_predicates_symbols=show_predicates_symbols, shown_predicates_only=shown_predicates_only,
-                          instance_representation=instance_representation)
+def solve(input_path: str, output_path: str, answer_sets_count: int = 1,
+          instance_representation: InstanceRepresentation = InstanceRepresentation.Textual,
+          shown_predicates_only: bool = True, show_predicates_symbols: bool = True,
+          on_progress=None, stop_event: Event = None):
+    solver = Solver(output_path,
+                    input_path,
+                    instance_representation,
+                    show_predicates_symbols,
+                    answer_sets_count,
+                    shown_predicates_only,
+                    on_progress,
+                    stop_event)
+    solver.solve()
+
+    Settings.get_settings().save_changes(program_to_solve_path=input_path, answer_sets_count=answer_sets_count,
+                                         show_predicates_symbols=show_predicates_symbols, shown_predicates_only=shown_predicates_only,
+                                         instance_representation=instance_representation)
 
 
-def generate_(output_path: str, model: Model, shown_predicates_dict: Dict[str, bool], settings: Settings):
-    code = generate_code(model, shown_predicates_dict)
+def generate(output_path: Optional[str], model: Model, show_all_predicates: bool, shown_predicates_dict: Dict[str, bool]):
+    if not output_path:
+        raise BGError('Logic program output path must be specified.')
+
+    code = generate_code(model, show_all_predicates, shown_predicates_dict)
     with open(output_path, 'w') as output_file:
         output_file.write(code)
-        output_file.close()
-        # TODO:
-        settings.save_changes(shown_predicates_dict=shown_predicates_dict)
+        Settings.get_settings().save_changes(shown_predicates_dict=shown_predicates_dict)

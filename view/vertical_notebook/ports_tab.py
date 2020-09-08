@@ -1,12 +1,11 @@
 import math
 import tkinter as tk
 from typing import Optional, Any, Tuple, List
-from tkinter import ttk, simpledialog, messagebox
+from tkinter import ttk
 
 from pubsub import pub
 
 import actions
-from exceptions import BGError
 from model.port import Port
 from model.component import Component
 from state import State
@@ -14,6 +13,7 @@ from view.abstract.has_common_setup import HasCommonSetup
 from view.abstract.resetable import Resetable
 from view.abstract.subscribes_to_events import SubscribesToEvents
 from view.abstract.tab import Tab
+from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.select_ports_window import SelectPortsWindow
 from view.tree_view_column import Column
@@ -54,7 +54,7 @@ class PortsTab(Tab,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
-                                                 columns=[Column('amount', 'Amount')],
+                                                 columns=[Column('Amount')],
                                                  values=self.__state.model.hierarchy)
         self.__left_frame = ttk.Frame(self._frame)
 
@@ -68,11 +68,11 @@ class PortsTab(Tab,
         self.__port_combobox['values'] = sorted(ports_names)
         # C(r)ud Buttons
         self.__add_port_button = ttk.Button(self.__left_frame, text='Add', state=tk.NORMAL,
-                                            command=self.__add_port)
+                                            command=self.__on_add)
         self.__rename_port_button = ttk.Button(self.__left_frame, text='Rename', state=tk.DISABLED,
-                                               command=self.__rename_port)
+                                               command=self.__on_rename)
         self.__remove_port_button = ttk.Button(self.__left_frame, text='Remove', state=tk.DISABLED,
-                                               command=self.__remove_port)
+                                               command=self.__remove)
         # Force connection
         self.__force_connection_checkbox_var = tk.BooleanVar(value=False)
         self.__force_connection_checkbox_var.trace('w', self.__on_force_connection_toggled)
@@ -82,11 +82,11 @@ class PortsTab(Tab,
                                                            variable=self.__force_connection_checkbox_var)
         # Force connection checkbox
         self.__compatible_with_edit_button = ttk.Button(self.__left_frame, text='Edit compatibility',
-                                                        command=self.__edit_compatible_with, state=tk.DISABLED)
+                                                        command=self.__on_edit_compatible_with, state=tk.DISABLED)
         self.__compatible_with_listbox = ScrollbarListbox(self.__left_frame,
                                                           extract_text=lambda prt: prt.name,
                                                           extract_id=lambda prt: prt.id_,
-                                                          columns=[Column('#0', 'Compatible with', stretch=tk.YES)])
+                                                          columns=[Column('Compatible with', main=True, stretch=tk.YES)])
         self.__cmp_label_var = tk.StringVar(value='')
         self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel', anchor=tk.CENTER)
 
@@ -130,6 +130,7 @@ class PortsTab(Tab,
         self.__left_frame.columnconfigure(1, weight=1)
 
         # Hide widgets
+        self.__hierarchy_tree.grid_forget()
         self.__cmp_label.grid_forget()
         self.__amount_spinbox_label.grid_forget()
         self.__amount_spinbox.grid_forget()
@@ -140,11 +141,11 @@ class PortsTab(Tab,
     # HasHierarchyTree
     def __on_select_tree_item(self, cmp_id: int) -> None:
         if self.__selected_port:
-            selected_cmp = self.__state.model.get_component_by_id(cmp_id)
+            selected_cmp = self.__state.model.get_component(id_=cmp_id)
             self.__selected_component = selected_cmp
 
             self.__cmp_label.grid(row=7, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)  # Show cmp label
-            self.__cmp_label_var.set(trim_string(selected_cmp.name))    # Fill the label with component name
+            self.__cmp_label_var.set(trim_string(selected_cmp.name, length=30))    # Fill the label with component name
 
             if selected_cmp.is_leaf:
                 self.__all_children_amount_spinbox_label.grid_forget()  # Hide widgets (changing all children)
@@ -180,7 +181,7 @@ class PortsTab(Tab,
         self._reset()
         self.__build_tree()
 
-    def __on_combobox_changed(self, _1, _2, _3):
+    def __on_combobox_changed(self, *_):
         # Hide component-specific widgets
         self.__cmp_label.grid_forget()
         self.__amount_spinbox_label.grid_forget()
@@ -190,7 +191,7 @@ class PortsTab(Tab,
         self.__apply_to_all_children_button.grid_forget()
 
         prt_name = self.__port_combobox_var.get()
-        port = self.__state.model.get_port_by_name(prt_name)
+        port = self.__state.model.get_port(name=prt_name)
         buttons_to_change_state_of = [
             self.__rename_port_button,
             self.__remove_port_button,
@@ -203,17 +204,19 @@ class PortsTab(Tab,
             compatible_ports = self.__state.model.get_ports_by_ids(port.compatible_with)
             self.__compatible_with_listbox.set_items(compatible_ports)  # Fill the 'compatible with' listbox
             self.__force_connection_checkbox_var.set(port.force_connection)
-            if self.__hierarchy_tree:    # If tree exists
-                self.__update_tree()
-                self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)  # Show tree
+
+            self.__update_tree()    # Update tree values
+            self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)  # Show tree
         else:
             self.__selected_port = None
             self.__force_connection_checkbox_var.set(False)
+            self.__compatible_with_listbox.set_items([])    # Clear 'compatible with' listbox
             change_controls_state(tk.DISABLED,
                                   *buttons_to_change_state_of)
+            self.__hierarchy_tree.grid_forget()     # Hide tree
 
     def __update_tree(self):
-        leaf_cmps = self.__state.model.get_leaf_components()
+        leaf_cmps = self.__state.model.get_components(is_leaf=True)
         self.__hierarchy_tree.update_values(*leaf_cmps)
 
     # SubscribesToListeners
@@ -238,8 +241,7 @@ class PortsTab(Tab,
         self.__build_tree()
         ports_names = self.__state.model.get_all_ports_names()
         self.__port_combobox['values'] = sorted(ports_names)
-        self.__resource_combobox_var.set(SELECT_PORT)
-
+        # self.__resource_combobox_var.set(SELECT_PORT)     # TODO: why is this commented out
 
     # Resetable
     def _reset(self) -> None:
@@ -248,45 +250,44 @@ class PortsTab(Tab,
         self.__hierarchy_tree.set_items([])
         self.__port_combobox_var.set(SELECT_PORT)
         self.__port_combobox['values'] = []
+        self.__hierarchy_tree.grid_forget()     # Hide treeview
 
     # Class-specific
     # Ports
-    def __add_port(self):
-        name = simpledialog.askstring('Add port', f'Enter name of the new port.')
-        if name:
-            try:
-                port, _ = self.__state.model.add_port(name)
-                self.__selected_port = port
-                self.__port_combobox['values'] = sorted((*self.__port_combobox['values'], name))
-                self.__port_combobox_var.set(name)
-                change_controls_state(tk.NORMAL,
-                                      self.__rename_port_button,
-                                      self.__remove_port_button,
-                                      self.__force_connection_checkbox,
-                                      self.__compatible_with_edit_button)
-            except BGError as e:
-                messagebox.showerror('Add port error.', e.message)
+    def __on_add(self):
+        AskStringWindow(self._frame, self.__add, 'Add port', 'Enter name of a new port.')
 
-    def __rename_port(self) -> None:
-        new_name = simpledialog.askstring('Rename', f'Enter new name for "{self.__selected_port.name}" port.')
-        if new_name:
-            try:
-                old_name = self.__selected_port.name
-                self.__state.model.change_port_name(self.__selected_port, new_name)
-                updated_combobox_values = [val if val != old_name else new_name for val in
-                                           [*self.__port_combobox['values']]]
-                self.__port_combobox['values'] = sorted(updated_combobox_values)
-                self.__port_combobox_var.set(new_name)
-            except BGError as e:
-                messagebox.showerror('Rename error.', e.message)
+    def __add(self, name: str):
+        prt = Port(name)
+        self.__state.model.add_port(prt)
+        self.__selected_port = prt
+        self.__port_combobox['values'] = sorted(self.__state.model.get_all_ports_names())
+        self.__port_combobox_var.set(prt.name)
+        change_controls_state(tk.NORMAL,
+                              self.__rename_port_button,
+                              self.__remove_port_button,
+                              self.__force_connection_checkbox,
+                              self.__compatible_with_edit_button)
 
-    def __remove_port(self) -> None:
+    def __on_rename(self) -> None:
+        if self.__selected_port:
+            AskStringWindow(self._frame, self.__rename, 'Rename port',
+                            f'Enter new name for "{self.__selected_port.name}" port.',
+                            string=self.__selected_port.name)
+
+    def __rename(self, new_name: str) -> None:
+        prt = self.__state.model.rename_port(self.__selected_port, new_name)
+        self.__port_combobox['values'] = sorted(self.__state.model.get_all_ports_names())
+        self.__port_combobox_var.set(prt.name)
+
+    def __remove(self) -> None:
         if self.__selected_port:
             removed_prt = self.__state.model.remove_port(self.__selected_port)
             updated_combobox_values = [val for val in [*self.__port_combobox['values']] if val != removed_prt.name]
             self.__port_combobox['values'] = updated_combobox_values
             self.__selected_port = None
             self.__port_combobox_var.set(SELECT_PORT)
+            self.__compatible_with_listbox.set_items([])    # Clear the compatible with
             change_controls_state(tk.DISABLED,
                                   self.__rename_port_button,
                                   self.__remove_port_button,
@@ -303,25 +304,25 @@ class PortsTab(Tab,
 
             self.__update_tree()
 
-    def __edit_compatible_with(self):
+    def __on_edit_compatible_with(self):
         if self.__selected_port:
             all_ports = self.__state.model.ports
             compatible_ports = [p for p in all_ports if p.id_ in self.__selected_port.compatible_with]
             ports_rest = [p for p in all_ports if p not in compatible_ports and p.id_ != self.__selected_port.id_]
-            SelectPortsWindow(self._frame, self.__selected_port, compatible_ports, ports_rest, callback=self.__compatible_with_edited)
+            SelectPortsWindow(self._frame, self.__selected_port, compatible_ports, ports_rest, callback=self.__edit_compatible_with)
 
-    def __compatible_with_edited(self, ports: List[Port]):
+    def __edit_compatible_with(self, ports: List[Port]):
         if self.__selected_port:
             ports.sort(key=lambda x: x.root_name)
             self.__compatible_with_listbox.set_items(ports)
             self.__state.model.update_ports_compatibility(self.__selected_port, ports)
 
-    def __on_force_connection_toggled(self, _1, _2, _3):
+    def __on_force_connection_toggled(self, *_):
         if self.__selected_port:
             value = self.__force_connection_checkbox_var.get()
             self.__selected_port.force_connection = value
 
-    def __on_amount_changed(self, _1, _2, _3):
+    def __on_amount_changed(self, *_):
         if self.__selected_component and self.__selected_port:
             value = None
             try:

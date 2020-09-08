@@ -1,15 +1,15 @@
 import math
 import tkinter as tk
-from typing import Optional, Any, Tuple, List
-from tkinter import ttk, simpledialog, messagebox
+from typing import Optional, Any, Tuple
+from tkinter import ttk
 
 from pubsub import pub
 
 import actions
-from exceptions import BGError
 from model.component import Component
 from model.resource import Resource
 from state import State
+from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract.has_common_setup import HasCommonSetup
@@ -51,7 +51,7 @@ class ResourcesTab(Tab,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
-                                                 columns=[Column('produces', 'Produces')],
+                                                 columns=[Column('Produces')],
                                                  values=self.__state.model.hierarchy)
         self.__left_frame = ttk.Frame(self._frame)
         # Resources combobox
@@ -65,11 +65,11 @@ class ResourcesTab(Tab,
         self.__resource_combobox_var.set(SELECT_RESOURCE)
         # C(r)ud Buttons
         self.__add_resource_button = ttk.Button(self.__left_frame, text='Add', state=tk.NORMAL,
-                                                command=self.__add_resource)
+                                                command=self.__on_add)
         self.__rename_resource_button = ttk.Button(self.__left_frame, text='Rename', state=tk.DISABLED,
-                                                   command=self.__rename_resource)
+                                                   command=self.__on_rename)
         self.__remove_resource_button = ttk.Button(self.__left_frame, text='Remove', state=tk.DISABLED,
-                                                   command=self.__remove_resource)
+                                                   command=self.__remove)
         # Cmp label
         self.__cmp_label_var = tk.StringVar(value='COMPONENT')
         self.__cmp_label = ttk.Label(self.__left_frame, textvariable=self.__cmp_label_var, style='Big.TLabel', anchor=tk.CENTER)
@@ -129,11 +129,11 @@ class ResourcesTab(Tab,
     # HasHierarchyTree
     def __on_select_tree_item(self, cmp_id: int) -> None:
         if self.__selected_resource:
-            selected_cmp: Component = self.__state.model.get_component_by_id(cmp_id)
+            selected_cmp: Component = self.__state.model.get_component(id_=cmp_id)
             self.__selected_component = selected_cmp
 
             self.__cmp_label.grid(row=4, column=0, columnspan=2, pady=CONTROL_PAD_Y, sticky=tk.EW)
-            self.__cmp_label_var.set(trim_string(selected_cmp.name))
+            self.__cmp_label_var.set(trim_string(selected_cmp.name, length=23))
 
             if selected_cmp.is_leaf:
                 self.__all_children_produce_spinbox_label.grid_forget()     # Hide widgets (changing all children)
@@ -187,6 +187,7 @@ class ResourcesTab(Tab,
         self.__resource_combobox_var.set(SELECT_RESOURCE)
         self.__produces_spinbox_var.set('')
         self.__all_children_produce_spinbox_var.set('')
+        self.__cmp_label_var.set('')
         # Disable buttons
         change_controls_state(tk.DISABLED,
                               self.__rename_resource_button,
@@ -194,9 +195,9 @@ class ResourcesTab(Tab,
         self.__hierarchy_tree.set_items([])
 
     # Class-specific
-    def __on_combobox_changed(self, _1, _2, _3):
+    def __on_combobox_changed(self, *_):
         res_name = self.__resource_combobox_var.get()
-        resource = self.__state.model.get_resource_by_name(res_name)
+        resource = self.__state.model.get_resource(name=res_name)
         if resource:
             # Enable buttons
             change_controls_state(tk.NORMAL,
@@ -217,43 +218,38 @@ class ResourcesTab(Tab,
                 self.__update_tree()
 
     def __update_tree(self):
-        leaf_cmps = self.__state.model.get_leaf_components()
+        leaf_cmps = self.__state.model.get_components(is_leaf=True)
         self.__hierarchy_tree.update_values(*leaf_cmps)
 
-    def __add_resource(self):
-        name = simpledialog.askstring('Add resource', f'Enter name of the new resource.')
-        if name:
-            try:
-                resource = self.__state.model.add_resource(name)
-                self.__selected_resource = resource
-                self.__resource_combobox['values'] = sorted((*self.__resource_combobox['values'], name))
-                self.__resource_combobox_var.set(name)
-                # Enable buttons
-                change_controls_state(tk.NORMAL,
-                                      self.__rename_resource_button,
-                                      self.__remove_resource_button)
-            except BGError as e:
-                messagebox.showerror('Add resource error.', e.message)
+    def __on_add(self):
+        AskStringWindow(self._frame, self.__add, 'Add resource', 'Enter name of a new resource.')
 
-    def __rename_resource(self):
-        if self.__selected_resource:
-            new_name = simpledialog.askstring('Rename', f'Enter new name for "{self.__selected_resource.name}" resource.')
-            if new_name:
-                try:
-                    old_name = self.__selected_resource.name
-                    self.__state.model.change_resource_name(self.__selected_resource, new_name)
-                    updated_combobox_values = [val if val != old_name else new_name for val in
-                                               [*self.__resource_combobox['values']]]
-                    self.__resource_combobox['values'] = sorted(updated_combobox_values)
-                    self.__resource_combobox_var.set(new_name)
-                except BGError as e:
-                    messagebox.showerror('Rename error.', e.message)
+    def __add(self, name: str):
+        res = Resource(name)
+        self.__state.model.add_resource(res)
+        self.__selected_resource = res
+        self.__resource_combobox['values'] = sorted(self.__state.model.get_all_resources_names())
+        self.__resource_combobox_var.set(name)
+        # Enable buttons
+        change_controls_state(tk.NORMAL,
+                              self.__rename_resource_button,
+                              self.__remove_resource_button)
 
-    def __remove_resource(self):
+    def __on_rename(self) -> None:
         if self.__selected_resource:
-            removed_res = self.__state.model.remove_resource(self.__selected_resource)
-            updated_combobox_values = [val for val in [*self.__resource_combobox['values']] if val != removed_res.name]
-            self.__resource_combobox['values'] = updated_combobox_values
+            AskStringWindow(self._frame, self.__rename, 'Rename resource',
+                            f'Enter new name for "{self.__selected_resource.name}" resource.',
+                            string=self.__selected_resource.name)
+
+    def __rename(self, new_name: str) -> None:
+        res = self.__state.model.rename_resource(self.__selected_resource, new_name)
+        self.__resource_combobox['values'] = sorted(self.__state.model.get_all_resources_names())
+        self.__resource_combobox_var.set(res.name)
+
+    def __remove(self):
+        if self.__selected_resource:
+            self.__state.model.remove_resource(self.__selected_resource)
+            self.__resource_combobox['values'] = sorted(self.__state.model.get_all_resources_names())
             self.__selected_resource = None
 
             self.__resource_combobox_var.set(SELECT_RESOURCE)
@@ -271,7 +267,7 @@ class ResourcesTab(Tab,
             if self.__hierarchy_tree:
                 self.__hierarchy_tree.grid_forget()
 
-    def __on_produced_changed(self, _1, _2, _3):
+    def __on_produced_changed(self, *_):
         if self.__selected_component and self.__selected_resource:
             value = None
             try:
@@ -284,7 +280,7 @@ class ResourcesTab(Tab,
                 elif self.__selected_resource.id_ in self.__selected_component.produces:
                     del self.__selected_component.produces[self.__selected_resource.id_]
 
-                self.__hierarchy_tree.update_values([self.__selected_component])
+                self.__hierarchy_tree.update_values(self.__selected_component)
 
     def __apply_to_all_children(self):
         if self.__selected_component and self.__selected_resource:

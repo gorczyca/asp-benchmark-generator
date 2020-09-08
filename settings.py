@@ -25,19 +25,19 @@ class ProjectInfo:
 
 
 class Settings:
-    def __init__(self, recently_opened_projects: Deque[ProjectInfo] = None, theme_id: str = 'light',
+    def __init__(self, recently_opened_projects: Deque[ProjectInfo] = None,
                  shown_predicates_dict: Dict[str, bool] = None, answer_sets_count: int = 1,
                  shown_predicates_only: bool = True, show_predicates_symbols: bool = True,
-                 program_to_solve_path: str = None,
+                 program_to_solve_path: str = None, show_all_predicates: bool = False,
                  instance_representation: InstanceRepresentation = InstanceRepresentation.Mixed):
         self.recently_opened_projects: Deque[ProjectInfo] = recently_opened_projects if recently_opened_projects is not None \
             else deque([], maxlen=MAX_RECENTLY_OPENED_PROJECTS_COUNT)
-        self.theme_id: str = theme_id
         # By default show only IN and CN predicates
         self.shown_predicates_dict: Dict[str, bool] = shown_predicates_dict if shown_predicates_dict is not None \
             else {s: (s == IN_SYMBOL or s == CN_SYMBOL) for s in [INSTANCES_FACTS] + SYMBOLS}
         self.answer_sets_count: int = answer_sets_count
         self.shown_predicates_only: bool = shown_predicates_only
+        self.show_all_predicates: bool = show_all_predicates
         self.show_predicates_symbols: bool = show_predicates_symbols
         self.instance_representation: InstanceRepresentation = instance_representation
         self.program_to_solve_path: str = program_to_solve_path
@@ -57,7 +57,6 @@ class Settings:
 
         except JSONDecodeError as e:
             print(f'Error: {str(e)}')
-            file.close()
 
         open(CONFIGURATION_FILE_NAME, 'w').close()
         return cls()
@@ -68,7 +67,6 @@ class Settings:
             self_copy.recently_opened_projects = list(self.recently_opened_projects)
             json_string = get_json_string(self_copy, sort=False)
             file.write(json_string)
-            file.close()
 
     def add_recently_opened_project(self, root_name, path) -> None:
         project = self.__find_project(path)
@@ -78,10 +76,6 @@ class Settings:
         else:
             project = ProjectInfo(root_name, path)
         self.recently_opened_projects.appendleft(project)
-        self.__save_changes()
-
-    def change_theme(self, theme_id):
-        self.theme_id = theme_id
         self.__save_changes()
 
     def save_changes(self, **kwargs):

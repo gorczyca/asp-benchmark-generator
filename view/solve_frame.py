@@ -2,8 +2,10 @@ import math
 from threading import Thread, Event
 from tkinter import ttk, messagebox
 import tkinter as tk
+from typing import Optional
 
-from file_operations import CSV_EXTENSION, solve_
+from exceptions import BGError
+from file_operations import CSV_EXTENSION, solve
 from settings import Settings
 from solver.solver import InstanceRepresentation
 from state import State
@@ -13,6 +15,7 @@ from view.common import get_target_file_location, change_controls_state
 from view.style import CONTROL_PAD_X, CONTROL_PAD_Y
 
 ANSWER_SETS_FILE_SUFFIX = 'as'
+EXPORT_WINDOW_TITLE = 'Export answer sets to:'
 
 
 class SolveFrame(ttk.Frame,
@@ -56,9 +59,13 @@ class SolveFrame(ttk.Frame,
         self.__show_predicates_symbols_checkbox_label = ttk.Label(self, text='Shown predicates only:')
         self.__show_predicates_symbols_checkbox = ttk.Checkbutton(self, variable=self.__shown_predicates_only_checkbox_var)
 
-        path = get_target_file_location(self.__state.file, self.__state.model.root_name,
-                                        suffix=ANSWER_SETS_FILE_SUFFIX, extension=CSV_EXTENSION)
-        self.__export_to_path_frame = BrowseFilePathFrame(self, path, widget_label_text='Export answer sets to:',
+        root_name = '' if not self.__state.model else self.__state.model.root_name
+        path, file_name = get_target_file_location(self.__state.file, root_name,
+                                                   suffix=ANSWER_SETS_FILE_SUFFIX, extension=CSV_EXTENSION)
+        self.__export_to_path_frame = BrowseFilePathFrame(self, path,
+                                                          widget_label_text=EXPORT_WINDOW_TITLE,
+                                                          title=EXPORT_WINDOW_TITLE,
+                                                          initial_file=file_name,
                                                           default_extension=CSV_EXTENSION)
 
         self.__progress_label = ttk.Label(self, text='Progress:')
@@ -96,7 +103,12 @@ class SolveFrame(ttk.Frame,
         if self.__answer_sets_count > 0:
             self.__progressbar_var.set(current_answer_set_number)
 
-    def solve(self, input_path: str, on_solved=None):
+    def solve(self, input_path: Optional[str], on_solved=None):
+        if not input_path:
+            raise BGError('Input file path is not specified.')
+        elif not self.__export_to_path_frame.path:
+            raise BGError('Export path is not specified.')
+
         self.__input_path = input_path
         self.__stop_event = Event()
         self.__on_solved_callback = on_solved
@@ -118,7 +130,7 @@ class SolveFrame(ttk.Frame,
         return self.__solve_thread and self.__solve_thread.is_alive()
 
     def __solve(self, stop_event: Event):
-        # TODO: DRY
+        # TODO: ??? DRY
         answer_sets_count = self.__answer_sets_count_spinbox_var.get()
         self.__answer_sets_count = answer_sets_count
         self.__progressbar_var.set(0)
@@ -130,16 +142,14 @@ class SolveFrame(ttk.Frame,
             self.__progressbar.config(maximum=answer_sets_count)
 
         self.__current_answer_set_number_label_var.set(f'0 / {self.__answer_sets_count_label_string}')
-        solve_(self,
-               input_path=self.__input_path,
-               output_path=self.__export_to_path_frame.path,
-               answer_sets_count=answer_sets_count,
-               instance_representation=InstanceRepresentation(self.__representation_radiobuttons_var.get()),
-               shown_predicates_only=self.__shown_predicates_only_checkbox_var.get(),
-               show_predicates_symbols=self.__show_predicates_symbols_checkbox_var.get(),
-               settings=self.__settings,
-               stop_event=stop_event,
-               on_progress=self.__on_progress)
+        solve(input_path=self.__input_path,
+              output_path=self.__export_to_path_frame.path,
+              answer_sets_count=answer_sets_count,
+              instance_representation=InstanceRepresentation(self.__representation_radiobuttons_var.get()),
+              shown_predicates_only=self.__shown_predicates_only_checkbox_var.get(),
+              show_predicates_symbols=self.__show_predicates_symbols_checkbox_var.get(),
+              stop_event=stop_event,
+              on_progress=self.__on_progress)
 
         if self.__on_stopped_callback is not None:
             self.__on_stopped_callback()

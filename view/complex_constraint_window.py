@@ -1,17 +1,16 @@
 import copy
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from model.complex_constraint import ComplexConstraint
-from model.model import Model
-from model.simple_constraint import SimpleConstraint
+from exceptions import BGError
+from model import ComplexConstraint, SimpleConstraint
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.window import Window
+from view.abstract import HasCommonSetup, Window
 from view.scrollbars_listbox import ScrollbarListbox
 from view.simple_constraint_window import SimpleConstraintWindow
 from view.common import change_controls_state
+from model.helpers import normalize_name
 from view.style import FRAME_PAD_Y, FRAME_PAD_X, CONTROL_PAD_Y
 
 WINDOW_TITLE = 'Complex constraint'
@@ -23,13 +22,11 @@ WINDOW_HEIGHT_RATIO = 0.8
 
 class ComplexConstraintWindow(HasCommonSetup,
                               Window):
-    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None,
-                 check_name_with: List[str] = None):
+    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None):
         self.__state = State()
         self.__callback = callback
-        self.__check_name_with = check_name_with if check_name_with is not None else []
 
-        self.__constraint: ComplexConstraint = constraint if constraint is not None \
+        self.__constraint: ComplexConstraint = copy.deepcopy(constraint) if constraint is not None \
             else ComplexConstraint()
 
         self.__antecedent: List[SimpleConstraint] = [] if constraint is None else [copy.deepcopy(sc)
@@ -46,7 +43,7 @@ class ComplexConstraintWindow(HasCommonSetup,
     # HasCommonSetup
     def _create_widgets(self) -> None:
         # Name
-        self.__data_frame = ttk.Frame(self._window)
+        self.__data_frame = ttk.Frame(self)
         self.__name_entry_var = tk.StringVar(value=self.__constraint.name)
         self.__name_entry_label = ttk.Label(self.__data_frame, text='Name:')
         self.__name_entry = ttk.Entry(self.__data_frame, textvariable=self.__name_entry_var)
@@ -56,7 +53,7 @@ class ComplexConstraintWindow(HasCommonSetup,
         if self.__constraint.description:
             self.__description_text.insert(tk.INSERT, self.__constraint.description)
 
-        self.__implication_frame = ttk.Frame(self._window)
+        self.__implication_frame = ttk.Frame(self)
 
         self.__antecedent_frame = ttk.Frame(self.__implication_frame)
         self.__consequent_frame = ttk.Frame(self.__implication_frame)
@@ -86,22 +83,22 @@ class ComplexConstraintWindow(HasCommonSetup,
         self.__consequent_any_radiobutton = ttk.Radiobutton(self.__consequent_frame, text='Any',
                                                             value=False, variable=self.__consequent_all_var)
 
-        self.__add_antecedent_button = ttk.Button(self.__antecedent_frame, text='Add', command=self.__add_antecedent)
-        self.__edit_antecedent_button = ttk.Button(self.__antecedent_frame, text='Edit', command=self.__edit_antecedent,
+        self.__add_antecedent_button = ttk.Button(self.__antecedent_frame, text='Add', command=self.__on_add_antecedent)
+        self.__edit_antecedent_button = ttk.Button(self.__antecedent_frame, text='Edit', command=self.__on_edit_antecedent,
                                                    state=tk.DISABLED)
         self.__remove_antecedent_button = ttk.Button(self.__antecedent_frame, text='Remove', state=tk.DISABLED,
                                                      command=self.__remove_antecedent)
 
-        self.__add_consequent_button = ttk.Button(self.__consequent_frame, text='Add', command=self.__add_consequent)
-        self.__edit_consequent_button = ttk.Button(self.__consequent_frame, text='Edit', command=self.__edit_consequent,
+        self.__add_consequent_button = ttk.Button(self.__consequent_frame, text='Add', command=self.__on_add_consequent)
+        self.__edit_consequent_button = ttk.Button(self.__consequent_frame, text='Edit', command=self.__on_edit_consequent,
                                                    state=tk.DISABLED)
         self.__remove_consequent_button = ttk.Button(self.__consequent_frame, text='Remove', state=tk.DISABLED,
                                                      command=self.__remove_consequent)
 
         # Buttons frame
-        self.__buttons_frame = ttk.Frame(self._window)
+        self.__buttons_frame = ttk.Frame(self)
         self.__ok_button = ttk.Button(self.__buttons_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self._window.destroy)
+        self.__cancel_button = ttk.Button(self.__buttons_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
         self.__data_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
@@ -132,8 +129,8 @@ class ComplexConstraintWindow(HasCommonSetup,
         self.__ok_button.grid(row=0, column=0, sticky=tk.E)
         self.__cancel_button.grid(row=0, column=1, sticky=tk.W)
 
-        self._window.rowconfigure(1, weight=1)
-        self._window.columnconfigure(0, weight=1)
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
         self.__implication_frame.columnconfigure(0, weight=1, uniform='fred')
         self.__implication_frame.columnconfigure(1, weight=1, uniform='fred')
 
@@ -156,31 +153,19 @@ class ComplexConstraintWindow(HasCommonSetup,
         self._set_geometry(width_ratio=WINDOW_WIDTH_RATIO, height_ratio=WINDOW_HEIGHT_RATIO)
 
     def __ok(self):
-        # Update constraint values
-        name = self.__name_entry_var.get()
-        name = Model.replace_space(name)
-        if not name:
-            messagebox.showerror('Error.', f'Constraint must have a name.', parent=self._window)
-            return
-        if name in self.__check_name_with:
-            messagebox.showerror('Error.', f'Constraint {name} already exists.', parent=self._window)
-            return
-        if not self.__antecedent:
-            messagebox.showerror('Error.', f'Condition cannot be empty.', parent=self._window)
-            return
-        if not self.__consequent:
-            messagebox.showerror('Error.', f'Consequent cannot be empty.', parent=self._window)
-            return
-        self.__constraint.name = name
-        self.__constraint.description = self.__description_text.get(1.0, tk.END)
-        self.__constraint.antecedent = self.__antecedent
-        self.__constraint.antecedent_all = self.__antecedent_all_var.get()
-        self.__constraint.consequent = self.__consequent
-        self.__constraint.consequent_all = self.__consequent_all_var.get()
+        try:
+            self.__constraint.name = self.__name_entry_var.get()
+            self.__constraint.description = self.__description_text.get(1.0, tk.END)
+            self.__constraint.antecedent = self.__antecedent
+            self.__constraint.antecedent_all = self.__antecedent_all_var.get()
+            self.__constraint.consequent = self.__consequent
+            self.__constraint.consequent_all = self.__consequent_all_var.get()
 
-        self.__callback(self.__constraint)
-        self._window.grab_release()
-        self._window.destroy()
+            self.__callback(self.__constraint)
+            self.grab_release()
+            self.destroy()
+        except BGError as e:
+            messagebox.showerror('Error', e.message, parent=self)
 
     def __on_select_antecedent(self, id_: int) -> None:
         self.__selected_antecedent = next((a for a in self.__antecedent if a.id_ == id_), None)
@@ -196,24 +181,26 @@ class ComplexConstraintWindow(HasCommonSetup,
                               self.__edit_consequent_button,
                               self.__remove_consequent_button)
 
-    def __add_antecedent(self):
-        ant_names = [a.name for a in self.__antecedent]
-        SimpleConstraintWindow(self._window, callback=self.__on_antecedent_added, check_name_with=ant_names)
+    def __on_add_antecedent(self):
+        SimpleConstraintWindow(self, callback=self.__add_antecedent)
 
-    def __on_antecedent_added(self, ant: SimpleConstraint):
+    def __add_antecedent(self, ant: SimpleConstraint):
+        ant, index = self.__validate_constraint(ant, antecedent=True, added=True)
         self.__antecedent.append(ant)
-        ants_sorted = sorted([a.name for a in self.__antecedent])
-        self.__antecedent_listbox.add_item(ant, index=ants_sorted.index(ant.name))
+        self.__antecedent_listbox.add_item(ant, index=index)
+        self.__selected_antecedent = ant
+        # Enable controls
+        change_controls_state(tk.NORMAL,
+                              self.__edit_antecedent_button,
+                              self.__remove_antecedent_button)
 
-    def __on_antecedent_edited(self, ant: SimpleConstraint):
-        ant_names_sorted = sorted([a.name for a in self.__antecedent])
-        self.__antecedent_listbox.rename_item(ant, index=ant_names_sorted.index(ant.name))
-
-    def __edit_antecedent(self):
+    def __on_edit_antecedent(self):
         if self.__selected_antecedent:
-            ant_names = [a.name for a in self.__antecedent]
-            SimpleConstraintWindow(self._window, constraint=self.__selected_antecedent,
-                                   callback=self.__on_antecedent_edited, check_name_with=ant_names)
+            SimpleConstraintWindow(self, constraint=self.__selected_antecedent, callback=self.__edit_antecedent)
+
+    def __edit_antecedent(self, ant: SimpleConstraint):
+        ant, index = self.__validate_constraint(ant, antecedent=True, added=False)
+        self.__antecedent_listbox.rename_item(ant, index=index)
 
     def __remove_antecedent(self):
         if self.__selected_antecedent:
@@ -225,24 +212,26 @@ class ComplexConstraintWindow(HasCommonSetup,
                                   self.__edit_antecedent_button,
                                   self.__remove_antecedent_button)
 
-    def __add_consequent(self):
-        con_names = [c.name for c in self.__consequent]
-        SimpleConstraintWindow(self._window, callback=self.__on_consequent_added, check_name_with=con_names)
+    def __on_add_consequent(self):
+        SimpleConstraintWindow(self, callback=self.__add_consequent)
 
-    def __on_consequent_added(self, con: SimpleConstraint):
+    def __add_consequent(self, con: SimpleConstraint):
+        con, index = self.__validate_constraint(con, antecedent=False, added=True)
         self.__consequent.append(con)
-        cons_sorted = sorted([c.name for c in self.__consequent])
-        self.__consequent_listbox.add_item(con, index=cons_sorted.index(con.name))
+        self.__consequent_listbox.add_item(con, index=index)
+        self.__selected_consequent = con
+        # Enable controls
+        change_controls_state(tk.NORMAL,
+                              self.__edit_consequent_button,
+                              self.__remove_consequent_button)
 
-    def __edit_consequent(self):
+    def __on_edit_consequent(self):
         if self.__selected_consequent:
-            con_names = [c.name for c in self.__consequent]
-            SimpleConstraintWindow(self._window, constraint=self.__selected_consequent,
-                                   callback=self.__on_consequent_edited, check_name_with=con_names)
+            SimpleConstraintWindow(self, constraint=self.__selected_consequent, callback=self.__edit_consequent)
 
-    def __on_consequent_edited(self, con: SimpleConstraint):
-        con_names_sorted = sorted([c.name for c in self.__consequent])
-        self.__consequent_listbox.rename_item(con, index=con_names_sorted.index(con.name))
+    def __edit_consequent(self, con: SimpleConstraint):
+        con, index = self.__validate_constraint(con, antecedent=False, added=True)
+        self.__consequent_listbox.rename_item(con, index=index)
 
     def __remove_consequent(self):
         if self.__selected_consequent:
@@ -252,3 +241,34 @@ class ComplexConstraintWindow(HasCommonSetup,
             change_controls_state(tk.DISABLED,
                                   self.__edit_consequent_button,
                                   self.__remove_consequent_button)
+
+    def __get_antecedent_names(self) -> List[str]:
+        return [a.name for a in self.__antecedent]
+
+    def __get_consequent_names(self) -> List[str]:
+        return [c.name for c in self.__consequent]
+
+    @staticmethod
+    def __get_element_index(str_list: List[str], name: str):
+        if name not in str_list:
+            str_list.append(name)
+        return sorted(str_list).index(name)
+
+    def __validate_constraint(self, ctr: SimpleConstraint, antecedent: bool, added: bool) -> Tuple[SimpleConstraint, int]:
+        ctr.name = normalize_name(ctr.name)
+
+        selected_ctr = None if added else self.__selected_antecedent if antecedent else self.__selected_consequent
+        names = [a.name for a in self.__antecedent] if antecedent else [c.name for c in self.__consequent]
+        if ctr.name in names and not (selected_ctr is not None and selected_ctr.id_ == ctr.id_):
+            # If the name is contained in "names", and it's not because the constraint is edited
+            ctr_type_string = 'Antecedent' if antecedent else 'Consequent'
+            raise BGError(f'{ctr_type_string} already exists in complex constraint.')
+
+        if not ctr.components_ids:
+            raise BGError('Constraint must contain components.')
+        elif ctr.max_ is None and ctr.min_ is None:
+            raise BGError('Constraint has to have at least 1 bound.')
+
+        return ctr, self.__get_element_index(names, ctr.name)
+
+

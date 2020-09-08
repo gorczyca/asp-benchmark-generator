@@ -3,54 +3,79 @@ from tkinter import ttk
 from typing import List, Callable, Any, Optional
 
 from view.abstract.has_common_setup import HasCommonSetup
-from view.style import BACKGROUND_COLOR_SECONDARY, FONT_COLOR_SECONDARY
+from view.style import BACKGROUND_COLOR_SECONDARY, FONT_COLOR_SECONDARY, HOVER_COLOR
 from view.tree_view_column import Column
 
 NO_ANCESTOR = ''
 COL_ID_MAIN = '#0'
 
-DEFAULT_HEADING = 'HEADING'
-# TODO: change from heading to FOCUS e.g.
-HIGHLIGHT_TAG = 'highlight'
+DEFAULT_HEADING = ''
+SELECTED_TAG = 'select'
 HOVER_TAG = 'hover'
 
 
-class ScrollbarListbox(HasCommonSetup):
-    def __init__(self, parent_frame,
+class ScrollbarListbox(HasCommonSetup,
+                       ttk.Frame):
+    def __init__(self,
+                 parent_frame,
                  values: List[Any] = None,
                  columns: List[Column] = None,
-                 on_select_callback = None,
+                 on_select_callback: Optional[Callable[[int], Any]] = None,
                  heading: str = DEFAULT_HEADING,
                  extract_id: Callable[[Any], int] = None,
                  extract_text: Callable[[Any], str] = None,
                  extract_values: Callable[[Any], Any] = None,
                  extract_ancestor: Callable[[Any], Any] = None,
-                 scrollbars: bool = True,
-                 hover: bool = True):
+                 has_scrollbars: bool = True,
+                 enable_hover: bool = True):
 
-        self.__parent_frame = parent_frame
         self.__extract_id = extract_id
         self.__extract_text = extract_text
         self.__extract_values = extract_values
         self.__extract_ancestor = extract_ancestor if extract_ancestor is not None else lambda x: NO_ANCESTOR
         self.__on_select_callback = on_select_callback
+        self.__has_scrollbars = has_scrollbars
+        self.__selected_item_id = None
+        self.__hovered_item_id = None
 
-        self.__scrollbars = scrollbars
-
-        self.__highlighted_item_id = None
-
+        ttk.Frame.__init__(self, parent_frame)
         HasCommonSetup.__init__(self)
 
+        self.__configure(heading, enable_hover, columns, values)
+
+    # HasCommonSetup
+    def _create_widgets(self) -> None:
+        self.__listbox = ttk.Treeview(self, selectmode=tk.BROWSE, style='Custom.Treeview')
+
+        self.__listbox.tag_configure(SELECTED_TAG, background=BACKGROUND_COLOR_SECONDARY,
+                                     foreground=FONT_COLOR_SECONDARY)
+
+        if self.__has_scrollbars:
+            self.__listbox_x_scrollbar = ttk.Scrollbar(self, orient=tk.HORIZONTAL)
+            self.__listbox_y_scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL)
+            self.__listbox.config(xscrollcommand=self.__listbox_x_scrollbar.set,
+                                  yscrollcommand=self.__listbox_y_scrollbar.set)
+            self.__listbox_y_scrollbar.config(command=self.__listbox.yview)
+            self.__listbox_x_scrollbar.config(command=self.__listbox.xview)
+
+        if self.__on_select_callback:
+            self.__listbox.bind('<ButtonRelease-1>', self.__item_selected)
+
+    def _setup_layout(self) -> None:
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+
+        self.__listbox.grid(row=0, column=0, sticky=tk.NSEW)
+        if self.__has_scrollbars:
+            self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.S)
+            self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
+
+    def __configure(self, heading: str, enable_hover: bool, columns: List[Column], values: List[Any]):
         self.__listbox.column(COL_ID_MAIN, stretch=tk.YES)
         self.__listbox.heading(COL_ID_MAIN, text=heading, anchor=tk.W)
 
-        self.__listbox.tag_configure(HIGHLIGHT_TAG, background=BACKGROUND_COLOR_SECONDARY, foreground=FONT_COLOR_SECONDARY)
-
-        # TODO: naming
-        self.__hovered_item_id = None
-        if hover:
-            # TODO: find colour, refactor, move from here
-            self.__listbox.tag_configure(HOVER_TAG, background='red')
+        if enable_hover:
+            self.__listbox.tag_configure(HOVER_TAG, background=HOVER_COLOR)
             self.__listbox.bind('<Motion>', self.__hover)
 
         if columns is not None:
@@ -62,30 +87,6 @@ class ScrollbarListbox(HasCommonSetup):
 
         if values is not None:
             self.set_items(values)
-
-    # HasCommonSetup
-    def _create_widgets(self) -> None:
-        self.__listbox_frame = ttk.Frame(self.__parent_frame)
-        self.__listbox = ttk.Treeview(self.__listbox_frame, selectmode=tk.BROWSE, style='Custom.Treeview')
-        if self.__scrollbars:
-            self.__listbox_x_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.HORIZONTAL)
-            self.__listbox_y_scrollbar = ttk.Scrollbar(self.__listbox_frame, orient=tk.VERTICAL)
-            self.__listbox.config(xscrollcommand=self.__listbox_x_scrollbar.set,
-                                  yscrollcommand=self.__listbox_y_scrollbar.set)
-            self.__listbox_y_scrollbar.config(command=self.__listbox.yview)
-            self.__listbox_x_scrollbar.config(command=self.__listbox.xview)
-
-        if self.__on_select_callback:
-            self.__listbox.bind('<ButtonRelease-1>', self.__item_selected)
-
-    def _setup_layout(self) -> None:
-        self.__listbox_frame.rowconfigure(0, weight=1)
-        self.__listbox_frame.columnconfigure(0, weight=1)
-
-        self.__listbox.grid(row=0, column=0, sticky=tk.NSEW)
-        if self.__scrollbars:
-            self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.S)
-            self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
 
     def set_items(self, items: Any):
         self.__listbox.delete(*self.__listbox.get_children())   # Clear current items
@@ -127,15 +128,14 @@ class ScrollbarListbox(HasCommonSetup):
         self.__listbox.delete(id_)
 
     def select_item(self, item: Any):
-        # TODO: does not work
         id_ = self.__extract_id(item)
-        if self.__highlighted_item_id is not None and self.__listbox.exists(self.__highlighted_item_id):
-            tags_ = self.__listbox.item(self.__highlighted_item_id)['tags']
-            if HIGHLIGHT_TAG in tags_:
-                tags_.remove(HIGHLIGHT_TAG)
-                self.__listbox.item(self.__highlighted_item_id, tags=tags_)    # Remove highlight
-        self.__highlighted_item_id = id_
-        self.__listbox.item(id_, tags=[HIGHLIGHT_TAG])
+        if self.__selected_item_id is not None and self.__listbox.exists(self.__selected_item_id):
+            tags_ = self.__listbox.item(self.__selected_item_id)['tags']
+            if SELECTED_TAG in tags_:
+                tags_.remove(SELECTED_TAG)
+                self.__listbox.item(self.__selected_item_id, tags=tags_)    # Remove highlight
+        self.__selected_item_id = id_
+        self.__listbox.item(id_, tags=[SELECTED_TAG])
 
     def __hover(self, event):
         identified_row_string = self.__listbox.identify_row(event.y)
@@ -146,7 +146,7 @@ class ScrollbarListbox(HasCommonSetup):
             id_ = int(identified_row_string)
             if id_ != self.__hovered_item_id:   # The hover changed
                 self.__remove_tag(HOVER_TAG, self.__hovered_item_id)
-                if id_ != self.__highlighted_item_id:
+                if id_ != self.__selected_item_id:
                     self.__add_tag(HOVER_TAG, id_)
                     self.__hovered_item_id = id_
 
@@ -170,13 +170,13 @@ class ScrollbarListbox(HasCommonSetup):
         self.__listbox.item(item_id, tags=tags)
 
     def __item_selected(self, _):
-        if self.__highlighted_item_id is not None and self.__listbox.exists(self.__highlighted_item_id):
-            self.__listbox.item(self.__highlighted_item_id, tags=[])    # Remove highlight
+        if self.__selected_item_id is not None and self.__listbox.exists(self.__selected_item_id):
+            self.__listbox.item(self.__selected_item_id, tags=[])    # Remove highlight
         selected_item_id_str = self.__listbox.focus()
         if selected_item_id_str:
             selected_item_id = int(selected_item_id_str)
-            self.__listbox.item(selected_item_id, tags=[HIGHLIGHT_TAG])
-            self.__highlighted_item_id = selected_item_id
+            self.__listbox.item(selected_item_id, tags=[SELECTED_TAG])
+            self.__selected_item_id = selected_item_id
             if self.__on_select_callback:
                 self.__on_select_callback(selected_item_id)
 
@@ -185,13 +185,3 @@ class ScrollbarListbox(HasCommonSetup):
             values = self.__extract_values(i)
             id_ = self.__extract_id(i)
             self.__listbox.item(id_, values=values)
-
-    def grid_forget(self):
-        self.__listbox_frame.grid_forget()
-
-    def grid(self, **kwargs):
-        self.__listbox_frame.grid(**kwargs)
-
-
-
-

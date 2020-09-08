@@ -1,7 +1,7 @@
 import math
 import tkinter as tk
 from tkinter import ttk
-from typing import Tuple, Any, List, Optional
+from typing import Tuple, Any, Optional
 
 from pubsub import pub
 
@@ -10,7 +10,7 @@ from model.component import Component
 from model.association import Association
 from state import State
 from view.abstract.tab import Tab
-from view.common import change_controls_state
+from view.common import change_controls_state, trim_string
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract.has_common_setup import HasCommonSetup
@@ -51,11 +51,9 @@ class AssociationsTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
                                                  values=self.__state.model.hierarchy,
-                                                 columns=[
-                                                     Column('has_association', 'Has association?'),
-                                                     Column('min', 'Min'),
-                                                     Column('max', 'Max')
-                                                 ])
+                                                 columns=[Column('Has association?'),
+                                                          Column('Min'),
+                                                          Column('Max')])
 
         self.__left_frame = ttk.Frame(self._frame)
         # Cmp label
@@ -117,11 +115,11 @@ class AssociationsTab(Tab,
     def _subscribe_to_events(self):
         pub.subscribe(self.__on_hierarchy_changed, actions.HIERARCHY_EDITED)
         pub.subscribe(self.__on_hierarchy_changed, actions.MODEL_LOADED)
-        pub.subscribe(self._reset, actions.RESET)   # TODO:
+        pub.subscribe(self._reset, actions.RESET)
 
     # HasHierarchyTree
     def __on_select_tree_item(self, cmp_id: int) -> None:
-        selected_cmp = self.__state.model.get_component_by_id(cmp_id)
+        selected_cmp = self.__state.model.get_component(id_=cmp_id)
         if selected_cmp:
             change_controls_state(tk.NORMAL, self.__has_association_checkbox)
             self.__selected_component = selected_cmp
@@ -130,17 +128,17 @@ class AssociationsTab(Tab,
                 change_controls_state(tk.NORMAL,
                                       self.__has_min_checkbox,
                                       self.__has_max_checkbox)
-                if selected_cmp.association.min_:
+                if selected_cmp.association.min_count:
                     self.__has_min_checkbox_var.set(True)
-                    self.__min_spinbox_var.set(selected_cmp.association.min_)
+                    self.__min_spinbox_var.set(selected_cmp.association.min_count)
                     change_controls_state(tk.NORMAL, self.__min_spinbox)
                 else:
                     self.__has_min_checkbox_var.set(False)
                     change_controls_state(tk.DISABLED, self.__min_spinbox)
                     self.__min_spinbox_var.set('')
-                if selected_cmp.association.max_:
+                if selected_cmp.association.max_count:
                     self.__has_max_checkbox_var.set(True)
-                    self.__max_spinbox_var.set(selected_cmp.association.max_)
+                    self.__max_spinbox_var.set(selected_cmp.association.max_count)
                     change_controls_state(tk.NORMAL, self.__max_spinbox)
                 else:
                     self.__has_max_checkbox_var.set(False)
@@ -157,7 +155,7 @@ class AssociationsTab(Tab,
                                       self.__has_min_checkbox,
                                       self.__max_spinbox,
                                       self.__min_spinbox)
-            self.__cmp_label_var.set(selected_cmp.name)
+            self.__cmp_label_var.set(trim_string(selected_cmp.name, length=20))
 
     @staticmethod
     def __extract_values(cmp: Component) -> Tuple[Any, ...]:
@@ -196,7 +194,7 @@ class AssociationsTab(Tab,
         self._reset()
         self.__build_tree()
 
-    def __on_has_association_changed(self, _1, _2, _3):
+    def __on_has_association_changed(self, *_):
         if self.__hierarchy_tree and self.__selected_component:
             has_association = self.__has_association_checkbox_var.get()
             if has_association:
@@ -218,7 +216,7 @@ class AssociationsTab(Tab,
                 self.__selected_component.association = None
             self.__hierarchy_tree.update_values(self.__selected_component)
 
-    def __on_has_min_changed(self, _1, _2, _3):
+    def __on_has_min_changed(self, *_):
         if self.__selected_component:
             has_min = self.__has_min_checkbox_var.get()
             if has_min:
@@ -234,7 +232,7 @@ class AssociationsTab(Tab,
                 change_controls_state(tk.DISABLED, self.__min_spinbox)
                 self.__min_spinbox_var.set('')
 
-    def __on_has_max_changed(self, _1, _2, _3):
+    def __on_has_max_changed(self, *_):
         if self.__selected_component:
             has_max = self.__has_max_checkbox_var.get()
             if has_max:
@@ -256,7 +254,7 @@ class AssociationsTab(Tab,
                 change_controls_state(tk.DISABLED, self.__max_spinbox)
                 self.__max_spinbox_var.set('')
 
-    def __on_min_changed(self, _1, _2, _3):
+    def __on_min_changed(self, *_):
         if self.__selected_component and self.__hierarchy_tree:
             if self.__selected_component.association:
                 # This gets triggered at unpredicted moments (e.g. enabling and disabling widgets
@@ -274,7 +272,7 @@ class AssociationsTab(Tab,
                 finally:
                     self.__hierarchy_tree.update_values(self.__selected_component)
 
-    def __on_max_changed(self, _1, _2, _3):
+    def __on_max_changed(self, *_):
         if self.__selected_component and self.__hierarchy_tree:
             if self.__selected_component.association:
                 try:

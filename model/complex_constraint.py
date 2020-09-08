@@ -1,6 +1,7 @@
 import uuid
 from typing import Optional, List
 
+from json_converter import deserialize_list
 from model.simple_constraint import SimpleConstraint
 
 
@@ -22,10 +23,7 @@ class ComplexConstraint:
     @classmethod
     def from_json(cls, data):
         """Necessary to create an instance from JSON"""
-        # Convert dictionary to object
-        antecedent = [] if not data['antecedent'] else list(map(SimpleConstraint.from_json, data['antecedent']))
-        data['antecedent'] = antecedent
-        consequent = [] if not data['consequent'] else list(map(SimpleConstraint.from_json, data['consequent']))
-        data['consequent'] = consequent
+        data['antecedent'] = deserialize_list(SimpleConstraint, data['antecedent'])
+        data['consequent'] = deserialize_list(SimpleConstraint, data['consequent'])
         return cls(**data)
 

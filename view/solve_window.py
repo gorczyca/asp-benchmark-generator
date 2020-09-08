@@ -1,9 +1,8 @@
 import tkinter as tk
-from multiprocessing import Process
 from tkinter import ttk, messagebox
-from threading import Thread
 
-from file_operations import LP_EXTENSION, solve_
+from exceptions import BGError
+from file_operations import LP_EXTENSION
 from settings import Settings
 from state import State
 from view.abstract.has_common_setup import HasCommonSetup
@@ -14,6 +13,7 @@ from view.solve_frame import SolveFrame
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 
 WINDOW_TITLE = 'Solve a logic program...'
+SELECT_FILE_TITLE = 'Select logic program file:'
 
 ANSWER_SETS_FILE_SUFFIX = 'as'
 
@@ -23,26 +23,26 @@ WINDOW_HEIGHT_RATIO = 0.4
 
 class SolveWindow(HasCommonSetup,
                   Window):
-    def __init__(self, parent_frame, callback):
+    def __init__(self, parent_frame):
         self.__state = State()
-        self.__callback = callback
         self.__settings = Settings.get_settings()
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
 
-        self._window.protocol('WM_DELETE_WINDOW', lambda: self.__solve_frame.on_close(self._window))
+        self.protocol('WM_DELETE_WINDOW', lambda: self.__solve_frame.on_close(self))
 
     def _create_widgets(self) -> None:
-        self.__main_frame = ttk.Frame(self._window)
+        self.__main_frame = ttk.Frame(self)
         self.__solve_file_path_frame = BrowseFilePathFrame(self.__main_frame,
                                                            path=self.__settings.program_to_solve_path,
                                                            widget_label_text='Select logic program',
+                                                           title=SELECT_FILE_TITLE,
                                                            default_extension=LP_EXTENSION,
                                                            save=False)
         self.__solve_frame = SolveFrame(self.__main_frame, self.__settings, self.__state)
         self.__ok_button = ttk.Button(self.__main_frame, text='Ok', command=self.__ok)
-        self.__cancel_button = ttk.Button(self.__main_frame, text='Cancel', command=self._window.destroy)
+        self.__cancel_button = ttk.Button(self.__main_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
         self._set_geometry(height_ratio=WINDOW_HEIGHT_RATIO, width_ratio=WINDOW_WIDTH_RATIO)
@@ -59,13 +59,16 @@ class SolveWindow(HasCommonSetup,
         self.__main_frame.columnconfigure(0, weight=1)
         self.__main_frame.columnconfigure(1, weight=1)
 
-        self._window.rowconfigure(0, weight=1)
-        self._window.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
 
     def __ok(self):
-        self.__change_window_controls_state(tk.DISABLED)
-        self.__solve_frame.solve(self.__solve_file_path_frame.path,
-                                 on_solved=lambda: self.__change_window_controls_state(tk.NORMAL))
+        try:
+            self.__solve_frame.solve(self.__solve_file_path_frame.path,
+                                     on_solved=lambda: self.__change_window_controls_state(tk.NORMAL))
+            self.__change_window_controls_state(tk.DISABLED)
+        except BGError as e:
+            messagebox.showerror('Error', e.message, parent=self)
 
     def __change_window_controls_state(self, state):
         change_controls_state(state,

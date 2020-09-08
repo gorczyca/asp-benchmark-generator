@@ -8,3 +8,4 @@ PROJECT_DESCRIPTION = "Benchmark generator of configuration's problem ASP encodi
 PROJECT_VERSION = '0.1'
 AUTHOR = 'Piotr Gorczyca'
 AUTHOR_EMAIL = 'gorczycapj@gmail.com'
+GITHUB_PAGE = 'https://github.com/gorczyca/asp-benchmark-generator'

@@ -15,4 +15,4 @@ class Association:
     @classmethod
     def from_json(cls, data):
         """Necessary to create an instance from JSON"""
-        return cls(**data)
+        return None if not data else cls(**data)
