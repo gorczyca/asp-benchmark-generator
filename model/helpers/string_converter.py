@@ -7,7 +7,7 @@ above.
 from typing import List, Tuple, Optional
 
 from exceptions import BGError
-from model.component import Component
+from model import Component
 
 CHILD_SYMBOL = '\t'
 NEWLINE_SYMBOL = '\n'

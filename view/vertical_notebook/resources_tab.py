@@ -6,16 +6,10 @@ from tkinter import ttk
 from pubsub import pub
 
 import actions
-from model.component import Component
-from model.resource import Resource
+from model import Component, Resource
 from state import State
-from view.ask_string_window import AskStringWindow
-from view.scrollbars_listbox import ScrollbarListbox
-from view.tree_view_column import Column
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.tab import Tab
-from view.abstract.resetable import Resetable
+from view import AskStringWindow, ScrollbarListbox, Column
+from view.abstract import HasCommonSetup, SubscribesToEvents, Resetable, Tab
 from view.common import change_controls_state, trim_string
 from view.style import FONT
 

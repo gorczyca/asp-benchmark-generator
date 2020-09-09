@@ -6,9 +6,9 @@ from tkinter import ttk, messagebox
 from exceptions import BGError
 from model import ComplexConstraint, SimpleConstraint
 from state import State
+from view import ScrollbarListbox
 from view.abstract import HasCommonSetup, Window
-from view.scrollbars_listbox import ScrollbarListbox
-from view.simple_constraint_window import SimpleConstraintWindow
+from view.vertical_notebook import SimpleConstraintWindow
 from view.common import change_controls_state
 from model.helpers import normalize_name
 from view.style import FRAME_PAD_Y, FRAME_PAD_X, CONTROL_PAD_Y

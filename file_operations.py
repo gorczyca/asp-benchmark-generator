@@ -28,7 +28,7 @@ def extract_file_name(path):
     return tail or ntpath.basename(head)
 
 
-def open_project(callback):
+def open_project(callback=None):
     file_name = filedialog.askopenfilename(filetypes=(JSON_FILE_TYPE, ALL_FILES_TYPE))
     if file_name:
         load_from_file(file_name, callback)

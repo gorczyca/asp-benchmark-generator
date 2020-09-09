@@ -1,5 +1,4 @@
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.tab import Tab
+from view.abstract import HasCommonSetup, Tab
 
 TAB_NAME = 'Encoding'
 

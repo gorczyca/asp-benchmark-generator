@@ -1,8 +1,7 @@
 import tkinter as tk
 
-from view.initial_window import InitialWindow
+from view import View, InitialWindow
 from view.style import CustomTheme
-from view.view import View
 
 if __name__ == '__main__':
     main_window = tk.Tk()

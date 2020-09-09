@@ -6,17 +6,11 @@ from tkinter import ttk
 from pubsub import pub
 
 import actions
-from model.port import Port
-from model.component import Component
+from model import Port, Component
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.resetable import Resetable
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.tab import Tab
-from view.ask_string_window import AskStringWindow
-from view.scrollbars_listbox import ScrollbarListbox
-from view.select_ports_window import SelectPortsWindow
-from view.tree_view_column import Column
+from view import AskStringWindow, ScrollbarListbox, Column
+from view.abstract import HasCommonSetup, Resetable, SubscribesToEvents, Tab
+from view.vertical_notebook import SelectPortsWindow
 from view.style import FONT
 from view.common import trim_string, change_controls_state
 
@@ -241,7 +235,6 @@ class PortsTab(Tab,
         self.__build_tree()
         ports_names = self.__state.model.get_all_ports_names()
         self.__port_combobox['values'] = sorted(ports_names)
-        # self.__resource_combobox_var.set(SELECT_PORT)     # TODO: why is this commented out
 
     # Resetable
     def _reset(self) -> None:

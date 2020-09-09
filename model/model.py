@@ -4,11 +4,7 @@ import json
 from json_converter import deserialize_list
 from model.helpers import normalize_name, matches
 from exceptions import BGError
-from model.complex_constraint import ComplexConstraint
-from model.component import Component
-from model.resource import Resource
-from model.port import Port
-from model.simple_constraint import SimpleConstraint
+from model import SimpleConstraint, Port, Resource, Component, ComplexConstraint
 
 
 class Model:

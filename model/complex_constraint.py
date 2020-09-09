@@ -2,7 +2,7 @@ import uuid
 from typing import Optional, List
 
 from json_converter import deserialize_list
-from model.simple_constraint import SimpleConstraint
+from model import SimpleConstraint
 
 
 class ComplexConstraint:

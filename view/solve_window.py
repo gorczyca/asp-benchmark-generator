@@ -5,11 +5,9 @@ from exceptions import BGError
 from file_operations import LP_EXTENSION
 from settings import Settings
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.window import Window
-from view.browse_file_path_frame import BrowseFilePathFrame
+from view import BrowseFilePathFrame, SolveFrame
+from view.abstract import HasCommonSetup, Window
 from view.common import change_controls_state
-from view.solve_frame import SolveFrame
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 
 WINDOW_TITLE = 'Solve a logic program...'

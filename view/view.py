@@ -6,19 +6,12 @@ from pubsub import pub
 
 import actions
 from file_operations import extract_file_name
-from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.main_notebook.main_notebook import MainNotebook
-from view.main_notebook.encoding_tab import EncodingTab
-from view.main_notebook.instances_tab import InstancesTab
-from view.menu import Menu
-from view.vertical_notebook.vertical_notebook import VerticalNotebook
-from view.vertical_notebook.hierarchy_tab import HierarchyTab
-from view.vertical_notebook.associations_tab import AssociationsTab
-from view.vertical_notebook.ports_tab import PortsTab
-from view.vertical_notebook.resources_tab import ResourcesTab
-from view.vertical_notebook.constraints_tab import ConstraintsTab
+from view import Menu
+from view.abstract import HasCommonSetup, SubscribesToEvents
+from view.main_notebook import MainNotebook, EncodingTab, InstancesTab
+from view.vertical_notebook import VerticalNotebook, HierarchyTab, AssociationsTab, \
+    PortsTab, ResourcesTab, ConstraintsTab
+
 
 NEW_FILE_NAME = 'untitled'
 WINDOW_TITLE = 'Benchmark Generator'
@@ -35,7 +28,6 @@ class View(ttk.Frame,
     """
     def __init__(self, main_window):
         ttk.Frame.__init__(self, main_window)
-        self.__state = State()
 
         self.__main_window = main_window
         self.__window_title: Optional[str] = None
@@ -66,7 +58,6 @@ class View(ttk.Frame,
         self.__init_title()
 
     def _subscribe_to_events(self) -> None:
-        pub.subscribe(self.__on_model_changed, actions.MODEL_CHANGED)
         pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
         pub.subscribe(self.__init_title, actions.RESET)
 
@@ -75,12 +66,7 @@ class View(ttk.Frame,
         self.__main_window.title(window_title)
         self.__window_title = window_title
 
-    def __on_model_changed(self):
-        self.__state.is_saved = False
-        self.__main_window.title(f'{UNSAVED_CHANGES_SYMBOL} {self.__window_title}')
-
-    def __on_model_saved(self, file_name):
-        self.__state.is_saved = True
+    def __on_model_saved(self, file_name=None):
         if not file_name:
             file_name = NEW_FILE_NAME
         else:

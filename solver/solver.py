@@ -3,7 +3,7 @@ import csv
 import re
 from enum import IntEnum
 
-from code_generator.code_generator import DOMAIN_STRING, PRD_SYMBOL
+from code_generator import DOMAIN_STRING, PRD_SYMBOL
 
 
 class InstanceRepresentation(IntEnum):
@@ -108,7 +108,7 @@ class Solver:
         return row
 
     def __on_answer_set(self, answer_set):
-        # TODO:
+        # TODO: ???
         if self.__stop_event is not None and self.__stop_event.is_set():
             self.__control.interrupt()
 

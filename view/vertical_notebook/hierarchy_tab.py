@@ -6,15 +6,11 @@ from typing import Optional
 from pubsub import pub
 
 import actions
-from model.component import Component
+from model import Component
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.resetable import Resetable
-from view.abstract.tab import Tab
-from view.ask_string_window import AskStringWindow
-from view.scrollbars_listbox import ScrollbarListbox
-from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
+from view import AskStringWindow, ScrollbarListbox
+from view.abstract import HasCommonSetup, SubscribesToEvents, Resetable, Tab
+from view.vertical_notebook import CreateHierarchyWindow
 from view.common import change_controls_state, trim_string
 
 TAB_NAME = 'Hierarchy'

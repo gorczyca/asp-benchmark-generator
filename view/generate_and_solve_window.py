@@ -1,16 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from code_generator.code_generator import generate_code
 from exceptions import BGError
 from file_operations import generate
 from settings import Settings
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.window import Window
+from view import GenerateFrame, SolveFrame
+from view.abstract import HasCommonSetup, Window
 from view.common import change_controls_state
-from view.generate_frame import GenerateFrame
-from view.solve_frame import SolveFrame
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 
 WINDOW_TITLE = 'Generate logic program...'

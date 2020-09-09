@@ -5,9 +5,9 @@ from typing import Deque, Optional, Dict
 import os
 import copy
 
-from code_generator.code_generator import SYMBOLS, CN_SYMBOL, IN_SYMBOL, INSTANCES_FACTS
+from code_generator import SYMBOLS, CN_SYMBOL, IN_SYMBOL, INSTANCES_FACTS
 from json_converter import get_json_string
-from solver.solver import InstanceRepresentation
+from solver import InstanceRepresentation
 
 CONFIGURATION_FILE_NAME = './.settings.json'
 MAX_RECENTLY_OPENED_PROJECTS_COUNT = 15

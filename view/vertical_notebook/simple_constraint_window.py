@@ -5,13 +5,10 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from exceptions import BGError
-from model.component import Component
-from model.simple_constraint import SimpleConstraint
+from model import Component, SimpleConstraint
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.window import Window
-from view.scrollbars_listbox import ScrollbarListbox
-from view.tree_view_column import Column
+from view import ScrollbarListbox, Column
+from view.abstract import HasCommonSetup, Window
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, FONT
 
 

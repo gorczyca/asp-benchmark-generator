@@ -6,16 +6,11 @@ from typing import Tuple, Any, Optional
 from pubsub import pub
 
 import actions
-from model.component import Component
-from model.association import Association
+from model import Component, Association
 from state import State
-from view.abstract.tab import Tab
+from view import Column, ScrollbarListbox
+from view.abstract import Tab, HasCommonSetup, SubscribesToEvents, Resetable, Resetable
 from view.common import change_controls_state, trim_string
-from view.scrollbars_listbox import ScrollbarListbox
-from view.tree_view_column import Column
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.resetable import Resetable
 from view.style import FONT
 
 TAB_NAME = 'Associations'

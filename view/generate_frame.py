@@ -5,8 +5,8 @@ from code_generator.code_generator import SYMBOLS_WITH_ARITIES, INSTANCES_FACTS
 from file_operations import LP_EXTENSION
 from settings import Settings
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.browse_file_path_frame import BrowseFilePathFrame
+from view import BrowseFilePathFrame
+from view.abstract import HasCommonSetup
 from view.common import get_target_file_location, change_controls_state
 from view.style import BACKGROUND_COLOR_PRIMARY, CONTROL_PAD_Y, CONTROL_PAD_X
 

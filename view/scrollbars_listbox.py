@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 from typing import List, Callable, Any, Optional
 
-from view.abstract.has_common_setup import HasCommonSetup
+from view import Column
+from view.abstract import HasCommonSetup
 from view.style import BACKGROUND_COLOR_SECONDARY, FONT_COLOR_SECONDARY, HOVER_COLOR
-from view.tree_view_column import Column
 
 NO_ANCESTOR = ''
 COL_ID_MAIN = '#0'

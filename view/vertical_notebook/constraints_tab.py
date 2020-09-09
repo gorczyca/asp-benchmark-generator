@@ -1,22 +1,16 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 from typing import Optional, Any
 
 from pubsub import pub
 
-from exceptions import BGError
-from model.simple_constraint import SimpleConstraint
-from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.resetable import Resetable
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.tab import Tab
-from view.complex_constraint_window import ComplexConstraintWindow
-from view.scrollbars_listbox import ScrollbarListbox
-from view.simple_constraint_window import SimpleConstraintWindow
-from view.tree_view_column import Column
-from view.common import trim_string, change_controls_state
 import actions
+from model import SimpleConstraint
+from state import State
+from view import ScrollbarListbox, Column
+from view.abstract import HasCommonSetup, Resetable, SubscribesToEvents, Tab
+from view.vertical_notebook import ComplexConstraintWindow, SimpleConstraintWindow
+from view.common import trim_string, change_controls_state
 
 TAB_NAME = 'Constraints'
 LABEL_LENGTH = 15

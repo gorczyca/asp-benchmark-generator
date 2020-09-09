@@ -7,13 +7,18 @@ import actions
 from exceptions import BGError
 from model.helpers import string_converter
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
+from view.abstract import HasCommonSetup, Window
 from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
-from view.abstract.window import Window
-from view.common_callbacks import select_all_text
 
 WINDOW_TITLE = 'Edit hierarchy'
 LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
+
+
+def select_all_text(event):
+    event.widget.tag_add(tk.SEL, 1.0, tk.END)
+    event.widget.mark_set(tk.INSERT, 1.0)
+    event.widget.see(tk.INSERT)
+    return 'break'
 
 
 class CreateHierarchyWindow(HasCommonSetup,
@@ -81,7 +86,6 @@ class CreateHierarchyWindow(HasCommonSetup,
             hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
             self.__state.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
             pub.sendMessage(actions.HIERARCHY_EDITED)
-            pub.sendMessage(actions.MODEL_CHANGED)
             self.__callback()
             self.grab_release()
             self.destroy()

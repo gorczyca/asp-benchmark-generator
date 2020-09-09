@@ -1,7 +1,7 @@
 from typing import Optional, TextIO
 
 from settings import Settings
-from model.model import Model
+from model import Model
 
 
 class State:
@@ -9,7 +9,6 @@ class State:
         def __init__(self):
             self.model: Optional[Model] = None
             self.file: Optional[TextIO] = None
-            self.is_saved: bool = True
             self.settings: Optional[Settings] = None
 
     instance = None

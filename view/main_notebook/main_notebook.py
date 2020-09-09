@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-from view.abstract.has_common_setup import HasCommonSetup
+from view.abstract import HasCommonSetup
 
 
 class MainNotebook(HasCommonSetup):

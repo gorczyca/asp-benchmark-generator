@@ -2,8 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 from exceptions import BGError
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.window import Window
+from view.abstract import Window, HasCommonSetup
 from view.style import CONTROL_PAD_Y, CONTROL_PAD_X, FRAME_PAD_Y, FRAME_PAD_X
 
 WINDOW_HEIGHT = 100

@@ -6,14 +6,10 @@ from typing import Any, Tuple, Optional
 from pubsub import pub
 
 import actions
-from model.component import Component
+from model import Component
 from state import State
-from view.abstract.has_common_setup import HasCommonSetup
-from view.abstract.subscribes_to_events import SubscribesToEvents
-from view.abstract.tab import Tab
-from view.abstract.resetable import Resetable
-from view.scrollbars_listbox import ScrollbarListbox
-from view.tree_view_column import Column
+from view import ScrollbarListbox, Column
+from view.abstract import HasCommonSetup, Tab, SubscribesToEvents, Resetable
 from view.common import trim_string, BOOLEAN_TO_STRING_DICT, change_controls_state, set_spinbox_var_value
 
 TAB_NAME = 'Instances'
@@ -231,7 +227,6 @@ class InstancesTab(Tab,
         self.__hierarchy_tree.set_items([])
 
     def __on_symmetry_breaking_toggled(self, *_):
-        # if self.__selected_component and self.__hierarchy_tree:
         if self.__selected_component and self.__selected_component.is_leaf:
             self.__selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
             self.__hierarchy_tree.update_values(self.__selected_component)
@@ -247,6 +242,7 @@ class InstancesTab(Tab,
                         # Reset min/max counter
                         self.__selected_component.min_count = None
                         self.__selected_component.max_count = None
+
                 else:
                     max_value = self.__max_spinbox_var.get()
                     if self.__selected_component.is_leaf:

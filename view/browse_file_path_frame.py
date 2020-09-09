@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 
 from file_operations import ALL_FILES_TYPE
-from view.abstract.has_common_setup import HasCommonSetup
+from view.abstract import HasCommonSetup
 from view.style import CONTROL_PAD_Y, CONTROL_PAD_X
 
 

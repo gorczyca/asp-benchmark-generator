@@ -2,7 +2,7 @@ import uuid
 from typing import Optional, Dict
 
 from json_converter import deserialize_dict
-from model.association import Association
+from model import Association
 
 
 class Component:
