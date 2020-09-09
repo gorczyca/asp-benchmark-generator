@@ -10,9 +10,12 @@ tests.py/
 view/__pycache__/
 view/vertical_notebook/__pycache__/
 tests.py
-/messing_around.json
 /save
 analyze-code.bat
 sonar-project.properties
 start-sonar.bat
 .settings.json
+/build
+/dist
+asp_benchmark_generator.spec
+

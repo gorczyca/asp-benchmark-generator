@@ -8,9 +8,10 @@ from pubsub import pub
 import actions
 from model import Component
 from state import State
-from view import AskStringWindow, ScrollbarListbox
+from view.ask_string_window import AskStringWindow
+from view.scrollbars_listbox import ScrollbarListbox
 from view.abstract import HasCommonSetup, SubscribesToEvents, Resetable, Tab
-from view.vertical_notebook import CreateHierarchyWindow
+from view.vertical_notebook.create_hierarchy_window import CreateHierarchyWindow
 from view.common import change_controls_state, trim_string
 
 TAB_NAME = 'Hierarchy'

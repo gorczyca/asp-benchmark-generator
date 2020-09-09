@@ -5,7 +5,9 @@ from file_operations import load_from_file, open_project
 from model import Model
 from settings import Settings
 from state import State
-from view import AskStringWindow, ScrollbarListbox, SolveWindow
+from view.ask_string_window import AskStringWindow
+from view.scrollbars_listbox import ScrollbarListbox
+from view.solve_window import SolveWindow
 from view.style import CONTROL_PAD_Y, FRAME_PAD_X, FRAME_PAD_Y
 from view.abstract import HasCommonSetup, Window
 from file_operations import extract_file_name

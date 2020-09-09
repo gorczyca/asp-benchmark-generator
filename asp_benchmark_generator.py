@@ -3,6 +3,7 @@ import tkinter as tk
 from view import View, InitialWindow
 from view.style import CustomTheme
 
+
 if __name__ == '__main__':
     main_window = tk.Tk()
     main_window.withdraw()

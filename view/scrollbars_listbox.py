@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from typing import List, Callable, Any, Optional
 
-from view import Column
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup
 from view.style import BACKGROUND_COLOR_SECONDARY, FONT_COLOR_SECONDARY, HOVER_COLOR
 

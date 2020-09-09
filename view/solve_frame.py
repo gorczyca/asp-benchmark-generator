@@ -9,7 +9,7 @@ from file_operations import CSV_EXTENSION, solve
 from settings import Settings
 from solver import InstanceRepresentation
 from state import State
-from view import BrowseFilePathFrame
+from view.browse_file_path_frame import BrowseFilePathFrame
 from view.abstract import HasCommonSetup
 from view.common import get_target_file_location, change_controls_state
 from view.style import CONTROL_PAD_X, CONTROL_PAD_Y

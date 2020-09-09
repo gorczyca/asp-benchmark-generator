@@ -5,7 +5,8 @@ from exceptions import BGError
 from file_operations import generate
 from settings import Settings
 from state import State
-from view import GenerateFrame, SolveFrame
+from view.generate_frame import GenerateFrame
+from view.solve_frame import SolveFrame
 from view.abstract import HasCommonSetup, Window
 from view.common import change_controls_state
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X

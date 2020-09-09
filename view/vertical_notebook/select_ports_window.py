@@ -4,7 +4,8 @@ from tkinter import ttk
 
 from model import Port
 from state import State
-from view import ScrollbarListbox, Column
+from view.scrollbars_listbox import ScrollbarListbox
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Window
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y
 

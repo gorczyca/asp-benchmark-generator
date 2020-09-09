@@ -7,7 +7,10 @@ import actions
 from file_operations import JSON_EXTENSION, extract_file_name, open_project, JSON_FILE_TYPE, ALL_FILES_TYPE
 import json_converter
 from state import State
-from view import AskStringWindow, GenerateAndSolveWindow, GenerateWindow, SolveWindow
+from view.ask_string_window import AskStringWindow
+from view.generate_and_solve_window import GenerateAndSolveWindow
+from view.generate_window import GenerateWindow
+from view.solve_window import SolveWindow
 from view.style import BACKGROUND_COLOR_PRIMARY
 
 

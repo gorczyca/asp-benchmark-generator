@@ -8,7 +8,8 @@ from pubsub import pub
 import actions
 from model import Component
 from state import State
-from view import ScrollbarListbox, Column
+from view.scrollbars_listbox import ScrollbarListbox
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Tab, SubscribesToEvents, Resetable
 from view.common import trim_string, BOOLEAN_TO_STRING_DICT, change_controls_state, set_spinbox_var_value
 

@@ -6,7 +6,7 @@ from pubsub import pub
 
 import actions
 from file_operations import extract_file_name
-from view import Menu
+from view.menu import Menu
 from view.abstract import HasCommonSetup, SubscribesToEvents
 from view.main_notebook import MainNotebook, EncodingTab, InstancesTab
 from view.vertical_notebook import VerticalNotebook, HierarchyTab, AssociationsTab, \
@@ -28,6 +28,8 @@ class View(ttk.Frame,
     """
     def __init__(self, main_window):
         ttk.Frame.__init__(self, main_window)
+
+        main_window.deiconify()     # Bring back window after withdraw
 
         self.__main_window = main_window
         self.__window_title: Optional[str] = None

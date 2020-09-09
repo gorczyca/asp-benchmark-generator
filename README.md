@@ -37,7 +37,7 @@ That should do it. To make sure packages have been installed in correct environm
 on the active environment. When both pypubsub and clingo appear on the list, we should be good to go.
    
 ### Running
-Execute the [main.py](../asp-benchmark-generator/main.py) script, eg:
+Execute the [asp_benchmark_generator.py](asp_benchmark_generator.py) script, eg:
 ```sh
 $ python3 main.py
 ```

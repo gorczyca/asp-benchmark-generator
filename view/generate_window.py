@@ -4,7 +4,7 @@ from tkinter import ttk, messagebox
 from file_operations import extract_file_name, generate
 from settings import Settings
 from state import State
-from view import GenerateFrame
+from view.generate_frame import GenerateFrame
 from view.abstract import HasCommonSetup, Window
 from view.style import FRAME_PAD_X, FRAME_PAD_Y, CONTROL_PAD_Y, CONTROL_PAD_X
 

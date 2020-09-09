@@ -7,9 +7,11 @@ from pubsub import pub
 import actions
 from model import SimpleConstraint
 from state import State
-from view import ScrollbarListbox, Column
+from view.scrollbars_listbox import ScrollbarListbox
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Resetable, SubscribesToEvents, Tab
-from view.vertical_notebook import ComplexConstraintWindow, SimpleConstraintWindow
+from view.vertical_notebook.complex_constraint_window import ComplexConstraintWindow
+from view.vertical_notebook.simple_constraint_window import SimpleConstraintWindow
 from view.common import trim_string, change_controls_state
 
 TAB_NAME = 'Constraints'

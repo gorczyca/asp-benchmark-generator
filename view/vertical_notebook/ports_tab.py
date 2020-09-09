@@ -8,9 +8,11 @@ from pubsub import pub
 import actions
 from model import Port, Component
 from state import State
-from view import AskStringWindow, ScrollbarListbox, Column
+from view.ask_string_window import AskStringWindow
+from view.scrollbars_listbox import ScrollbarListbox
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Resetable, SubscribesToEvents, Tab
-from view.vertical_notebook import SelectPortsWindow
+from view.vertical_notebook.select_ports_window import SelectPortsWindow
 from view.style import FONT
 from view.common import trim_string, change_controls_state
 

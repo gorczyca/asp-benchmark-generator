@@ -8,7 +8,9 @@ from pubsub import pub
 import actions
 from model import Component, Resource
 from state import State
-from view import AskStringWindow, ScrollbarListbox, Column
+from view.ask_string_window import AskStringWindow
+from view.scrollbars_listbox import ScrollbarListbox
+from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, SubscribesToEvents, Resetable, Tab
 from view.common import change_controls_state, trim_string
 from view.style import FONT
