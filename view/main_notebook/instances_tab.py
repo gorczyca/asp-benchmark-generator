@@ -1,3 +1,5 @@
+"""Main notebook's instances tab."""
+
 import math
 import tkinter as tk
 from tkinter import ttk
@@ -30,7 +32,13 @@ class InstancesTab(Tab,
                    HasCommonSetup,
                    SubscribesToEvents,
                    Resetable):
-    def __init__(self, parent_notebook):
+    """Used to set the number of instances of components.
+
+    Attributes:
+        __selected_component: Currently selected component in the components hierarchy view.
+    """
+    def __init__(self,
+                 parent_notebook: ttk.Notebook):
         self.__state = State()
         self.__selected_component: Optional[Component] = None
 
@@ -41,7 +49,7 @@ class InstancesTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__hierarchy_tree = ScrollbarListbox(self._frame,
+        self.__hierarchy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -54,7 +62,7 @@ class InstancesTab(Tab,
                                                           Column('Symmetry breaking?')],
                                                  values=self.__state.model.hierarchy)
 
-        self.__left_frame = ttk.Frame(self._frame)
+        self.__left_frame = ttk.Frame(self)
 
         self.__global_symmetry_breaking_frame = ttk.Frame(self.__left_frame)
         self.__global_symmetry_breaking_checkbox_label = ttk.Label(self.__global_symmetry_breaking_frame,
@@ -148,9 +156,9 @@ class InstancesTab(Tab,
         self.__left_frame.columnconfigure(2, weight=1, uniform='fred')
         self.__left_frame.columnconfigure(3, weight=1, uniform='fred')
 
-        self._frame.columnconfigure(0, weight=1, uniform='fred')
-        self._frame.columnconfigure(1, weight=3, uniform='fred')
-        self._frame.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1, uniform='fred')
+        self.columnconfigure(1, weight=3, uniform='fred')
+        self.rowconfigure(0, weight=1)
 
     # SubscribesToListeners
     def _subscribe_to_events(self):
@@ -160,18 +168,31 @@ class InstancesTab(Tab,
 
     @staticmethod
     def __extract_values(cmp: Component) -> Tuple[Any, ...]:
+        """Extracts the data of the component to show in the hierarchy view.
+
+        :param cmp: Component from which to extract the data.
+        :return: Tuple containing data about component
+            (exact count, min_count, max_count, apply symmetry breaking?).
+        """
         return (cmp.count if cmp.count else '',
                 cmp.min_count if cmp.min_count is not None else '',
                 cmp.max_count if cmp.max_count is not None else '',
                 BOOLEAN_TO_STRING_DICT[cmp.symmetry_breaking])
 
-    def __on_model_loaded(self):
+    def __on_model_loaded(self) -> None:
+        """Executed whenever a model is loaded from file."""
         self.__build_tree()
 
     def __build_tree(self) -> None:
+        """Fills the tree view with components from model."""
         self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
 
-    def __on_select_tree_item(self, cmp_id: int):
+    # Hierarchy Treeview
+    def __on_select_tree_item(self, cmp_id: int) -> None:
+        """Executed whenever a tree item is selected (by mouse click).
+        
+        :param cmp_id: Id of the selected component.
+        """
         selected_cmp: Component = self.__state.model.get_component(id_=cmp_id)
         self.__selected_component = selected_cmp
         self.__cmp_label_var.set(trim_string(selected_cmp.name, length=LABEL_LENGTH))
@@ -227,12 +248,14 @@ class InstancesTab(Tab,
         # Clear the tree
         self.__hierarchy_tree.set_items([])
 
-    def __on_symmetry_breaking_toggled(self, *_):
+    def __on_symmetry_breaking_toggled(self, *_) -> None:
+        """Executed whenever the __symmetry_breaking_checkbox is toggled"""
         if self.__selected_component and self.__selected_component.is_leaf:
             self.__selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
             self.__hierarchy_tree.update_values(self.__selected_component)
 
-    def __on_count_changed(self, *_):
+    def __on_count_changed(self, *_) -> None:
+        """Executed whenever the __exact_minimum_spinbox value changes."""
         if self.__selected_component:
             exact = self.__exact_value_radiobutton_var.get()
             try:
@@ -255,22 +278,22 @@ class InstancesTab(Tab,
                         self.__max_spinbox_var.set(new_max_value)
                         if self.__selected_component.is_leaf:
                             self.__selected_component.max_count = new_max_value
-            except tk.TclError as e:
-                print(e)
+            except tk.TclError:
                 self.__selected_component.count = None  # Reset both
                 self.__selected_component.min_count = None
             finally:
                 self.__hierarchy_tree.update_values(self.__selected_component)
 
-    def __apply_count_to_all_children(self):
+    def __apply_count_to_all_children(self) -> None:
+        """Executed whenever the __apply_count_to_all_children_button is pressed."""
         if self.__selected_component:
             exact = self.__exact_value_radiobutton_var.get()
             if exact:
                 count = None
                 try:
                     count = self.__exact_minimum_spinbox_var.get()
-                except tk.TclError as e:
-                    print(e)
+                except tk.TclError:
+                    pass
                 finally:
                     updated_cmps = self.__state.model.set_components_leaf_children_properties(self.__selected_component,
                                                                                               exact=True, count=count,
@@ -282,8 +305,8 @@ class InstancesTab(Tab,
                 try:
                     min_count = self.__exact_minimum_spinbox_var.get()
                     max_count = self.__max_spinbox_var.get()
-                except tk.TclError as e:
-                    print(e)
+                except tk.TclError:
+                    pass
                 finally:
                     updated_cmps = self.__state.model.set_components_leaf_children_properties(self.__selected_component,
                                                                                               exact=False,
@@ -293,18 +316,20 @@ class InstancesTab(Tab,
             self.__hierarchy_tree.update_values(*updated_cmps)
 
     def __apply_symmetry_breaking_to_all_children(self):
+        """Executed whenever the __apply_symmetry_breaking_to_all_children_button is pressed."""
         if self.__selected_component:
             symm_breaking = True
             try:
                 symm_breaking = self.__symm_breaking_checkbox_var.get()
-            except tk.TclError as e:
-                print(e)
+            except tk.TclError:
+                pass
             finally:
                 updated_cmps = self.__state.model.set_components_leaf_children_properties(self.__selected_component,
                                                                                           symmetry_breaking=symm_breaking)
                 self.__hierarchy_tree.update_values(*updated_cmps)
 
     def __on_exact_value_radiobutton_changed(self, *_):
+        """Executed whenever the __exact_value_radiobutton's value changes."""
         if self.__selected_component:
             self.__exact_minimum_spinbox_var.set(0)
             self.__max_spinbox_var.set(0)
@@ -329,6 +354,7 @@ class InstancesTab(Tab,
                 self.__hierarchy_tree.update_values(self.__selected_component)
 
     def __on_max_changed(self, *_):
+        """Executed whenever the __max_spinbox value changes."""
         if self.__selected_component:
             try:
                 max_value = self.__max_spinbox_var.get()
@@ -341,12 +367,13 @@ class InstancesTab(Tab,
                     self.__exact_minimum_spinbox_var.set(new_min_value)
                     if self.__selected_component.is_leaf:
                         self.__selected_component.min_count = new_min_value
-            except tk.TclError as e:
-                print(e)
+            except tk.TclError:
+                pass
             finally:
                 self.__hierarchy_tree.update_values(self.__selected_component)
 
     def __apply_symmetry_breaking_for_all_components(self):
+        """Executed whenever the __apply_global_symmetry_breaking_button is pressed."""
         if self.__hierarchy_tree:
             symm_breaking = self.__global_symmetry_breaking_checkbox_var.get()
             updated_cmps = self.__state.model.set_all_leaf_components_properties(symmetry_breaking=symm_breaking)

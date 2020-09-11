@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from typing import Any, Callable
 
 from exceptions import BGError
 from view.abstract import Window, HasCommonSetup
@@ -13,7 +14,19 @@ PROMPT = 'Enter string'
 
 class AskStringWindow(HasCommonSetup,
                       Window):
-    def __init__(self, parent_frame, callback, window_title=WINDOW_TITLE, prompt_text=PROMPT, string=''):
+    """Used create/edit SimpleConstraints.
+
+    Attributes:
+        __callback: Callback function to be executed after pressing the OK button on this Window.
+            The parameter passed to it is the string obtained from this window.
+        __prompt_text: Text to be displayed in the window.
+        __string: String.
+    """
+    def __init__(self, parent_frame,
+                 callback: Callable[[str], Any],
+                 window_title: str = WINDOW_TITLE,
+                 prompt_text: str = PROMPT,
+                 string: str = ''):
         self.__callback = callback
         self.__prompt_text = prompt_text
         self.__string = string
@@ -48,6 +61,7 @@ class AskStringWindow(HasCommonSetup,
         self._set_geometry(height=WINDOW_HEIGHT, width_ratio=WINDOW_WIDTH_RATIO)
 
     def __ok(self):
+        """Executed whenever the __ok_button is pressed."""
         try:
             string = self.__string_entry_var.get()
             self.__callback(string)

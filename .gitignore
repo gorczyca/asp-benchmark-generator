@@ -15,7 +15,7 @@ analyze-code.bat
 sonar-project.properties
 start-sonar.bat
 .settings.json
-/build
-/dist
+build
+dist
 asp_benchmark_generator.spec
 

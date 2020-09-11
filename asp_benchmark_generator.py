@@ -1,3 +1,5 @@
+"""Main program's module."""
+
 import tkinter as tk
 
 from view import View, InitialWindow

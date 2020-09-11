@@ -1,4 +1,5 @@
-"""Provides helper functions for conversion between hierarchy expressed as string and Hierarchy object
+"""Provides helper functions for conversion between hierarchy expressed as string and a hierarchy
+    represented by list of components.
 
 The aforementioned string is in form where each '\n' character means another element and '\t' means child of the element
 above.
@@ -8,6 +9,7 @@ from typing import List, Tuple, Optional
 
 from exceptions import BGError
 from model import Component
+from model.helpers.common import normalize_name
 
 CHILD_SYMBOL = '\t'
 NEWLINE_SYMBOL = '\n'
@@ -17,8 +19,8 @@ NUMBER_OF_SPACES_EQUAL_TO_TAB = 4
 def __extract_tabs(line: str) -> Tuple[int, str]:
     """Returns the component name and its level based on the number of \t symbols.
 
-    :param line:    Line containing \t symbols and component's name.
-    :return:       A tuple of the form (component's level, components'name).
+    :param line: Line containing \t symbols and component's name.
+    :return: A tuple of the form (component's level, components'name).
     """
     tab_count = 0
     for letter in line:
@@ -26,14 +28,15 @@ def __extract_tabs(line: str) -> Tuple[int, str]:
             break
         else:
             tab_count += 1
-    return tab_count, line.split()[0]
+    cmp_name = line.lstrip()
+    return tab_count, normalize_name(cmp_name)
 
 
 def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
-    """Converts string into Hierarchy object
+    """Converts string into hierarchy (list of components).
 
-    :param hierarchy_string:    hierarchy represented as string
-    :return:   hierarchy's 'Hierarchy' object representation
+    :param hierarchy_string: hierarchy represented as string
+    :return: List of components representing hierarchy.
     """
     hierarchy_string = hierarchy_string.replace(' ' * NUMBER_OF_SPACES_EQUAL_TO_TAB,
                                                 CHILD_SYMBOL)  # make sure N spaces are converted to '\t'
@@ -42,16 +45,15 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
     cmp_names = []
 
     for line in hierarchy_string.split('\n'):
-        if not line or line.isspace():      # if entire line contains only spaces, ignore it
+        if not line or line.isspace():      # If entire line contains only spaces, ignore it
             continue
         level, component_name = __extract_tabs(line)
-        if component_name in cmp_names:     # if names are not unique, raise error
+        if component_name in cmp_names:     # If names are not unique, raise error
             raise BGError(f'Hierarchy contains more than one component '
                           f'named "{component_name}".')
         else:
             cmp_names.append(component_name)
-        if len(last_on_level) < level:      # if there are too many intendations,
-            # raise error
+        if len(last_on_level) < level:      # If there are too many intendations,
             raise BGError(f'Cannot create a child of non-existing component. '
                           f'Check number of tabs in component: "{component_name} " '
                           f'and its ancestor.')
@@ -69,10 +71,10 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
 
 
 def hierarchy_to_string(hierarchy: List[Component]) -> str:
-    """Converts 'Hierarchy' object to string.
+    """Converts hierarchy object to string.
 
-    :param hierarchy:   'Hierarchy' object to be converted to string.
-    :return:           Hierarchy's string representation.
+    :param hierarchy: List of components to be converted to string.
+    :return: Hierarchy's string representation.
     """
     def __hierarchy_to_string(hierarchy_: List[Component], string_: str, parent_id: Optional[int]) -> str:
         """Internal function used recursively.

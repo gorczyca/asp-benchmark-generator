@@ -23,9 +23,12 @@ def select_all_text(event):
 
 class CreateHierarchyWindow(HasCommonSetup,
                             Window):
+    """
+
+    """
     def __init__(self, parent_frame, callback):
-        self.__state = State()
         self.__callback = callback
+        self.__state = State()
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)

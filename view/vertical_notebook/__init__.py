@@ -1,4 +1,3 @@
-from .vertical_notebook import VerticalNotebook
 from .hierarchy_tab import HierarchyTab
 from .associations_tab import AssociationsTab
 from .ports_tab import PortsTab

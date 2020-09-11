@@ -19,13 +19,18 @@ class Model:
         root_name: Name of the root component.
         hierarchy:  Hierarchy of components - tree structure, implemented as a list of components,
             each of them having a pointer to the parent component (or None if there is no parent).
-        resources:  List of resources
-        ports: List of ports
-        simple_constraints: List of simple constraints
-        complex_constraints: List of complex constraints
+        resources:  List of resources.
+        ports: List of ports.
+        simple_constraints: List of simple constraints.
+        complex_constraints: List of complex constraints.
     """
-    def __init__(self, root_name: str = None, hierarchy: List[Component] = None, resources: List[Resource] = None, ports: List[Port] = None,
-                 simple_constraints: List[SimpleConstraint] = None, complex_constraints: List[ComplexConstraint] = None):
+    def __init__(self,
+                 root_name: str = None,
+                 hierarchy: List[Component] = None,
+                 resources: List[Resource] = None,
+                 ports: List[Port] = None,
+                 simple_constraints: List[SimpleConstraint] = None,
+                 complex_constraints: List[ComplexConstraint] = None):
         self.root_name: str = root_name
         self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
@@ -162,7 +167,7 @@ class Model:
         """Returns the first component whose attributes match the kwargs.
 
         :param kwargs: Desired attributes of a component.
-        :return: Component
+        :return: Component.
         """
         return next((cmp for cmp in self.hierarchy if matches(cmp, **kwargs)), None)
 
@@ -170,7 +175,7 @@ class Model:
         """Returns a list of components with attributes that match the kwargs.
 
         :param kwargs: Desired attributes of a components.
-        :return: List of components
+        :return: List of components.
         """
         return [c for c in self.hierarchy if matches(c, **kwargs)]
 
@@ -249,10 +254,10 @@ class Model:
         return res
 
     def get_resource(self, **kwargs) -> Resource:
-        """
+        """Returns the first resource whose attributes match the kwargs.
 
-        :param kwargs:
-        :return:
+        :param kwargs: Desired attributes of a resource.
+        :return: Resource.
         """
         return next((res for res in self.resources if matches(res, **kwargs)), None)
 
@@ -273,7 +278,7 @@ class Model:
         return res
 
     def remove_resource(self, res: Resource) -> Resource:
-        """Removes resource from self and all the references to it by its id in Component.produces.
+        """Removes resource from list of resources and all the references to it by its id in Component.produces.
 
         :param res: Resource to be removed from self.
         :return: Removed Resource.
@@ -318,7 +323,7 @@ class Model:
 
         :param prt: Port
         :param new_name: New name for port
-        :return: Modified port.
+        :return: Renamed Port.
         """
         new_name = normalize_name(new_name)
         if new_name in self.get_all_ports_names() and prt.name != new_name:     # Allow changing name for the same
@@ -327,25 +332,24 @@ class Model:
         return prt
 
     def get_port(self, **kwargs) -> Port:
-        """Returns port, that has the specified id
+        """Returns the first port whose attributes match the kwargs.
 
-        :return: Port with the given id.
+        :param kwargs: Desired attributes of a port.
+        :return: Port.
         """
         return next((prt for prt in self.ports if matches(prt, **kwargs)), None)
 
     def get_ports_by_ids(self, ids: List[int]) -> List[Port]:
-        """
+        """Returns a list of ports that have their ids among given ids list.
 
-        :param self:
-        :param ids:
-        :return:
+        :param ids: List of ids of ports to return.
+        :return: List of ports.
         """
         return [p for p in self.ports if p.id_ in ids]
 
     def remove_port(self, prt: Port) -> Port:
-        """Removes port from selfand all the references to it by its id in Component.ports.
+        """Removes port from the list of ports and all the references to it by its id in Component.ports.
 
-        :param self:
         :param prt: Port to be removed from self.
         :return: Removed Port.
         """
@@ -361,12 +365,11 @@ class Model:
         return [p.name for p in self.ports]
 
     def update_ports_compatibility(self, port, compatible_ports) -> None:
-        """
+        """Sets the compatibility of a port.
 
-        :param self:
-        :param port:
-        :param compatible_ports:
-        :return:
+        :param port: The port to set the compatibility of.
+        :param compatible_ports: Port is set to be compatible with all ports in "compatible_ports";
+            likewise, it sets the ports in "compatible_ports" to be compatible with "port".
         """
         compatible_ports_ids = [p.id_ for p in compatible_ports]
         # If compatibility was removed
@@ -382,11 +385,18 @@ class Model:
                 port_.compatible_with.append(port.id_)
         port.compatible_with = compatible_ports_ids
 
-    def set_ports_amount_to_all_components_children(self, cmp: Component, prt: Port, value: int) \
+    def set_ports_amount_to_all_components_children(self, cmp: Component, prt: Port, number: int) \
             -> List[Component]:
+        """Sets the number of ports to all leaf children of component.
+
+        :param cmp: Component, whose leaf-children are to be set to have the port.
+        :param prt: Port type.
+        :param number: Number of ports each of the leaf-children is supposed to have.
+        :return: List of children affected.
+        """
         leaf_children = self.get_components_children(cmp, is_leaf=True)
         for c in leaf_children:
-            c.ports[prt.id_] = value
+            c.ports[prt.id_] = number
         return leaf_children
 
     def get_all_constraints(self) -> List[Any]:
@@ -397,10 +407,12 @@ class Model:
         """
         return self.simple_constraints + self.complex_constraints
 
-    def get_constraint(self, **kwargs):
-        """Returns a constraint by a given id. Note: 'Constraint' might be an instance of either SimpleConstraint or ComplexConstraint
+    def get_constraint(self, **kwargs) -> Any:
+        """Returns the first constraint whose attributes match the kwargs.
+            Note: 'Constraint' might be an instance of either SimpleConstraint or ComplexConstraint
 
-        :return: SimpleConstraint or ComplexConstraint instance with a given id
+        :param kwargs: Desired attributes of a constraint.
+        :return: SimpleConstraint or ComplexConstraint.
         """
         # Look in the simple constraints first
         simple_ctr = next((c for c in self.simple_constraints if matches(c, **kwargs)), None)
@@ -409,6 +421,7 @@ class Model:
             else next((c for c in self.complex_constraints if matches(c, **kwargs)), None)
 
     def get_all_constraints_names(self) -> List[str]:
+        """Returns a list with all constraints' names."""
         return [c.name for c in self.get_all_constraints()]
 
     def add_constraint(self, ctr: Any) -> Tuple[Any, int]:
@@ -416,7 +429,7 @@ class Model:
 
         :param ctr: Constraint to add to the self
         :return: Added constraint and index of it in the sorted alphabetically union of simple
-        and complex constraints (Simple constraints are put first in the union, complex constraints later).
+            and complex constraints (Simple constraints are put first in the union, complex constraints later).
         """
         new_name = normalize_name(ctr.name)
         if ctr.name in self.get_all_constraints_names():
@@ -440,6 +453,11 @@ class Model:
         return ctr, self.get_constraint_index(ctr)
 
     def edit_constraint(self, edited_ctr: Any) -> Tuple[Any, int]:
+        """Updates the constraint data.
+
+        :param edited_ctr: Constraint to edit (SimpleConstraint or ComplexConstraint).
+        :return: Edited constraint (SimpleConstraint or ComplexConstraint).
+        """
         new_name = normalize_name(edited_ctr.name)
         current_ctr = self.get_constraint(id_=edited_ctr.id_)
         if new_name in self.get_all_constraints_names() and edited_ctr.name != current_ctr.name:
@@ -478,12 +496,12 @@ class Model:
             self.complex_constraints.remove(ctr)
         return ctr
 
-    def get_constraint_index(self, ctr: Any):
-        """
+    def get_constraint_index(self, ctr: Any) -> int:
+        """ Returns the index of a constraint in the list created as a union of sorted list of simple constraint
+            and sorted list of complex constraints.
 
-        :param self:
-        :param ctr:
-        :return:
+        :param ctr: SimpleConstraint or ComplexConstraint
+        :return: Index of the constraint.
         """
         sorted_ctrs_names = sorted([p.name for p in self.simple_constraints]) + \
                             sorted([p.name for p in self.complex_constraints])

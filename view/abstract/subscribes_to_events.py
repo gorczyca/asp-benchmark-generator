@@ -7,4 +7,6 @@ class SubscribesToEvents(ABC):
         self._subscribe_to_events()
 
     @abstractmethod
-    def _subscribe_to_events(self) -> None: pass
+    def _subscribe_to_events(self) -> None:
+        """Subscribes to PubSub events."""
+        pass

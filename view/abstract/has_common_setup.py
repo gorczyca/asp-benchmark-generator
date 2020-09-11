@@ -8,10 +8,14 @@ class HasCommonSetup(ABC):
         self._setup_layout()
 
     @abstractmethod
-    def _create_widgets(self) -> None: pass
+    def _create_widgets(self) -> None:
+        """All the tk widgets should be created here."""
+        pass
 
     @abstractmethod
-    def _setup_layout(self) -> None: pass
+    def _setup_layout(self) -> None:
+        """This is where the tk widgets are being positioned."""
+        pass
 
 
 

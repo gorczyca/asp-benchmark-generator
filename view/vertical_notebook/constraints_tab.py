@@ -27,6 +27,11 @@ class ConstraintsTab(Tab,
                      HasCommonSetup,
                      SubscribesToEvents,
                      Resetable):
+    """Used to create, edit and remove constraints.
+
+    Attributes:
+        __selected_constraint: Currently selected constraint in the constraints list view.
+    """
     def __init__(self, parent_notebook):
 
         self.__state = State()
@@ -38,12 +43,12 @@ class ConstraintsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__constraints_listbox = ScrollbarListbox(self._frame, columns=[Column('Type')], heading='Constraint',
+        self.__constraints_listbox = ScrollbarListbox(self, columns=[Column('Type')], heading='Constraint',
                                                       extract_id=lambda crt: crt.id_, extract_text=lambda crt: crt.name,
                                                       extract_values=lambda crt: 'Simple' if isinstance(crt, SimpleConstraint) else 'Complex',
                                                       on_select_callback=self.__on_select_callback,
                                                       values=self.__state.model.get_all_constraints())
-        self.__right_frame = ttk.Frame(self._frame)
+        self.__right_frame = ttk.Frame(self)
         # Ctr label
         self.__ctr_label_var = tk.StringVar(value='')
         self.__ctr_label = ttk.Label(self.__right_frame, textvariable=self.__ctr_label_var, style='Big.TLabel', anchor=tk.CENTER)
@@ -67,13 +72,15 @@ class ConstraintsTab(Tab,
         self.__edit_constraint_button.grid(row=3, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__remove_constraint_button.grid(row=4, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self._frame.columnconfigure(0, weight=1)
-        self._frame.rowconfigure(0, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
+    # SubscribesToEvents
     def _subscribe_to_events(self) -> None:
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
         pub.subscribe(self._reset, actions.RESET)
 
+    # Resetable
     def _reset(self) -> None:
         self.__constraints_listbox.set_items([])
         self.__selected_constraint = None
@@ -83,6 +90,10 @@ class ConstraintsTab(Tab,
                               self.__remove_constraint_button)
 
     def __on_select_callback(self, ctr_id: int):
+        """Executed whenever a constraints listview item is selected (by mouse click).
+
+        :param ctr_id: Id of the selected constraint.
+        """
         selected_ctr = self.__state.model.get_constraint(id_=ctr_id)
         if selected_ctr:
             self.__selected_constraint = selected_ctr
@@ -92,7 +103,12 @@ class ConstraintsTab(Tab,
                                   self.__edit_constraint_button,
                                   self.__remove_constraint_button)
 
-    def __add(self, ctr: Any):
+    def __add(self, ctr: Any) -> None:
+        """Executed after adding a new constraint in SimpleConstraintWindow or ComplexConstraintWindow.
+
+        :param ctr: New SimpleConstraint or ComplexConstraint obtained from SimpleConstraintWindow
+            or ComplexConstraintWindow.
+        """
         _, index = self.__state.model.add_constraint(ctr)
         self.__constraints_listbox.add_item(ctr, index=index)
         # Set selected constraint to the newly created constraint
@@ -104,35 +120,39 @@ class ConstraintsTab(Tab,
                               self.__remove_constraint_button)
 
     def __edit(self, ctr: Any):
+        """Executed after editing the constraint in SimpleConstraintWindow or ComplexConstraintWindow.
+
+        :param ctr: Edited SimpleConstraint or ComplexConstraint obtained from SimpleConstraintWindow
+            or ComplexConstraintWindow.
+        """
         _, index = self.__state.model.edit_constraint(ctr)
         self.__selected_constraint = ctr
-        # index = self.__state.model.get_constraint_index(ctr)
         # Just in case if the name has changed
         self.__constraints_listbox.rename_item(ctr, index=index)    # Update constraint name in treeview
         self.__ctr_label_var.set(trim_string(ctr.name, length=LABEL_LENGTH))  # Update constraint label
 
     def __on_add(self, complex_=False):
-        # ctr_names = self.__state.model.get_all_constraints_names()
+        """Executed whenever the __add_simple_constraint_button or __add_complex_constraint_button are pressed.
+
+        :param complex_: If __add_complex_constraint_button is pressed then set to True; False otherwise.
+        """
         if complex_:
-            # ComplexConstraintWindow(self._frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
-            ComplexConstraintWindow(self._frame, callback=self.__add)
+            ComplexConstraintWindow(self, callback=self.__add)
         else:
-            # SimpleConstraintWindow(self._frame, callback=self.__on_constraint_created, check_name_with=ctr_names)
-            SimpleConstraintWindow(self._frame, callback=self.__add)
+            SimpleConstraintWindow(self, callback=self.__add)
 
     def __on_edit(self):
+        """Executed whenever the __edit_constraint_button is pressed."""
         if self.__selected_constraint:
-            # ctr_names = [c.name for c in self.__state.model.get_all_constraints() if c != self.__selected_constraint]
             if isinstance(self.__selected_constraint, SimpleConstraint):
-                # SimpleConstraintWindow(self._frame, constraint=self.__selected_constraint,
-                #                        callback=self.__on_constraint_edited, check_name_with=ctr_names)
-                SimpleConstraintWindow(self._frame, constraint=self.__selected_constraint, callback=self.__edit)
+                SimpleConstraintWindow(self, constraint=self.__selected_constraint, callback=self.__edit)
             else:
-                # ComplexConstraintWindow(self._frame, constraint=self.__selected_constraint,
-                #                         callback=self.__on_constraint_edited, check_name_with=ctr_names)
-                ComplexConstraintWindow(self._frame, constraint=self.__selected_constraint, callback=self.__edit)
+                ComplexConstraintWindow(self, constraint=self.__selected_constraint, callback=self.__edit)
 
     def __remove_constraint(self):
+        """Executed whenever the __remove_constraint_button is pressed.
+        Removes selected constraint from model.
+        """
         if self.__selected_constraint:
             self.__state.model.remove_constraint(self.__selected_constraint)
             self.__constraints_listbox.remove_item_recursively(self.__selected_constraint)
@@ -144,5 +164,6 @@ class ConstraintsTab(Tab,
                                   self.__remove_constraint_button)
 
     def __on_model_loaded(self):
+        """Executed whenever a model is loaded from file."""
         ctrs = self.__state.model.get_all_constraints()
         self.__constraints_listbox.set_items(ctrs)

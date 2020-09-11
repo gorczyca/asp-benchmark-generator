@@ -16,27 +16,51 @@ HOVER_TAG = 'hover'
 
 class ScrollbarListbox(HasCommonSetup,
                        ttk.Frame):
+    """Scrollable listbox / Treeview widget with optional scrollbars.
+
+    Attributes:
+        __selected_item_id: Currently selected item.
+        __hovered_item_id: Currently hovered over item.
+    """
     def __init__(self,
                  parent_frame,
-                 values: List[Any] = None,
-                 columns: List[Column] = None,
+                 values: Optional[List[Any]] = None,
+                 columns: Optional[List[Column]] = None,
                  on_select_callback: Optional[Callable[[int], Any]] = None,
                  heading: str = DEFAULT_HEADING,
-                 extract_id: Callable[[Any], int] = None,
-                 extract_text: Callable[[Any], str] = None,
-                 extract_values: Callable[[Any], Any] = None,
-                 extract_ancestor: Callable[[Any], Any] = None,
+                 extract_id: Optional[Callable[[Any], int]] = None,
+                 extract_text: Optional[Callable[[Any], str]] = None,
+                 extract_values: Optional[Callable[[Any], Any]] = None,
+                 extract_ancestor: Optional[Callable[[Any], Any]] = None,
                  has_scrollbars: bool = True,
                  enable_hover: bool = True):
+        """Creates ScrollbarListbox widget.
 
-        self.__extract_id = extract_id
-        self.__extract_text = extract_text
-        self.__extract_values = extract_values
-        self.__extract_ancestor = extract_ancestor if extract_ancestor is not None else lambda x: NO_ANCESTOR
-        self.__on_select_callback = on_select_callback
-        self.__has_scrollbars = has_scrollbars
-        self.__selected_item_id = None
-        self.__hovered_item_id = None
+        :param parent_frame: Parent frame.
+        :param values: Initial values to show in the ScrollbarListbox.
+        :param columns: Columns of ScrollbarListbox to present its items' properties.
+        :param on_select_callback: Callback function executed whenever an item is selected (by a mouse click).
+        :param heading: Title of the main column.
+        :param extract_id: Function determining how to extract the item's id.
+        :param extract_text: Function determining how to extract item's text for the main column.
+        :param extract_values: Function determining how to extract item's values to present them in
+            the ScrollbarListbox columns.
+        :param extract_ancestor: Function determining how to extract item's ancestor
+            - useful in case of tree structure.
+        :param has_scrollbars: Whether to show the scrollbars.
+        :param enable_hover: Whether to enable the hover option.
+        """
+
+        self.__extract_id: Callable[[Any], int] = extract_id
+        self.__extract_text: Optional[Callable[[Any], str]] = extract_text
+        self.__extract_values: Optional[Callable[[Any], Any]] = extract_values
+        self.__extract_ancestor: Optional[Callable[[Any], Any]] = extract_ancestor if extract_ancestor is not None \
+            else lambda x: NO_ANCESTOR
+        self.__on_select_callback: Optional[Callable[[int], Any]] = on_select_callback
+        self.__has_scrollbars: bool = has_scrollbars
+
+        self.__selected_item_id: Optional[int] = None
+        self.__hovered_item_id: Optional[int] = None
 
         ttk.Frame.__init__(self, parent_frame)
         HasCommonSetup.__init__(self)
@@ -70,7 +94,14 @@ class ScrollbarListbox(HasCommonSetup,
             self.__listbox_x_scrollbar.grid(row=1, column=0, sticky=tk.EW + tk.S)
             self.__listbox_y_scrollbar.grid(row=0, column=1, sticky=tk.NS + tk.E)
 
-    def __configure(self, heading: str, enable_hover: bool, columns: List[Column], values: List[Any]):
+    def __configure(self, heading: str, enable_hover: bool, columns: List[Column], values: List[Any]) -> None:
+        """Configures ScrollbarListbox options.
+
+        :param heading: Title of the main column.
+        :param values: Initial values to show in the ScrollbarListbox.
+        :param columns: Columns of ScrollbarListbox to present its items' properties.
+        :param enable_hover: Whether to enable the hover option.
+        """
         self.__listbox.column(COL_ID_MAIN, stretch=tk.YES)
         self.__listbox.heading(COL_ID_MAIN, text=heading, anchor=tk.W)
 
@@ -88,12 +119,23 @@ class ScrollbarListbox(HasCommonSetup,
         if values is not None:
             self.set_items(values)
 
-    def set_items(self, items: Any):
+    def set_items(self, items: List[Any]) -> None:
+        """Fills the ScrollbarListbox with items.
+
+        :param items: List of items to fill the ScrollbarListbox.
+        """
         self.__listbox.delete(*self.__listbox.get_children())   # Clear current items
         for i in items:
             self.add_item(i, select_item=False)
 
     def add_item(self, item: Any, index: Optional[int] = None, expand=True, select_item=True) -> None:
+        """Adds new item to ScrollbarListbox.
+
+        :param item: Item to add.
+        :param index: Item's index in ScrollbarListbox.
+        :param expand: Whether to open the item's branch (and its parent's).
+        :param select_item: Whether to highlight added item as selected.
+        """
         id_ = None if self.__extract_id is None else self.__extract_id(item)
         text = '' if self.__extract_text is None else self.__extract_text(item)
         values = () if self.__extract_values is None else self.__extract_values(item)
@@ -107,7 +149,12 @@ class ScrollbarListbox(HasCommonSetup,
         if select_item:
             self.select_item(item)
 
-    def rename_item(self, item: Any, index: Optional[int] = None):
+    def rename_item(self, item: Any, index: Optional[int] = None) -> None:
+        """Updates item's text (name) in the ScrollbarListbox.
+
+        :param item: Item to update.
+        :param index: Index in the ScrollbarListbox (useful in case of listview)
+        """
         id_ = self.__extract_id(item)
         text = self.__extract_text(item)
         self.__listbox.item(id_, text=text)
@@ -115,11 +162,19 @@ class ScrollbarListbox(HasCommonSetup,
             ancestor = self.__extract_ancestor(item)
             self.__listbox.move(id_, ancestor, index)
 
-    def remove_item_recursively(self, item: Any):
+    def remove_item_recursively(self, item: Any) -> None:
+        """Removes item and all its children recursively.
+
+        :param item: Item to remove.
+        """
         id_ = self.__extract_id(item)
         self.__listbox.delete(id_)
 
-    def remove_item_preserve_children(self, item: Any):
+    def remove_item_preserve_children(self, item: Any) -> None:
+        """Removes item but preserves all its children by changing their parent_id to the parent id of the removed item.
+
+        :param item: Item to remove.
+        """
         ancestor = self.__extract_ancestor(item)
         id_ = self.__extract_id(item)
         children = self.__listbox.get_children(id_)
@@ -127,7 +182,11 @@ class ScrollbarListbox(HasCommonSetup,
             self.__listbox.move(child, ancestor, i)
         self.__listbox.delete(id_)
 
-    def select_item(self, item: Any):
+    def select_item(self, item: Any) -> None:
+        """Highlights item in the ScrollbarListbox as selected.
+
+        :param item: Item to highlight.
+        """
         id_ = self.__extract_id(item)
         if self.__selected_item_id is not None and self.__listbox.exists(self.__selected_item_id):
             tags_ = self.__listbox.item(self.__selected_item_id)['tags']
@@ -137,7 +196,11 @@ class ScrollbarListbox(HasCommonSetup,
         self.__selected_item_id = id_
         self.__listbox.item(id_, tags=[SELECTED_TAG])
 
-    def __hover(self, event):
+    def __hover(self, event) -> None:
+        """Executed whenever mouse cursor hovers over ScrollbarListbox and enable_hover option is set to True.
+
+        :param event:
+        """
         identified_row_string = self.__listbox.identify_row(event.y)
         if identified_row_string == '':
             self.__remove_tag(HOVER_TAG, self.__hovered_item_id)
@@ -150,14 +213,25 @@ class ScrollbarListbox(HasCommonSetup,
                     self.__add_tag(HOVER_TAG, id_)
                     self.__hovered_item_id = id_
 
-    def __remove_tag(self, tag, item_id):
+    def __remove_tag(self, tag: str, item_id: int) -> None:
+        """Removes tag from item.
+
+        :param tag: Tag to remove.
+        :param item_id: Id of an item to remove the tag from.
+        """
         if item_id is not None and self.__listbox.exists(item_id):
             tags = self.__listbox.item(item_id)['tags']
             if tag in tags:
                 tags.remove(HOVER_TAG)
             self.__listbox.item(item_id, tags=tags)
 
-    def __add_tag(self, tag, item_id, remove_others=False):
+    def __add_tag(self, tag, item_id, remove_others: bool = False) -> None:
+        """Adds tag to item.
+
+        :param tag: Tag to add to item.
+        :param item_id: Id of the item to add the tag to.
+        :param remove_others: Whether to remove all other tags from the item.
+        """
         tags = []
         if remove_others:
             tags.append(tag)
@@ -169,7 +243,11 @@ class ScrollbarListbox(HasCommonSetup,
                 tags.append(tag)
         self.__listbox.item(item_id, tags=tags)
 
-    def __item_selected(self, _):
+    def __item_selected(self, _) -> None:
+        """Executed whenever a ScrollbarListbox's item is selected (by a mouse click).
+
+        Highlights the selected item as selected and executes the __on_select_callback on it.
+        """
         if self.__selected_item_id is not None and self.__listbox.exists(self.__selected_item_id):
             self.__listbox.item(self.__selected_item_id, tags=[])    # Remove highlight
         selected_item_id_str = self.__listbox.focus()
@@ -180,7 +258,11 @@ class ScrollbarListbox(HasCommonSetup,
             if self.__on_select_callback:
                 self.__on_select_callback(selected_item_id)
 
-    def update_values(self, *items):
+    def update_values(self, *items) -> None:
+        """Updates given items' values in the ScrollbarListbox.
+
+        :param items: Items to update.
+        """
         for i in items:
             values = self.__extract_values(i)
             id_ = self.__extract_id(i)

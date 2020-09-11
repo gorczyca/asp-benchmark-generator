@@ -22,6 +22,16 @@ WINDOW_HEIGHT_RATIO = 0.8
 
 class ComplexConstraintWindow(HasCommonSetup,
                               Window):
+    """Used to create/edit complex constraint.
+
+    Attributes:
+        __callback: Function to be executed when the 'OK' button is pressed, before destroying the window.
+        __constraint: New constraint / deep copy of the edited constraint.
+        __antecedent: List of SimpleConstraints forming an antecedent.
+        __consequent: List of SimpleConstraints forming a consequent.
+        __selected_antecedent: Currently selected simple constraint in the antecedent list view.
+        __selected_consequent: Currently selected simple constraint in the consequent list view.
+    """
     def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None):
         self.__state = State()
         self.__callback = callback
@@ -33,9 +43,8 @@ class ComplexConstraintWindow(HasCommonSetup,
                                                                                    for sc in constraint.antecedent]
         self.__consequent: List[SimpleConstraint] = [] if constraint is None else [copy.deepcopy(sc)
                                                                                    for sc in constraint.consequent]
-
         self.__selected_antecedent: Optional[SimpleConstraint] = None
-        self.__selected_constraint_consequent: Optional[SimpleConstraint] = None
+        self.__selected_consequent: Optional[SimpleConstraint] = None
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
@@ -153,6 +162,10 @@ class ComplexConstraintWindow(HasCommonSetup,
         self._set_geometry(width_ratio=WINDOW_WIDTH_RATIO, height_ratio=WINDOW_HEIGHT_RATIO)
 
     def __ok(self):
+        """
+
+        :return:
+        """
         try:
             self.__constraint.name = self.__name_entry_var.get()
             self.__constraint.description = self.__description_text.get(1.0, tk.END)
@@ -201,6 +214,11 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_antecedent(self, ant: SimpleConstraint):
         ant, index = self.__validate_constraint(ant, antecedent=True, added=False)
         self.__antecedent_listbox.rename_item(ant, index=index)
+        # Replace selected antecedent with edited
+        self.__antecedent.remove(self.__selected_antecedent)
+        self.__antecedent.append(ant)
+        self.__antecedent_listbox.select_item(ant)
+        self.__selected_antecedent = ant
 
     def __remove_antecedent(self):
         if self.__selected_antecedent:
@@ -232,6 +250,11 @@ class ComplexConstraintWindow(HasCommonSetup,
     def __edit_consequent(self, con: SimpleConstraint):
         con, index = self.__validate_constraint(con, antecedent=False, added=True)
         self.__consequent_listbox.rename_item(con, index=index)
+        # Replace selected antecedent with edited
+        self.__consequent.remove(self.__selected_consequent)
+        self.__consequent.append(con)
+        self.__consequent_listbox.select_item(con)
+        self.__selected_consequent = con
 
     def __remove_consequent(self):
         if self.__selected_consequent:
@@ -254,9 +277,16 @@ class ComplexConstraintWindow(HasCommonSetup,
             str_list.append(name)
         return sorted(str_list).index(name)
 
-    def __validate_constraint(self, ctr: SimpleConstraint, antecedent: bool, added: bool) -> Tuple[SimpleConstraint, int]:
-        ctr.name = normalize_name(ctr.name)
+    def __validate_constraint(self, ctr: SimpleConstraint, antecedent: bool, added: bool) -> \
+            Tuple[SimpleConstraint, int]:
+        """
 
+        :param ctr:
+        :param antecedent:
+        :param added:
+        :return:
+        """
+        ctr.name = normalize_name(ctr.name)
         selected_ctr = None if added else self.__selected_antecedent if antecedent else self.__selected_consequent
         names = [a.name for a in self.__antecedent] if antecedent else [c.name for c in self.__consequent]
         if ctr.name in names and not (selected_ctr is not None and selected_ctr.id_ == ctr.id_):

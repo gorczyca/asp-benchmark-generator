@@ -6,12 +6,28 @@ from model import SimpleConstraint
 
 
 class ComplexConstraint:
-    """
+    """Represents complex constraint, expressed in a following form:
+        if ANTECEDENT holds, then CONSEQUENT must hold.
 
+    Attributes:
+        id_: Unique identifier.
+        name: Name of the constraint.
+        description: Constraint's description.
+        antecedent: List of SimpleConstraints expressing Antecedent (conditions).
+        consequent: List of SimpleConstraint expressing Consequent.
+        antecedent_all: If True, then every element of antecedent must hold, so that it's satisfied;
+            otherwise it's enough if only one of them holds.
+        consequent_all: If True, then the all elements of consequent must evaluate to true at the same time;
+            otherwise some of them must.
     """
-    def __init__(self, id_: Optional[int] = None, name: str = None, description: str = None,
-                 antecedent: List[SimpleConstraint] = None, consequent: List[SimpleConstraint] = None,
-                 antecedent_all: bool = True, consequent_all: bool = True):
+    def __init__(self,
+                 id_: Optional[int] = None,
+                 name: str = None,
+                 description: str = None,
+                 antecedent: List[SimpleConstraint] = None,
+                 consequent: List[SimpleConstraint] = None,
+                 antecedent_all: bool = True,
+                 consequent_all: bool = True):
         self.id_: int = id_ if id_ is not None else uuid.uuid4().int
         self.name: str = name
         self.description: str = description

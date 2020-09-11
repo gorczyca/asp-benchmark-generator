@@ -1,5 +1,9 @@
+"""Basic interface for custom windows."""
+
 import tkinter as tk
 from abc import ABC, abstractmethod
+from tkinter import ttk
+from typing import Optional, Callable
 
 from view.style import BACKGROUND_COLOR_PRIMARY, WINDOW_WIDTH_RATIO, WINDOW_HEIGHT_RATIO
 
@@ -7,7 +11,15 @@ from view.style import BACKGROUND_COLOR_PRIMARY, WINDOW_WIDTH_RATIO, WINDOW_HEIG
 class Window(ABC,
              tk.Toplevel):
     @abstractmethod
-    def __init__(self, parent_frame, window_title, bind_enter_callback=None):
+    def __init__(self,
+                 parent_frame,
+                 window_title: str,
+                 bind_enter_callback: Optional[Callable] = None):
+        """
+        :param parent_frame: Parent frame.
+        :param window_title: Window title.
+        :param bind_enter_callback: Callback function, to be exectured when 'Enter' is pressed.
+        """
         tk.Toplevel.__init__(self, parent_frame, bg=BACKGROUND_COLOR_PRIMARY)
         self.grab_set()
         self.focus()

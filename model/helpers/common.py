@@ -1,3 +1,5 @@
+"""Provides helper functions for model."""
+
 from typing import Any
 import re
 
@@ -8,7 +10,12 @@ SPACE_REPLACEMENT = '_'
 VALID_NAME_REGEX = r'[a-z][a-zA-Z0-9_]*$'
 
 
-def normalize_name(name: str):
+def normalize_name(name: str) -> str:
+    """Normalizes name and checks if it's legal.
+
+    :param name: Name to normalize and check.
+    :return: Normalized name.
+    """
     if not name:
         raise BGError('Name cannot be empty.')
     name = name.replace(' ', SPACE_REPLACEMENT).lower()
@@ -20,6 +27,12 @@ def normalize_name(name: str):
 
 
 def matches(obj: Any, **kwargs):
+    """Checks if object's attributes match all the kwargs.
+
+    :param obj: Object.
+    :param kwargs: Attributes to check.
+    :return: True if object matches kwargs, False, otherwise.
+    """
     for key, val in kwargs.items():
         if getattr(obj, key) != val:
             return False

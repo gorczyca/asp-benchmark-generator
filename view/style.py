@@ -1,3 +1,5 @@
+"""Stores and creates all style data."""
+
 import tkinter as tk
 from tkinter import ttk
 
@@ -98,4 +100,5 @@ class CustomTheme(ttk.Style):
         })
 
     def use(self):
+        """Activates the theme."""
         self.theme_use(self.__name)

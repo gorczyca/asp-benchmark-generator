@@ -18,6 +18,7 @@ WINDOW_HEIGHT_RATIO = 0.425
 
 class GenerateWindow(HasCommonSetup,
                      Window):
+    """Used for setting options of the logic program file's generation."""
     def __init__(self, parent_frame, callback):
         self.__state = State()
         self.__callback = callback
@@ -49,6 +50,7 @@ class GenerateWindow(HasCommonSetup,
         self.__main_frame.columnconfigure(1, weight=1)
 
     def __ok(self):
+        """Executed whenever the __ok_button is pressed."""
         generate(self.__generate_frame.export_to_path, self.__state.model, self.__generate_frame.show_all_predicates,
                  self.__generate_frame.shown_predicates_dict)
         file_name = extract_file_name(self.__generate_frame.export_to_path)

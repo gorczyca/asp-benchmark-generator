@@ -29,6 +29,7 @@ class SolveWindow(HasCommonSetup,
         Window.__init__(self, parent_frame, WINDOW_TITLE)
         HasCommonSetup.__init__(self)
 
+        # Protect from closing this window while solving.
         self.protocol('WM_DELETE_WINDOW', lambda: self.__solve_frame.on_close(self))
 
     def _create_widgets(self) -> None:
@@ -62,14 +63,19 @@ class SolveWindow(HasCommonSetup,
         self.columnconfigure(0, weight=1)
 
     def __ok(self):
+        """Executed whenever the __ok_button is pressed."""
         try:
             self.__solve_frame.solve(self.__solve_file_path_frame.path,
-                                     on_solved=lambda: self.__change_window_controls_state(tk.NORMAL))
+                                     on_solving_finished=lambda: self.__change_window_controls_state(tk.NORMAL))
             self.__change_window_controls_state(tk.DISABLED)
         except BGError as e:
             messagebox.showerror('Error', e.message, parent=self)
 
-    def __change_window_controls_state(self, state):
+    def __change_window_controls_state(self, state) -> None:
+        """Changes the state of specific widgets to that stated in "state".
+
+        :param state: State to change the widgets to.
+        """
         change_controls_state(state,
                               self.__ok_button,
                               self.__cancel_button)

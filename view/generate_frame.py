@@ -1,5 +1,6 @@
 from tkinter import ttk
 import tkinter as tk
+from typing import Dict
 
 from code_generator.code_generator import SYMBOLS_WITH_ARITIES, INSTANCES_FACTS
 from file_operations import LP_EXTENSION
@@ -17,6 +18,7 @@ EXPORT_WINDOW_TITLE = 'Export logic program to:'
 
 class GenerateFrame(ttk.Frame,
                     HasCommonSetup):
+    """Reusable frame with all logic program generation related settings."""
     def __init__(self, parent_frame, settings: Settings, state: State, **kwargs):
         self.__state: State = state
         self.__settings: Settings = settings
@@ -70,7 +72,6 @@ class GenerateFrame(ttk.Frame,
         self.__export_to_path_frame = BrowseFilePathFrame(self, path,
                                                           widget_label_text=EXPORT_WINDOW_TITLE,
                                                           title=EXPORT_WINDOW_TITLE,
-                                                          initial_file=file_name,
                                                           default_extension=LP_EXTENSION)
 
     def _setup_layout(self) -> None:
@@ -97,14 +98,19 @@ class GenerateFrame(ttk.Frame,
         self.rowconfigure(1, weight=1)
         self.rowconfigure(2, weight=1)
 
-    def __on_mousewheel(self, event):
+    def __on_mousewheel(self, event) -> None:
+        """Executes whenever mousewheel is scrolled and cursor is inside the __show_predicates_canvas."""
         self.__show_predicates_canvas.yview_scroll(int(-1*(event.delta/120)), 'units')
 
-    def __on_unbind_scroll(self, _):
-        # This cannot be a lambda (for some reason), otherwise it does not unbind.
+    def __on_unbind_scroll(self, _) -> None:
+        """Unbinds the mousewheel scroll event from __show_predicates_canvas (whenever cursor leaves the canvas).
+
+        This cannot be a lambda expression (for some reason), because it would not unbind.
+        """
         self.__show_predicates_canvas.unbind_all('<MouseWheel>')
 
     def __on_show_all_predicates_changed(self, *_):
+        """Executes whenever __show_all_predicates_checkbox is toggled."""
         show_all = self.__show_all_predicates_checkbox_var.get()
         if show_all:
             state = tk.DISABLED
@@ -123,18 +129,28 @@ class GenerateFrame(ttk.Frame,
 
     @property
     def export_to_path(self):
+        """Returns the export to path."""
         return self.__export_to_path_frame.path
 
     @property
-    def shown_predicates_dict(self):
+    def shown_predicates_dict(self) -> Dict[str, bool]:
+        """Returns the dictionary indicating for which predicate symbols to generate the "#show" directive.
+
+        :return: Dictionary of type predicate_symbol: show.
+        """
         return {predicate_symbol: checkbox_var.get() for predicate_symbol, (checkbox_var, _1, _2)
                 in self.__show_predicates_checkbox_widgets_dict.items()}
 
     @property
-    def show_all_predicates(self):
+    def show_all_predicates(self) -> bool:
+        """Returns the __show_all_predicates_checkbox value."""
         return self.__show_all_predicates_checkbox_var.get()
 
-    def change_frame_controls_state(self, state):
+    def change_frame_controls_state(self, state) -> None:
+        """Changes widgets' state.
+
+        :param state: Desired state of the widgets (tk.NORMAL or tk.DISABLED).
+        """
         change_controls_state(state,
                               *[checkbox for (_0, _1, checkbox) in self.__show_predicates_checkbox_widgets_dict.values()],
                               self.__show_all_predicates_checkbox)

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Callable, Any
 import tkinter as tk
 from tkinter import ttk
 
@@ -14,9 +14,23 @@ WINDOW_TITLE = 'Select ports to be compatible with {0}'
 
 class SelectPortsWindow(HasCommonSetup,
                         Window):
-    def __init__(self, parent_frame, selected_port: Port, ports_right, ports_left, callback):
-        self.__state = State()
-        self.__callback = callback
+    """Windows used to create (or edit) a subset of a set of ports..
+
+    Attributes:
+        __callback: Callback function to be executed after pressing the OK button on this Window.
+        __ports_right: Set of selected ports.
+        __ports_left: Set of not-selected ports.
+        __selected_port_left: Currently selected port from __ports_right.
+        __selected_port_right: Currently selected port from __ports_left.
+    """
+    def __init__(self,
+                 parent_frame,
+                 selected_port: Port,
+                 ports_right: List[Port],
+                 ports_left: List[Port],
+                 callback: Callable[[List[Port]], Any]):
+        self.__state: State = State()
+        self.__callback: Callable[[List[Port]], Any] = callback
 
         self.__ports_right: List[Port] = ports_right
         self.__ports_left: List[Port] = ports_left
@@ -75,12 +89,21 @@ class SelectPortsWindow(HasCommonSetup,
         self._set_geometry()
 
     def __on_select_listbox_left(self, prt_id: int) -> None:
+        """Executed whenever a __ports_left_listbox item is selected (by mouse click).
+
+        :param prt_id: Id of the selected port.
+        """
         self.__selected_port_left = self.__state.model.get_port(id_=prt_id)
 
     def __on_select_listbox_right(self, prt_id: int) -> None:
+        """Executed whenever a __ports_right_listbox item is selected (by mouse click).
+
+        :param prt_id: Id of the selected port.
+        """
         self.__selected_port_right = self.__state.model.get_port(id_=prt_id)
 
     def __add_to_selected(self):
+        """Removes the __selected_port_left from __ports_left and adds it to __ports_right."""
         if self.__selected_port_left:
             prt = self.__selected_port_left
             self.__ports_left.remove(prt)
@@ -93,6 +116,7 @@ class SelectPortsWindow(HasCommonSetup,
             self.__ports_right_listbox.add_item(prt, index=index)
 
     def __remove_from_selected(self):
+        """Removes the __selected_port_right from __ports_right and adds it to __ports_left."""
         if self.__selected_port_right:
             prt = self.__selected_port_right
             self.__ports_right.remove(prt)
@@ -105,6 +129,7 @@ class SelectPortsWindow(HasCommonSetup,
             self.__ports_left_listbox.add_item(prt, index=index)
 
     def __ok(self):
+        """Executed whenever the __ok_button is pressed."""
         self.grab_release()
         self.__callback(self.__ports_right)
         self.destroy()

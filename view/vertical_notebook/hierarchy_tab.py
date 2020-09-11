@@ -36,6 +36,11 @@ class HierarchyTab(Tab,
                    HasCommonSetup,
                    SubscribesToEvents,
                    Resetable):
+    """Used to create, edit and remove components.
+
+    Attributes:
+        __selected_component: Currently selected component in the components hierarchy view.
+    """
     def __init__(self, parent_notebook):
         self.__state: State = State()
         self.__selected_component: Optional[Component] = None
@@ -46,7 +51,7 @@ class HierarchyTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__hierarchy_tree = ScrollbarListbox(self._frame,
+        self.__hierarchy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -54,7 +59,7 @@ class HierarchyTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  values=self.__state.model.hierarchy,
                                                  )
-        self.__right_frame = ttk.Frame(self._frame)
+        self.__right_frame = ttk.Frame(self)
 
         self.__cmp_name_var = tk.StringVar()
         self.__cmp_name_var.set('')
@@ -63,10 +68,10 @@ class HierarchyTab(Tab,
         self.__rename_button = ttk.Button(self.__right_frame, text='Rename', command=self.__on_rename, state=tk.DISABLED)
         self.__add_sibling_button = ttk.Button(self.__right_frame, text='Add sibling', command=self.__on_add_sibling)
         self.__add_child_button = ttk.Button(self.__right_frame, text='Add child', command=self.__on_add_child)
-        self.__remove_button = ttk.Button(self.__right_frame, text='Remove', command=self.__on_remove, state=tk.DISABLED)
+        self.__remove_button = ttk.Button(self.__right_frame, text='Remove', command=self.__remove, state=tk.DISABLED)
         self.__remove_recursively_button = ttk.Button(self.__right_frame, text='Remove recursively', state=tk.DISABLED,
-                                                      command=lambda: self.__on_remove(recursively=True))
-        self.__create_hierarchy_button = ttk.Button(self._frame, text="Create hierarchy",
+                                                      command=lambda: self.__remove(recursively=True))
+        self.__create_hierarchy_button = ttk.Button(self, text="Create hierarchy",
                                                     command=self.__on_create_hierarchy, width=14)
 
     def _setup_layout(self):
@@ -83,9 +88,9 @@ class HierarchyTab(Tab,
 
         self.__create_hierarchy_button.grid(row=1, column=0, padx=30, pady=5)
         # Hide widgets
-        self._frame.rowconfigure(0, weight=1)
-        self._frame.columnconfigure(1, weight=1, uniform='fred')
-        self._frame.columnconfigure(0, weight=3, uniform='fred')
+        self.rowconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1, uniform='fred')
+        self.columnconfigure(0, weight=3, uniform='fred')
 
         self.__right_frame.columnconfigure(0, weight=1)
 
@@ -94,8 +99,12 @@ class HierarchyTab(Tab,
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
         pub.subscribe(self._reset, actions.RESET)
 
-    # HasHierarchyTree
+    # Hierarchy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
+        """Executed whenever a tree item is selected (by mouse click).
+
+        :param cmp_id: Id of the selected component.
+        """
         selected_cmp: Component = self.__state.model.get_component(id_=cmp_id)
         self.__selected_component = selected_cmp
         self.__cmp_name_var.set(trim_string(selected_cmp.name, length=22))
@@ -105,10 +114,12 @@ class HierarchyTab(Tab,
                               self.__rename_button)
 
     def __on_model_loaded(self):
+        """Executed whenever a model is loaded from file."""
         self._reset()
         self.__build_tree()
 
     def __build_tree(self) -> None:
+        """Fills the tree view with components from model."""
         self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
 
     # Resetable
@@ -122,7 +133,13 @@ class HierarchyTab(Tab,
                               self.__rename_button)
 
     # Class-specific
-    def __add(self, cmp_name: str, level: int, parent_id: Optional[int]):
+    def __add(self, cmp_name: str, level: int, parent_id: Optional[int]) -> None:
+        """Executed after creating of a new component.
+
+        :param cmp_name: Name of a new component
+        :param level: Level of the new component.
+        :param parent_id: Id of the parent of the new component.
+        """
         cmp = Component(cmp_name, level, parent_id=parent_id, is_leaf=True, symmetry_breaking=True)
         self.__state.model.add_component(cmp)
         self.__hierarchy_tree.add_item(cmp)
@@ -135,34 +152,47 @@ class HierarchyTab(Tab,
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_add_sibling(self) -> None:
+        """Executed whenever the __add_sibling_button is pressed."""
         sibling_name = BASE_COMPONENT_NAME if self.__selected_component is None else self.__selected_component.name
         level = 0 if self.__selected_component is None else self.__selected_component.level
         parent_id = None if self.__selected_component is None else self.__selected_component.parent_id
 
-        AskStringWindow(self._frame, lambda cmp_name: self.__add(cmp_name, level, parent_id),
+        AskStringWindow(self, lambda cmp_name: self.__add(cmp_name, level, parent_id),
                         'Add sibling', f'Enter name of sibling of the {sibling_name} component.')
 
     def __on_add_child(self) -> None:
+        """Executed whenever the __add_child_button is pressed."""
         sibling_name = BASE_COMPONENT_NAME if self.__selected_component is None else self.__selected_component.name
         level = 0 if self.__selected_component is None else self.__selected_component.level + 1
         parent_id = None if self.__selected_component is None else self.__selected_component.id_
 
-        AskStringWindow(self._frame, lambda cmp_name: self.__add(cmp_name, level, parent_id),
+        AskStringWindow(self, lambda cmp_name: self.__add(cmp_name, level, parent_id),
                         'Add sibling', f'Enter name of child of the {sibling_name} component.')
 
-    def __rename(self, new_name: str):
+    def __rename(self, new_name: str) -> None:
+        """Executed after renaming __selected_component.
+
+        :param new_name: New name of the component.
+        """
         cmp = self.__state.model.rename_component(self.__selected_component, new_name)
         self.__cmp_name_var.set(trim_string(cmp.name, length=22))
         self.__hierarchy_tree.rename_item(self.__selected_component)
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_rename(self) -> None:
+        """Executed whenever the __rename_button is pressed."""
         if self.__selected_component:
-            AskStringWindow(self._frame, self.__rename, 'Rename component',
+            AskStringWindow(self, self.__rename, 'Rename component',
                             f'Enter new name for "{self.__selected_component.name}" component.',
                             string=self.__selected_component.name)
 
-    def __on_remove(self, recursively=False) -> None:
+    def __remove(self, recursively=False) -> None:
+        """Executed whenever the __rename_button or __remove_recursively_button is pressed.
+
+        :param recursively: True if __remove_recursively_button is pressed. Removes the selected component and all of
+            its children; Otherwise set to False and removes only the __selected_component, setting the
+            parent_id of its children to __selected_component.parent_id.
+        """
         if self.__selected_component:
             if recursively:
                 self.__state.model.remove_component_recursively(self.__selected_component)
@@ -179,10 +209,12 @@ class HierarchyTab(Tab,
             pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __create_hierarchy(self):
+        """Executes when the hierarchy is created (in the CreateHierarchyWindow)."""
         self.__build_tree()
         pub.sendMessage(actions.HIERARCHY_EDITED)
 
     def __on_create_hierarchy(self) -> None:
+        """Executed whenever the __create_hierarchy_button is pressed."""
         if self.__state.model.hierarchy:
             answer = messagebox.askyesno('Create hierarchy', 'Warning: hierarchy has already been created. \n '
                                                              'If you use this option again, previous hierarchy will be '
@@ -192,7 +224,7 @@ class HierarchyTab(Tab,
             if not answer:
                 return
 
-        CreateHierarchyWindow(self._frame, self.__create_hierarchy)
+        CreateHierarchyWindow(self, self.__create_hierarchy)
 
 
 

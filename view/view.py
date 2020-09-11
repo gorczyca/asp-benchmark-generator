@@ -8,14 +8,13 @@ import actions
 from file_operations import extract_file_name
 from view.menu import Menu
 from view.abstract import HasCommonSetup, SubscribesToEvents
-from view.main_notebook import MainNotebook, EncodingTab, InstancesTab
-from view.vertical_notebook import VerticalNotebook, HierarchyTab, AssociationsTab, \
+from view.main_notebook import EncodingTab, InstancesTab
+from view.vertical_notebook import HierarchyTab, AssociationsTab, \
     PortsTab, ResourcesTab, ConstraintsTab
 
 
 NEW_FILE_NAME = 'untitled'
 WINDOW_TITLE = 'Benchmark Generator'
-UNSAVED_CHANGES_SYMBOL = '*'
 
 
 class View(ttk.Frame,
@@ -24,66 +23,68 @@ class View(ttk.Frame,
     """Class holds all references for widgets.
 
     Attributes:
-        __menu:
+        __main_window: Application's main window (tk.Tk).
     """
-    def __init__(self, main_window):
+    def __init__(self,
+                 main_window: tk.Tk):
         ttk.Frame.__init__(self, main_window)
 
         main_window.deiconify()     # Bring back window after withdraw
 
-        self.__main_window = main_window
-        self.__window_title: Optional[str] = None
+        self.__main_window: tk.Tk = main_window
 
         HasCommonSetup.__init__(self)
         SubscribesToEvents.__init__(self)
 
     def _create_widgets(self) -> None:
         self.__menu = Menu(self.__main_window)
-        self.__main_notebook = MainNotebook(self.__main_window)
+        self.__main_notebook = ttk.Notebook(self.__main_window, style='Main.TNotebook')
 
-        self.__encoding_frame = EncodingTab(self.__main_notebook.notebook)
-        self.__instances_tab = InstancesTab(self.__main_notebook.notebook)
+        self.__encoding_frame = EncodingTab(self.__main_notebook)
+        self.__instances_tab = InstancesTab(self.__main_notebook)
 
-        self.__vertical_notebook = VerticalNotebook(self.__encoding_frame.frame)
+        self.__vertical_notebook = ttk.Notebook(self.__encoding_frame, style='Vertical.TNotebook')
 
-        self.__hierarchy_tab = HierarchyTab(self.__vertical_notebook.notebook)
-        self.__associations_tab = AssociationsTab(self.__vertical_notebook.notebook)
-        self.__ports_tab = PortsTab(self.__vertical_notebook.notebook)
-        self.__resources_tab = ResourcesTab(self.__vertical_notebook.notebook)
-        self.__constraints_tab = ConstraintsTab(self.__vertical_notebook.notebook)
+        self.__hierarchy_tab = HierarchyTab(self.__vertical_notebook)
+        self.__associations_tab = AssociationsTab(self.__vertical_notebook)
+        self.__ports_tab = PortsTab(self.__vertical_notebook)
+        self.__resources_tab = ResourcesTab(self.__vertical_notebook)
+        self.__constraints_tab = ConstraintsTab(self.__vertical_notebook)
 
     def _setup_layout(self) -> None:
+        self.__main_notebook.grid(row=0, column=0, sticky=tk.NSEW)
+        self.__vertical_notebook.grid(row=0, column=0, sticky=tk.NSEW)
+
         self.__main_window.rowconfigure(0, weight=1)
         self.__main_window.columnconfigure(0, weight=1)
 
         self.__set_geometry()
-        self.__init_title()
+        self.__set_window_title()
 
     def _subscribe_to_events(self) -> None:
-        pub.subscribe(self.__on_model_saved, actions.MODEL_SAVED)
-        pub.subscribe(self.__init_title, actions.RESET)
+        pub.subscribe(self.__set_window_title, actions.MODEL_SAVED)
+        pub.subscribe(self.__set_window_title, actions.RESET)
 
-    def __init_title(self):
-        window_title = f'{NEW_FILE_NAME} - {WINDOW_TITLE}'
-        self.__main_window.title(window_title)
-        self.__window_title = window_title
+    def __set_window_title(self, file_name: Optional[str] = None) -> None:
+        """Executed whenever the model is saved to a file or a new project is created.
+        Updates window's title accordingly.
 
-    def __on_model_saved(self, file_name=None):
+        :param file_name: Path to the file the model has been saved to.
+        """
         if not file_name:
             file_name = NEW_FILE_NAME
         else:
             file_name = extract_file_name(file_name)
-        window_title = f'{file_name} - {WINDOW_TITLE}'
-        self.__main_window.title(window_title)
-        self.__window_title = window_title
+        self.__main_window.title(f'{file_name} - {WINDOW_TITLE}')
 
-    def __set_geometry(self):
+    def __set_geometry(self) -> None:
+        """Sets window's dimensions."""
         try:
             self.__main_window.wm_state('zoomed')   # Windows
-        except tk.TclError as e:
+        except tk.TclError:
             try:
                 self.__main_window.wm_attributes('-zoomed', 1)  # Linux / requires tests
-            except tk.TclError as e:
+            except tk.TclError:
                 screen_width = self.__main_window.winfo_screenwidth()
                 screen_height = self.__main_window.winfo_screenheight()
                 self.__main_window.geometry(f'{screen_width}x{screen_height}+0+0')

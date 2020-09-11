@@ -6,9 +6,11 @@ class Resource:
 
     Attributes:
         id_: Unique identifier
-        name: Unique name
+        name: Name
     """
-    def __init__(self, name: str, id_: int = None):
+    def __init__(self,
+                 name: str,
+                 id_: int = None):
         self.id_ = id_ if id_ is not None else uuid.uuid4().int
         self.name = name
 

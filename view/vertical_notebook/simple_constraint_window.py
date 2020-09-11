@@ -19,6 +19,15 @@ TREEVIEW_HEADING = 'Component'
 
 class SimpleConstraintWindow(HasCommonSetup,
                              Window):
+    """Used create/edit SimpleConstraints.
+
+    Attributes:
+        __callback: Callback function to be executed after pressing the OK button on this Window.
+        __constraint: SimpleConstraint to add / create.
+        __components_ids: List of component ids concerned by this constraint.
+        __selected_hierarchy_tree_item: Currently selected component in the components hierarchy view.
+        __selected_listbox_item: Currently selected component in the selected components listview.
+    """
     def __init__(self, parent_frame,
                  callback: Optional[Callable],
                  constraint: Optional[SimpleConstraint] = None):
@@ -137,13 +146,23 @@ class SimpleConstraintWindow(HasCommonSetup,
 
         self._set_geometry()
 
+    # Hierarchy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
+        """Executed whenever a tree item is selected (by mouse click).
+
+        :param cmp_id: Id of the selected component.
+        """
         self.__selected_hierarchy_tree_item = self.__state.model.get_component(id_=cmp_id)
 
     def __on_select_listbox_component(self, cmp_id: int) -> None:
+        """Executed whenever a listview item is selected (by mouse click).
+
+        :param cmp_id: Id of the selected component.
+        """
         self.__selected_listbox_item = self.__state.model.get_component(id_=cmp_id)
 
     def __add_to_selected(self):
+        """Adds the __selected_hierarchy_tree_item to the list of selected component ids."""
         if self.__selected_hierarchy_tree_item:
             if self.__selected_hierarchy_tree_item.id_ not in self.__components_ids:
                 self.__components_ids.append(self.__selected_hierarchy_tree_item.id_)
@@ -152,6 +171,7 @@ class SimpleConstraintWindow(HasCommonSetup,
                 self.__selected_hierarchy_tree_item = None
 
     def __add_to_selected_recursively(self):
+        """Adds the __selected_hierarchy_tree_item and all its children to the list of selected component ids."""
         if self.__selected_hierarchy_tree_item:
             for c in self.__state.model.get_components_children(self.__selected_hierarchy_tree_item):
                 if c.id_ not in self.__components_ids:
@@ -163,6 +183,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__selected_hierarchy_tree_item = None
 
     def __remove_from_selected(self):
+        """Adds the __selected_hierarchy_tree_item to the list of selected component ids."""
         if self.__selected_listbox_item:
             self.__components_ids.remove(self.__selected_listbox_item.id_)
             self.__components_listbox.remove_item_recursively(self.__selected_listbox_item)
@@ -171,6 +192,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__selected_listbox_item = None
 
     def __on_has_min_changed(self, *_):
+        """Executed whenever the __has_min_checkbox is toggled"""
         has_min = self.__has_min_checkbox_var.get()
         if has_min:
             self.__min_spinbox.config(state=tk.ACTIVE)
@@ -180,6 +202,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__min_spinbox.config(state=tk.DISABLED)
 
     def __on_has_max_changed(self, *_):
+        """Executed whenever the __has_max_checkbox is toggled"""
         has_max = self.__has_max_checkbox_var.get()
         if has_max:
             self.__max_spinbox.config(state=tk.ACTIVE)
@@ -195,6 +218,7 @@ class SimpleConstraintWindow(HasCommonSetup,
             self.__max_spinbox.config(state=tk.DISABLED)
 
     def __on_min_changed(self, *_):
+        """Executed whenever the __min_spinbox value changes."""
         try:
             min_ = self.__min_spinbox_var.get()
             has_max = self.__has_max_checkbox_var.get()
@@ -202,10 +226,11 @@ class SimpleConstraintWindow(HasCommonSetup,
                 max_ = self.__max_spinbox_var.get()
                 if min_ > max_:
                     self.__max_spinbox_var.set(min_)
-        except tk.TclError as e:
-            print(e)
+        except tk.TclError:
+            pass
 
     def __on_max_changed(self, *_):
+        """Executed whenever the __max_spinbox value changes."""
         try:
             max_ = self.__max_spinbox_var.get()
             has_min = self.__has_min_checkbox_var.get()
@@ -213,10 +238,11 @@ class SimpleConstraintWindow(HasCommonSetup,
                 min_ = self.__min_spinbox_var.get()
                 if min_ > max_:
                     self.__min_spinbox_var.set(max_)
-        except tk.TclError as e:
-            print(e)
+        except tk.TclError:
+            pass
 
     def __ok(self):
+        """Executed whenever the __ok_button is pressed."""
         min_ = None
         max_ = None
         if self.__has_min_checkbox_var.get():   # If component has min

@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog
+from typing import Optional
 
 from file_operations import ALL_FILES_TYPE
 from view.abstract import HasCommonSetup
@@ -12,21 +13,29 @@ SELECT_PATH_STRING = '(Select file path)'
 
 class BrowseFilePathFrame(ttk.Frame,
                           HasCommonSetup):
-    def __init__(self, parent_frame,
-                 path: str = None,
+    """Reusable frame to obtain the file path.
+
+    Attributes:
+        __path: File path.
+            The parameter passed to it is the string obtained from this window.
+        __widget_label_text: Text to be displayed in the frame.
+        __default_extension: File's default extension.
+        __save: If True then show save file dialog; otherwise show open file dialog.
+        __title: (ask file) Window's title.
+    """
+    def __init__(self,
+                 parent_frame: ttk.Frame,
+                 path: Optional[str] = None,
                  widget_label_text: str = '',
                  default_extension: str = '',
-                 initial_file: str = '',
                  title: str = '',
                  save: bool = True,
                  **kwargs):
         ttk.Frame.__init__(self, parent_frame, **kwargs)
-
         self.__path = path
         self.__widget_label_text = widget_label_text
         self.__default_extension = default_extension
         self.__save = save
-        self.__initial_file = initial_file
         self.__title = title if title else 'Save as:' if save else 'Open as:'
 
         HasCommonSetup.__init__(self)
@@ -48,10 +57,11 @@ class BrowseFilePathFrame(ttk.Frame,
         self.columnconfigure(1, weight=1)
 
     def __on_browse_path(self):
+        """Executed whenever __browse_file_button is pressed."""
         if self.__save:
             file_path = filedialog.asksaveasfilename(defaultextension=self.__default_extension,
                                                      filetypes=((f'{self.__default_extension} file', f'*{self.__default_extension}'), ALL_FILES_TYPE),
-                                                     initialfile=self.__initial_file, title=self.__title,
+                                                     initialfile=self.__path, title=self.__title,
                                                      parent=self)
         else:
             file_path = filedialog.askopenfilename(filetypes=((f'{self.__default_extension} file', f'*{self.__default_extension}'), ALL_FILES_TYPE),
@@ -64,9 +74,14 @@ class BrowseFilePathFrame(ttk.Frame,
 
     @property
     def path(self) -> str:
+        """Returns the file path."""
         return self.__path
 
     def change_state(self, state):
+        """Changes widgets' state.
+
+        :param state: Desired state of the widgets (tk.NORMAL or tk.DISABLED).
+        """
         self.__browse_file_button.config(state=state)
 
 
