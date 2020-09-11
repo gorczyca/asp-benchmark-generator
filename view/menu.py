@@ -74,7 +74,7 @@ class Menu(tk.Menu):
 
     def __generate(self):
         """Executed whenever run_menu's Generate & solve command is selected."""
-        GenerateWindow(self.__parent_frame, None)
+        GenerateWindow(self.__parent_frame)
 
     def __new(self):
         """Executed whenever file_menu's New command is selected."""

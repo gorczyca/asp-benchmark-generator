@@ -38,7 +38,6 @@ class SolveFrame(ttk.Frame,
                  **kwargs):
         self.__state: State = state
         self.__settings: Settings = settings
-        self.__parent_frame = parent_frame
 
         self.__answer_sets_count_label_string: str = '?'
         self.__answer_sets_count: int = 0
@@ -61,8 +60,8 @@ class SolveFrame(ttk.Frame,
         self.__representation_radiobuttons_label = ttk.Label(self, text='Instance representation:')
         self.__representation_radiobuttons_var = tk.IntVar(value=self.__settings.instance_representation.value)
         self.__representation_radiobuttons = []
-        for Repr in InstanceRepresentation:
-            radiobutton = ttk.Radiobutton(self, value=Repr.value, text=Repr.name,
+        for inst_repr in InstanceRepresentation:
+            radiobutton = ttk.Radiobutton(self, value=inst_repr.value, text=inst_repr.name,
                                           variable=self.__representation_radiobuttons_var)
             self.__representation_radiobuttons.append(radiobutton)
 

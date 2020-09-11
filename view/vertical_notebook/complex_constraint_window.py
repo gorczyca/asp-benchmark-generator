@@ -1,11 +1,10 @@
 import copy
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Callable, Any
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 from exceptions import BGError
 from model import ComplexConstraint, SimpleConstraint
-from state import State
 from view.scrollbars_listbox import ScrollbarListbox
 from view.abstract import HasCommonSetup, Window
 from view.vertical_notebook.simple_constraint_window import SimpleConstraintWindow
@@ -32,8 +31,7 @@ class ComplexConstraintWindow(HasCommonSetup,
         __selected_antecedent: Currently selected simple constraint in the antecedent list view.
         __selected_consequent: Currently selected simple constraint in the consequent list view.
     """
-    def __init__(self, parent_frame, callback, constraint: Optional[ComplexConstraint] = None):
-        self.__state = State()
+    def __init__(self, parent_frame, callback: Callable[[Any], Any], constraint: Optional[ComplexConstraint] = None):
         self.__callback = callback
 
         self.__constraint: ComplexConstraint = copy.deepcopy(constraint) if constraint is not None \
@@ -162,10 +160,8 @@ class ComplexConstraintWindow(HasCommonSetup,
         self._set_geometry(width_ratio=WINDOW_WIDTH_RATIO, height_ratio=WINDOW_HEIGHT_RATIO)
 
     def __ok(self):
-        """
-
-        :return:
-        """
+        """Executed whenever the __ok_button is pressed. Rewrites the information from window to the constraint object,
+        calls the callback on it and destroys the window."""
         try:
             self.__constraint.name = self.__name_entry_var.get()
             self.__constraint.description = self.__description_text.get(1.0, tk.END)
@@ -181,6 +177,10 @@ class ComplexConstraintWindow(HasCommonSetup,
             messagebox.showerror('Error', e.message, parent=self)
 
     def __on_select_antecedent(self, id_: int) -> None:
+        """Executed whenever a __antecedent_listbox item is selected (by mouse click).
+
+        :param id_: Id of the selected antecedent item.
+        """
         self.__selected_antecedent = next((a for a in self.__antecedent if a.id_ == id_), None)
         # Enable widgets
         change_controls_state(tk.NORMAL,
@@ -188,16 +188,25 @@ class ComplexConstraintWindow(HasCommonSetup,
                               self.__remove_antecedent_button)
 
     def __on_select_consequent(self, id_: int) -> None:
+        """Executed whenever a __consequent_listbox item is selected (by mouse click).
+
+        :param id_: Id of the selected consequent item.
+        """
         self.__selected_consequent = next((c for c in self.__consequent if c.id_ == id_), None)
         # Enable widgets
         change_controls_state(tk.NORMAL,
                               self.__edit_consequent_button,
                               self.__remove_consequent_button)
 
-    def __on_add_antecedent(self):
+    def __on_add_antecedent(self) -> None:
+        """Executed whenever the __add_antecedent_button is pressed."""
         SimpleConstraintWindow(self, callback=self.__add_antecedent)
 
-    def __add_antecedent(self, ant: SimpleConstraint):
+    def __add_antecedent(self, ant: SimpleConstraint) -> None:
+        """Executed whenever an item is added to antecedent.
+
+        :param ant: Item to add to antecedent.
+        """
         ant, index = self.__validate_constraint(ant, antecedent=True, added=True)
         self.__antecedent.append(ant)
         self.__antecedent_listbox.add_item(ant, index=index)
@@ -207,11 +216,16 @@ class ComplexConstraintWindow(HasCommonSetup,
                               self.__edit_antecedent_button,
                               self.__remove_antecedent_button)
 
-    def __on_edit_antecedent(self):
+    def __on_edit_antecedent(self) -> None:
+        """Executed whenever the __edit_antecedent_button is pressed."""
         if self.__selected_antecedent:
             SimpleConstraintWindow(self, constraint=self.__selected_antecedent, callback=self.__edit_antecedent)
 
-    def __edit_antecedent(self, ant: SimpleConstraint):
+    def __edit_antecedent(self, ant: SimpleConstraint) -> None:
+        """Executed whenever an item from antecedent is edited.
+
+        :param ant: Edited item from antecedent.
+        """
         ant, index = self.__validate_constraint(ant, antecedent=True, added=False)
         self.__antecedent_listbox.rename_item(ant, index=index)
         # Replace selected antecedent with edited
@@ -220,7 +234,8 @@ class ComplexConstraintWindow(HasCommonSetup,
         self.__antecedent_listbox.select_item(ant)
         self.__selected_antecedent = ant
 
-    def __remove_antecedent(self):
+    def __remove_antecedent(self) -> None:
+        """Executes whenever __remove_antecedent_button is pressed. Removes item from antecedent."""
         if self.__selected_antecedent:
             self.__antecedent.remove(self.__selected_antecedent)
             self.__antecedent_listbox.remove_item_recursively(self.__selected_antecedent)
@@ -230,10 +245,15 @@ class ComplexConstraintWindow(HasCommonSetup,
                                   self.__edit_antecedent_button,
                                   self.__remove_antecedent_button)
 
-    def __on_add_consequent(self):
+    def __on_add_consequent(self) -> None:
+        """Executed whenever the __add_consequent_button is pressed."""
         SimpleConstraintWindow(self, callback=self.__add_consequent)
 
-    def __add_consequent(self, con: SimpleConstraint):
+    def __add_consequent(self, con: SimpleConstraint) -> None:
+        """Executed whenever an item is added to consequent.
+
+        :param con: Item to add to consequent.
+        """
         con, index = self.__validate_constraint(con, antecedent=False, added=True)
         self.__consequent.append(con)
         self.__consequent_listbox.add_item(con, index=index)
@@ -243,11 +263,16 @@ class ComplexConstraintWindow(HasCommonSetup,
                               self.__edit_consequent_button,
                               self.__remove_consequent_button)
 
-    def __on_edit_consequent(self):
+    def __on_edit_consequent(self) -> None:
+        """Executed whenever the __edit_consequent_button is pressed."""
         if self.__selected_consequent:
             SimpleConstraintWindow(self, constraint=self.__selected_consequent, callback=self.__edit_consequent)
 
-    def __edit_consequent(self, con: SimpleConstraint):
+    def __edit_consequent(self, con: SimpleConstraint) -> None:
+        """Executed whenever an item from consequent is edited.
+
+        :param con: Edited item from consequent.
+        """
         con, index = self.__validate_constraint(con, antecedent=False, added=True)
         self.__consequent_listbox.rename_item(con, index=index)
         # Replace selected antecedent with edited
@@ -256,7 +281,7 @@ class ComplexConstraintWindow(HasCommonSetup,
         self.__consequent_listbox.select_item(con)
         self.__selected_consequent = con
 
-    def __remove_consequent(self):
+    def __remove_consequent(self) -> None:
         if self.__selected_consequent:
             self.__consequent.remove(self.__selected_consequent)
             self.__consequent_listbox.remove_item_recursively(self.__selected_consequent)
@@ -265,26 +290,26 @@ class ComplexConstraintWindow(HasCommonSetup,
                                   self.__edit_consequent_button,
                                   self.__remove_consequent_button)
 
-    def __get_antecedent_names(self) -> List[str]:
-        return [a.name for a in self.__antecedent]
-
-    def __get_consequent_names(self) -> List[str]:
-        return [c.name for c in self.__consequent]
-
     @staticmethod
-    def __get_element_index(str_list: List[str], name: str):
-        if name not in str_list:
-            str_list.append(name)
-        return sorted(str_list).index(name)
+    def __get_element_index(str_list: List[str], item: str) -> int:
+        """Returns an index of an name on a list. If element is not present on the list, it gets added to it.
+
+        :param str_list: List of strings.
+        :param item: Item.
+        :return: Index of the item on the list.
+        """
+        if item not in str_list:
+            str_list.append(item)
+        return sorted(str_list).index(item)
 
     def __validate_constraint(self, ctr: SimpleConstraint, antecedent: bool, added: bool) -> \
             Tuple[SimpleConstraint, int]:
-        """
+        """Validates an item of either antecedent or consequent and normalizes it's name.
 
-        :param ctr:
-        :param antecedent:
-        :param added:
-        :return:
+        :param ctr: item.
+        :param antecedent: If True then the item is a part of antecedent; Otherwise, a part of consequent.
+        :param added: If True then item is added; Otherwise edited.
+        :return: Tuple of the form (validate item, its index in the list of antecedents or consequents)
         """
         ctr.name = normalize_name(ctr.name)
         selected_ctr = None if added else self.__selected_antecedent if antecedent else self.__selected_consequent

@@ -19,9 +19,8 @@ WINDOW_HEIGHT_RATIO = 0.425
 class GenerateWindow(HasCommonSetup,
                      Window):
     """Used for setting options of the logic program file's generation."""
-    def __init__(self, parent_frame, callback):
+    def __init__(self, parent_frame):
         self.__state = State()
-        self.__callback = callback
         self.__settings = Settings.get_settings()
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)

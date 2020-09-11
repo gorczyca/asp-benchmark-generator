@@ -208,7 +208,7 @@ class AssociationsTab(Tab,
 
     def __on_has_association_changed(self, *_):
         """Executed whenever the __has_association_checkbox is toggled"""
-        if self.__hierarchy_tree and self.__selected_component:
+        if self.__selected_component:
             has_association = self.__has_association_checkbox_var.get()
             if has_association:
                 if not self.__selected_component.association:
@@ -271,34 +271,32 @@ class AssociationsTab(Tab,
 
     def __on_min_changed(self, *_):
         """Executed whenever the __min_spinbox_var value changes."""
-        if self.__selected_component and self.__hierarchy_tree:
-            if self.__selected_component.association:
-                # This gets triggered at unpredicted moments (e.g. enabling and disabling widgets
-                # so it's necessary to check this condition.
-                try:
-                    min_ = self.__min_spinbox_var.get()
-                    self.__selected_component.association.min_ = min_
-                    if self.__selected_component.association.max_ is not None \
-                       and self.__selected_component.association.max_ < min_:  # If max < min; set max to min
-                        self.__selected_component.association.max_ = min_
-                        self.__max_spinbox_var.set(min_)
-                except tk.TclError:
-                    self.__selected_component.association.min_ = None
-                finally:
-                    self.__hierarchy_tree.update_values(self.__selected_component)
+        if self.__selected_component and self.__selected_component.association:
+            # This gets triggered at unpredicted moments (e.g. enabling and disabling widgets
+            # so it's necessary to check this condition.
+            try:
+                min_ = self.__min_spinbox_var.get()
+                self.__selected_component.association.min_ = min_
+                if self.__selected_component.association.max_ is not None \
+                   and self.__selected_component.association.max_ < min_:  # If max < min; set max to min
+                    self.__selected_component.association.max_ = min_
+                    self.__max_spinbox_var.set(min_)
+            except tk.TclError:
+                self.__selected_component.association.min_ = None
+            finally:
+                self.__hierarchy_tree.update_values(self.__selected_component)
 
     def __on_max_changed(self, *_):
         """Executed whenever the __max_spinbox_var value changes."""
-        if self.__selected_component and self.__hierarchy_tree:
-            if self.__selected_component.association:
-                try:
-                    max_ = self.__max_spinbox_var.get()
-                    self.__selected_component.association.max_ = max_
-                    if self.__selected_component.association.min_ is not None \
-                       and self.__selected_component.association.min_ > max_:  # If min > max; set min to max
-                        self.__selected_component.association.min_ = max_
-                        self.__min_spinbox_var.set(max_)
-                except tk.TclError:
-                    self.__selected_component.association.max_ = None
-                finally:
-                    self.__hierarchy_tree.update_values(self.__selected_component)
+        if self.__selected_component and self.__selected_component.association:
+            try:
+                max_ = self.__max_spinbox_var.get()
+                self.__selected_component.association.max_ = max_
+                if self.__selected_component.association.min_ is not None \
+                   and self.__selected_component.association.min_ > max_:  # If min > max; set min to max
+                    self.__selected_component.association.min_ = max_
+                    self.__min_spinbox_var.set(max_)
+            except tk.TclError:
+                self.__selected_component.association.max_ = None
+            finally:
+                self.__hierarchy_tree.update_values(self.__selected_component)
