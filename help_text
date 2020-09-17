@@ -1,0 +1,273 @@
+<tab>General information</tab>
+<title>General information</title>
+
+This guide explains how to use the <b>benchmark generator</b> to create the ASP encodings of configuration problem instances, solve them and extract answers. The program  utilizes the ideas presented in
+
+<i>T. Soininen, I. Niemelä, J. Tiihonen, and R. Sulonen. "Representing Configuration Knowledge with Weight Constraint Rules" (2001)</i>
+
+such as taxonomy, associations, ports, resources and constraints. The concept of symmetry breaking and variable number of component's type instances is based on:
+
+<i>G. Friedrich, A. Ryabokon, Andreas A. Falkner, Alois Haselböck, G. Schenner, and H. Schreiner. "(Re)configuration using Answer Set Programming" (2011)</i>.
+
+Modelling of the configuration problem with the benchmark generator is divided into two parts, following the good practices of ASP modelling -- <b>encoding</b> and <b>instances</b>. The first part allows user to define the rules of a correct configuration, whereas the latter one is used (mostly) to define the actual number of components available.
+All encoding-related options are available in the <b>Encoding</b> tab, located in the top-left corner of the program's window. The <b>instances</b> tab is located right next to it.
+
+<tab>Taxonomy</tab>
+<title>Taxonomy</title>
+
+Components form a tree stucture, a taxonomy of elements — from the most abstract to the most tangible ones. <b>Leaf</b> components (viz. components with no children) correspond to a real world object, whereas <b>non-leaf</b> components always form some kind of a "category". An example a non-leaf component can be an <i>operating system</b>, while <i>Windows 10 Home 64-bit</i> would be its leaf (grand)child.
+
+There is only one <b>root component</b> — the component that's configuration is the goal of this program.
+
+In order to modify the taxonomy select the <b>Taxonomy</b> tab in the left panel.
+
+<h>Creating a taxonomy</h>
+
+To create a complete taxonomy press the button <b>Create taxonomy</b>, which is located at the bottom of the <b>Taxonomy</b> tab. You will be presented with a text area, where you can enter the desired taxonomy. Each line must contain only one component. If component A, located above component B is on the same indentation level as A, that means the components are <b>siblings</b> in the taxonomy tree. If B is supposed to be A's child, it should be preceeded with tabulation. E.g.
+
+<code>componentA</code>
+<code>	componentAs_child</code>
+<code>componentB</code>
+<code>	componentBs_child</code>
+<code>		componentBs_childs_child</code>
+
+<u>Warning:</u> If you select <b>Create taxonomy</b> option after taxonomy has already been created, even if you don't change much in the taxonomy <u>you will lose all information about constraints and associations, information about which ports the components have and the amount of resources they produce</u>. If you want to make subtle changes only, consider using options on the right of the <b>Taxonomy</b> tab (such as <b>Rename component</b>, <b>Add sibling</b> etc).
+
+<h>Adding a component</h>
+
+<color>Adding a component's sibling</color>
+
+To add a sibling, select the component that you want to add the sibling of (from the treeview on the left-hand side), then press <b>Add sibling</b> button from the right panel.
+
+<color>Adding a component's child</color>
+
+To add a child, select the component that you want to add the child of (from the treeview on the left-hand side), then press <b>Add child</b> button from the right panel.
+
+<h>Renaming a component</h>
+
+To rename component, select the component you want to rename (from the treeview on the left-hand side), then press <b>Rename component</b> button from the right panel.
+
+<h>Removing a component</h>
+
+<color>Remove component preserving its children</color>
+
+To remove a component, but preserve its children, select the component that you want to remove (from the treeview on the left-hand side), then press <b>Remove</b> button from the right panel. Selected component will be removed, but its children will become the children of the parent of the removed component.
+
+<color>Remove component and all its children</color>
+
+To remove a component and all its children, select the component that you want to remove, then press <b>Remove recursively</b> button from the right panel.
+
+<u>Note:</u> When removing a component that is referenced in any <b>constraint</b>, the constraint referencing it <u>will be removed as well</u>. If that happens, you will be notified which constraints have been removed.
+
+<tab>Associations</tab>
+<title>Associations</title>
+
+In the <b>Associations</b> tab you can configure the one-to-many associations between the root component and other components. E.g. you can state that a valid <i>pc</i> must contain precisely 1 <i>power supply unit</i> and between 1 and 6 <i>disk drives</i>.
+
+<h>Adding an association</h>
+
+To add an association, select a component (from the treeview on the right-hand side), then tick the <b>Has association?</b> checkbox located on the left-hand side, right under the selected component's name. This will enable the <b>Has min?</b> and <b>Has max?</b> checkboxes.
+
+<color>Setting lower bound</color>
+
+To set the association's lower bound, tick the <b>Has min?</b> checkbox. That will enable the entry under the checkbox, which can be used to enter the desired lower bound value. To remove the lower bound, simply untick the <b>Has min?</b> checkbox.
+
+<color>Setting upper bound</color>
+
+To set the association's upper bound, tick the <b>Has max?</b> checkbox. That will enable the entry under the checkbox, which can be used to enter the desired upper bound value. If you want to restrict that the configuration must not contain a component of some type, input 0 to the upper bound entry. To remove the upper bound, simply untick the <b>Has max?</b> checkbox.
+
+<color>Setting exact number</color>
+
+To set the association's exact number, tick both <b>Has min?</b> and <b>Has max?</b> checkboxes, then input the same number to both entries under the checkboxes.
+
+<h>Editting an association</h>
+
+To edit an association, select the component (from the treeview on the right-hand side) that you want to edit the association of, then follow the instructions in the section above in order to modify the association according to your needs.
+
+<h>Removing an association</h>
+
+To remove the association from the component, select the component (from the treeview on the right-hand side) that you want to remove the association from, then simply untick the <b>Has association?</b> checkbox.
+
+<tab>Ports</tab>
+<title>Ports</title>
+
+<b>Ports</b> tab is used to model connections or compatibility between individual components. A port type is a definition of a connection interface. It contains the information about the <b>compatibility</b> of the port type — set of other port types whose port individuals can be connected to individuals of the port type.
+
+<h>Adding a port type</h>
+
+To add a port type press <b>Add</b> button from the left panel.
+
+<h>Renaming a port type</h>
+
+To rename a port type select the port type that you want to rename (from the combobox on the top of the left panel), then press <b>Rename</b> button from the left panel.
+
+<h>Removing a port type</h>
+
+To remove a port type select the port type that you want to remove (from the combobox on the top of the left panel), then press <b>Remove</b> button from the left panel.
+
+<h>Forcing connection of a port type</h>
+
+To force the connection of a port type select the port type that you want to force connection of (from the combobox on the top of the left panel), then tick the <b>Force connection</b> checkbox from the left panel.
+
+Forcing connection of a port type enforces that a component containing the port cannot appear in the configuration, unless the port is connected. E.g. assume we have components that are: a <i>motherboard</i> and a <i>graphics card</i>. The <i>motherboard</i> contains many ports and not all of them are required to be connected (similarly, we do not have to connect all USB, HDMI and jack ports so that we can use our PCs). On the other hand, the <i>graphics card</i> port, used to connect it to the <i>motherboard</i> has to be connected, otherwise the <i>graphics card</i> would be useless. In such situations the <b>Force connection</b> option may deem useful.
+
+<h>Setting compatibility of a port type</h>
+
+To set the compatibility a port type select the port type that you want to set the compatibility of (from the combobox on the top of the left panel), then press the <b>Edit compatibility</b> button from the left panel. You will be presented with a new window, containing two lists of ports. To add another port type to the set of compatible port types select it from the <b>Port</b> list (located on the left-hand side) and press the <b>\textgreater\textgreater</b> button. To remove a port type from the list of compatible port types, select it from the <b>Compatible ports</b> list (located on the right-hand side) and press the <b><<</b> button.
+
+<h>Creating component's port individuals</h>
+
+To set the number of port individuals a component should have select the port type (from the combobox on the top of the left panel), then select a component (from the treeview on the left-hand side). Next enter the amount of port individuals in the <b>Has:</b>/<b>Children have:</b> entry. If the selected component is a leaf component, then amount will be updated automatically. If the selected component is not a leaf component however, you can press the <b>Apply to all children</b> button to apply the amount of port individuals of the port type to all leaf (grand)children of the selected component.
+
+<tab>Resources</tab>
+<title>Resources</title>
+
+The concept of a <b>resource</b> is useful whenever some components produce some kind of entity, whereas others consume it. The amount produced must always be greater or equal to the amount consumed, so that the balance is always greater or equal than 0. For example, <i>disk space</i> may be a resource produced by <i>disk drives</i> and consumed by <i>software</i>.
+
+In order to modify the resources and set components' resource production/consumption, select the <b>Resources</b> tab in the left panel.
+
+<h>Adding a resource</h>
+
+To create a new resource press <b>Add</b> button from the left panel.
+
+<h>Renaming a resource</h>
+
+To rename a resource, select the resource that you want to rename (from the combobox on the top of the left panel), then press <b>Rename</b> button from the left panel.
+
+<h>Removing a resource</h>
+
+To remove a resource, select the resource that you want to rename from the combobox on the top of the left panel, then press <b>Remove</b> button from the left panel.
+
+<h>Setting component's resource production/consumption</h>
+
+To set the component's resource <b>production</b>, select the resource that you want to set the production of (from the combobox on the top of the left panel), then select the component (from the treeview on the right-hand side). Next enter the produced amount in the <b>Produces:</b> entry. If the selected component is a leaf component, then amount will be updated automatically. If the selected component is not a leaf component however, you can press the <b>Apply to all children</b> button to apply the production amount to all leaf (grand)children of the selected component.
+To set the component's resource <b>consumption</b> the only difference is to enter a negative amount in the <b>Produces:</b> entry.
+
+<tab>Constraints</tab>
+<title>Constraints</title>
+
+<b>Constraints</b> tab is used to define conditions a correct configuration must satisfy.
+
+<h>Simple constraints</h>
+
+Simple constraints are similar to <b>Associations</b>, but are more expressive and have different meaning. They are used to enforce a number (or range) of components of some type present in the configuration.
+
+<color>Adding a simple constraint</color>
+
+To add a simple constraint press the <b>Add simple constraint</b> button (from the right panel). You will be presented with the <b>Simple constraint window</b>.
+
+<color>Editing a simple constraint</color>
+
+To edit a simple constraint, select a simple constraint that you want to edit (from the <b>Constraints</b> list on the left-hand side), then press the <b>Edit</b> button (from the right panel). You will be presented with the <b>Simple constraint window</b>.
+
+<color>Simple constraint window</color>
+- To <b>add the components</b> that are required by the constraint, select component from the <b>Component</b> treeview (located on the left-hand side) and press <b>>></b> button to add the selected component only or <b>>> (recursively)</b> to add the selected component and all its (grand)children.
+- To <b>remove the component</b> from the set of component required by the constraint select this component from the <b>Selected components</b> treeview (located on the right-hand side) and press <b><<</b> button.
+- To <b>set the number of instances of selected components the configuration must contain</b>, tick the <b>Has min?/Has max?</b> checkboxes and input the lower/upper bound respectively. If an exact number is desired, then lower and upper bounds should be equal. To ensure that a configuration does not contain any instances of selected component, input 0 in the max entry.
+- To <b>set whether instances of one component class should be counted once only</b>, tick the <b>Distinct?</b> checkbox. If not, every instance of will be counted individually.
+To <b>set the constraint's name</b> input the name in the <b>Name:</b> entry (located on the top of the right-hand side).
+- To <b>set the constraint's description</b>, input the description in the <b>Description:</b> entry (located on the top of the right-hand side, under the <b>Name:</b> entry). Description is optional, but may be useful to write down constraint's meaning (especially when the constraint is complicated).
+
+<color>Removing a simple constraint</color>
+
+To remove a simple constraint, select a simple constraint that you want to remove (from the <b>Constraints</b> list on the left-hand side), then press the <b>Remove</b> button (from the right panel).
+
+<h>Complex constraints</h>
+
+Complex constraints are more powerful than their simple counterparts. They can enforce a conditional constraint — if some condition is satisfied, then some other condition must be satisfied too in order to keep the configuration correct. E.g. if a <i>pc</i> has more than 4 <i>disk drives</i>, then a powerful <i>power supply unit</i> is required in order to supply the pc with enough power.
+
+<color>Adding a complex constraint</color>
+
+To add a simple constraint press the <b>Add simple constraint</b> button (from the right panel). You will be presented with the <b>Complex constraint window</b>.
+
+<color>Editing a complex constraint</color>
+
+To edit a complex constraint, select a complex constraint that you want to edit (from the <b>Constraints</b> list on the left-hand side), then press the <b>Edit</b> button (from the right panel). You will be presented with the <b>Complex constraint window</b>.
+
+<color>Complex constraint window</color>
+<b>1. Condition</b>
+To <b>add a part of condition</b> press the <b>Add</b> button (located in the left-bottom of the window, under the <b>Condition</b> list). You  will be presented with <b>Simple constraint window</b> which is used to create the part of the complex constraint's condition's part.
+	- To <b>edit a part of condition</b>, select the part of condition that you want to edit (from the <b>Condition</b> list), then press the <b>Edit</b> button (located under the list you selected the part of condition from). You  will be presented with <b>Simple constraint window</b> which is used to edit the part of the complex constraint's condition's part.
+	- To <b>remove a part of condition</b>, select the part of condition that you want to remove (from the <b>Condition</b> list), then press the <b>Remove</b> button (located under the list you selected the part of condition from).
+	- To set if <b>all</b> condition parts must be satisfied in order to satisfy the condition (and activate the constraint), tick the <b>all</b> radiobutton (located under the <b>Condition</b> list. If satisfying <b>any</b> of the condition parts is enough to safisfy the condition (and activate the constraint), tick the <b>any</b> radiobutton.
+<b>2. Consequence</b>
+	- To <b>add a part of consequence</b> press the <b>Add</b> button (located in the right-bottom of the window, under the <b>Consequence</b> list). You  will be presented with <b>Simple constraint window</b> which is used to create the part of the complex constraint's consequence's part.
+	- To <b>edit a part of consequence</b>, select the part of consequence that you want to edit (from the <b>Consequence</b> list), then press the <b>Edit</b> button (located under the list you selected the part of consequence from). You  will be presented with <b>Simple constraint window</b> which is used to edit the part of the complex constraint's consequence's part.
+	- To <b>remove a part of consequence</b>, select the part of consequence that you want to remove (from the <b>Consequence</b> list), then press the <b>Remove</b> button (located under the list you selected the part of consequence from).
+	- To set if <b>all</b> consequence's  parts are to be enforced (provided that the condition is satisfied), tick the <b>all</b> radiobutton (located under the <b>Condition</b> list). If enforcing <b>any</b> of the consequence parts is enough, tick the <b>any</b> radiobutton.
+<b>3.</b> To <b>set the constraint's name</b> input the name in the <b>Name:</b> entry (located on the top of the left-hand side).
+<b>4.</b> To <b>set the constraint's description</b> input the description in the <b>Description:</b> entry (located on the top of the left-hand side, under the <b>Name:</b> entry). Description is optional, but may be useful to write down constraint's meaning (especially when the constraint is complicated).
+
+<color>Removing a complex constraint</color>
+
+To remove a complex constraint, select a complex constraint that you want to remove (from the <b>Constraints</b> list on the left-hand side), then press the <b>Remove</b> button (from the right panel).
+
+<tab>Instances</tab>
+<title>Instances</title>
+
+The <b>instances</b> tab serves the purpose of setting the number of instances of component types available. It can be selected from the top-left corner of the program window.
+
+<h>Setting an exact number of instances</h>
+
+To set an exact number of instances of a component type select the component type from the component treeview on the right-hand side. Next, on the left-hand side, under the selected component's name, tick the <b>Exact</b> radiobutton and input the number of entries in the <b>Count:</b> entry below. If the selected component is a leaf component, then amount will be updated automatically. If the selected component is not a leaf component however, you can press the <b>Apply to all children</b> button (located under <b>Count:</b> entry) to apply the amount of component individuals to all leaf (grand)children of the selected component.
+
+<h>Setting a bounded number of instances</h>
+
+In many cases it is undesirable to consider a fixed number of component's type instances, as guessing the right number may be itself a difficult task. In such cases a bounded number of instances may be used, viz. the actual number of instances should be between some lower and upper bound.
+
+To set a bounded number of instances of a component type select the component type from the component treeview on the right-hand side. Next, on the left-hand side, under the selected component's name, tick the <b>Range</b> radiobutton and input the values of lower and upper bounds in the entries <b>Min:</b> and <b>Max</b>respectively. If the selected component is a leaf component, then bounds will be updated automatically. If the selected component is not a leaf component however, you can press the <b>Apply to all children</b> button (located under <b>Min:</b> and <b>Max</b> entries) to apply the bounded number of component individuals to all leaf (grand)children of the selected component.
+
+<h>Symmetry breaking</h>
+
+The concept of symmetry breaking can be useful to greatly reduce the number of answer sets expressing the same configuration. It ensures, that if a subset of cardinality N of a set of component's instances is admitted in a configuration, then it can be represented in <b>one way</b> only as the only possible N-element combination. For example, consider a fact:
+<code>component_a(1..10)</code>
+expressing that the configuration's instance admits 10 individuals of type <i>component_a</i>. Now assume that one of correct configurations admits 2 components of type <i>component_a</i>. That would mean that all the following subsets:
+
+<code>{1,2}, {1,3}, {1,4}, ..., {2,3}, ..., {9, 10} </code>
+
+are present in some answer sets. That is a lot of redundant information! In fact that make the answer sets space explode. Thus the <b>symmetry</b> breaking option ensures that the only considered subset for the problem above would be:
+
+<code>{1,2}</code>
+
+<h>Setting symmetry breaking for a component</h>
+
+To set the symmetry breaking for a component type select the component type from the component treeview on the right-hand side. Next, on the left-hand side, under the selected component's name, tick the <b>Symmetry breaking</b> checkbox. If the selected component is a leaf component, then the property will be updated automatically. If the selected component is not a leaf component however, you can press the <b>Apply to children</b> button (located on the right of the checkbox) to apply the symmetry breaking to all to all leaf (grand)children of the selected component.
+
+<h>Setting symmetry breaking for all components</h>
+
+To set the symmetry breaking for all component types, tick the <b>Symmetry breaking for all components:</b> checkbox (located in the top-left corner of the tab), then press the <b>Apply</b> button (located on the right of the checkbox). <u>Note:</u> on default, newly created component types have the property of <b>Symmetry breaking</b> set to True. Keep that in mind when creating new component types.
+
+<tab>Generation and solving</tab>
+<title>Generation and solving</title>
+
+<h>Generation</h>
+
+To generate the output ASP program file select the <b>Run</b> command from the top menu bar, then select <b>Generate</b>. You will be presented with the <b>Generate window</b> where you can select the output file path for the generated ASP program and set the predicates symbol for which you wish to generate the <b>#show</b> directive.
+
+- To select predicates symbol to generate the <b>#show</b> directive for, simply tick the checkboxes of the desired predicate symbol in the <b>Show selected predicates:</b> field.
+- To show <b>all</b> answer set's predicates, tick the checkbox <b>Show all predicates:</b> located under the <b>Show selected predicates:</b> field (in that case no <b>#show</b> directive will be generated and thus entire answer set will be shown).
+- To set the output ASP program file path press the <b>Browse</b> button in the <b>Export logic program to:</b> field.
+
+<h>Solving</h>
+
+To solve the previously generated ASP program file select the <b>Run</b> command from the top menu bar, then select <b>Solve</b>. You will be presented with the <b>Solve window</b> where you can select the input ASP program file path, the output CSV file path, the instance representation and the number of generated answer sets.
+- To set the <b>input ASP program file path</b>, press the <b>Browse...</b> button in the <b>Select logic program</b> field.
+- To set the <b>number of generated</b> answer sets, input the number in the <b>Answer sets count</b> field. <u>Note:</u> to generate <b>all</b> answer sets, input 0.
+- To set the <b>instance representation</b>, select between <b>Id</b>, <b>Textual</b> and <b>Mixed</b> in the <b>Instance representation:</b> radioboxes. The difference between them is presented below:
+Assume there is a fact:
+
+<code>component_a(1..10)</code>
+
+expressing that the configuration's instance admits 10 individuals of type <i>component_a</i>. The correct configuration admits that 1 <i>component_a</i> with ID = 1 is in the answer set. Then:
+
+<b>Id:</b>	<code>in(1)</code>
+<b>Textual:</b>	<code>in(component_a)</code>
+<b>Mixed:</b>	<code>in(component_a_1)</code>
+
+are the corresponding answer set's literals for each instance representation. Identyfying component types given an answer set can be cumbersome, if the representation type is <b>Id</b>. <b>Textual</b> representation can be useful in such cases. If one wants to preserve the component's Id and stil be able to identify the component types easily, they may utilize the <b>Mixed</b> option.
+- To specify whether to ignore or obey the <b>#show</b> directives, set the <b>Shown predicates only:</b> checbox accordingly.
+- To set the <b>exported answer sets output CSV file path</b>, press the <b>Browse...</b> button in the <b>Export answer sets to:</b> field.
+To start the answer sets export, press <b>OK</b> button. The label above the progressbar will denote the current number of exported answer sets. You can interrupt solving by pressing the <b>Stop</b> button — answer sets generated by that time will be saved.
+
+<h>Generation and solving</h>
+Current configuration can be solved in just one step — by selecting <b>Run</b> > <b>Generate & solve...</b>. You will be presented with a window, combining the functionality of both <b>Generate window</b> and <b>Solve window</b>.

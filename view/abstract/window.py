@@ -24,8 +24,6 @@ class Window(ABC,
         self.grab_set()
         self.focus()
         self.title(window_title)
-        # self.transient(1)     # TODO:  ???
-        # self.attributes('-toolwindow', 1)
         if bind_enter_callback:
             self.bind('<Return>', lambda _: bind_enter_callback())
 

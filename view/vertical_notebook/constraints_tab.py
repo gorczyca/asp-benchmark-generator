@@ -15,7 +15,7 @@ from view.vertical_notebook.simple_constraint_window import SimpleConstraintWind
 from view.common import trim_string, change_controls_state
 
 TAB_NAME = 'Constraints'
-LABEL_LENGTH = 15
+LABEL_LENGTH = 20
 
 CONTROL_PAD_Y = 3
 
@@ -77,7 +77,8 @@ class ConstraintsTab(Tab,
 
     # SubscribesToEvents
     def _subscribe_to_events(self) -> None:
-        pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
+        pub.subscribe(self.__on_model_changed, actions.MODEL_LOADED)
+        pub.subscribe(self.__on_model_changed, actions.TAXONOMY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
 
     # Resetable
@@ -163,7 +164,12 @@ class ConstraintsTab(Tab,
                                   self.__edit_constraint_button,
                                   self.__remove_constraint_button)
 
-    def __on_model_loaded(self):
-        """Executed whenever a model is loaded from file."""
+    def __on_model_changed(self):
+        """Executed whenever a model is loaded from file or taxonomy changes."""
         ctrs = self.__state.model.get_all_constraints()
         self.__constraints_listbox.set_items(ctrs)
+        self.__selected_constraint = None
+        self.__ctr_label_var.set('')
+        change_controls_state(tk.DISABLED,
+                              self.__edit_constraint_button,
+                              self.__remove_constraint_button)

@@ -10,8 +10,8 @@ from state import State
 from view.abstract import HasCommonSetup, Window
 from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
 
-WINDOW_TITLE = 'Edit hierarchy'
-LABEL_TEXT = 'Input hierarchy of view.\n("Tab" means subcomponent of component above.)'
+WINDOW_TITLE = 'Edit taxonomy'
+LABEL_TEXT = 'Input taxonomy of view.\n("Tab" means subcomponent of component above.)'
 
 
 def select_all_text(event):
@@ -21,8 +21,8 @@ def select_all_text(event):
     return 'break'
 
 
-class CreateHierarchyWindow(HasCommonSetup,
-                            Window):
+class CreateTaxonomyWindow(HasCommonSetup,
+                           Window):
     """
 
     """
@@ -45,9 +45,9 @@ class CreateHierarchyWindow(HasCommonSetup,
         self.__text.mark_set(tk.INSERT, 1.0)
         self.__text.bind('<Control-a>', select_all_text)
 
-        if self.__state.model.hierarchy:
-            hierarchy_string = string_converter.hierarchy_to_string(self.__state.model.hierarchy)
-            self.__text.insert(1.0, hierarchy_string)
+        if self.__state.model.taxonomy:
+            taxonomy_string = string_converter.taxonomy_to_string(self.__state.model.taxonomy)
+            self.__text.insert(1.0, taxonomy_string)
 
         self.__x_scrollbar.config(command=self.__text.xview)
         self.__y_scrollbar.config(command=self.__text.yview)
@@ -85,10 +85,11 @@ class CreateHierarchyWindow(HasCommonSetup,
     # Class-specific
     def __ok(self):
         try:
-            hierarchy_string = self.__text.get(1.0, tk.END)
-            hierarchy = string_converter.string_to_hierarchy(hierarchy_string)
-            self.__state.model.set_hierarchy(hierarchy)  # Sets hierarchy and marks leaves
-            pub.sendMessage(actions.HIERARCHY_EDITED)
+            taxonomy_string = self.__text.get(1.0, tk.END)
+            taxonomy = string_converter.string_to_taxonomy(taxonomy_string)
+            self.__state.model.set_taxonomy(taxonomy)  # Sets taxonomy and marks leaves
+            # Remove all constraints (since they [if exist] are based on the old components.
+            self.__state.model.remove_all_constraints()
             self.__callback()
             self.grab_release()
             self.destroy()

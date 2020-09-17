@@ -34,7 +34,7 @@ class PortsTab(Tab,
 
     Attributes:
         __selected_port: Currently selected port in the ports listview.
-        __selected_component: Currently selected component in the components hierarchy view.
+        __selected_component: Currently selected component in the components taxonomy view.
     """
     def __init__(self, parent_notebook):
         self.__state = State()
@@ -48,7 +48,7 @@ class PortsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__hierarchy_tree = ScrollbarListbox(self,
+        self.__taxonomy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -56,7 +56,7 @@ class PortsTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
                                                  columns=[Column('Amount')],
-                                                 values=self.__state.model.hierarchy)
+                                                 values=self.__state.model.taxonomy)
         self.__left_frame = ttk.Frame(self)
 
         # Ports combobox
@@ -105,7 +105,7 @@ class PortsTab(Tab,
                                                          command=self.__apply_to_all_children)
 
     def _setup_layout(self) -> None:
-        self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
         self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
 
         self.__port_combobox.grid(row=0, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
@@ -125,13 +125,13 @@ class PortsTab(Tab,
         self.__all_children_amount_spinbox.grid(row=8, column=1, pady=CONTROL_PAD_Y, sticky=tk.NSEW)
         self.__apply_to_all_children_button.grid(row=9, column=0, columnspan=2, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
 
-        self.columnconfigure(1, weight=1)     # Give all the remaining space to hierarchy tree
+        self.columnconfigure(1, weight=1)     # Give all the remaining space to taxonomy tree
         self.rowconfigure(0, weight=1)
 
         self.__left_frame.columnconfigure(1, weight=1)
 
         # Hide widgets
-        self.__hierarchy_tree.grid_forget()
+        self.__taxonomy_tree.grid_forget()
         self.__cmp_label.grid_forget()
         self.__amount_spinbox_label.grid_forget()
         self.__amount_spinbox.grid_forget()
@@ -139,7 +139,7 @@ class PortsTab(Tab,
         self.__all_children_amount_spinbox.grid_forget()
         self.__apply_to_all_children_button.grid_forget()
 
-    # Hierarchy Treeview
+    # Taxonomy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
         """Executed whenever a tree item is selected (by mouse click).
 
@@ -173,7 +173,7 @@ class PortsTab(Tab,
                                                          pady=CONTROL_PAD_Y)
 
     def __extract_values(self, cmp: Component) -> Tuple[Any, ...]:
-        """Extracts the data of the component to show in the hierarchy view.
+        """Extracts the data of the component to show in the taxonomy view.
 
         :param cmp: Component from which to extract the data.
         :return: Tuple containing data about component
@@ -187,7 +187,7 @@ class PortsTab(Tab,
 
     def __build_tree(self) -> None:
         """Fills the tree view with components from model."""
-        self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
+        self.__taxonomy_tree.set_items(self.__state.model.taxonomy)
 
     def __on_combobox_changed(self, *_) -> None:
         """Executed whenever the __port_combobox value changes."""
@@ -215,28 +215,28 @@ class PortsTab(Tab,
             self.__force_connection_checkbox_var.set(port.force_connection)
 
             self.__update_tree()    # Update tree values
-            self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)  # Show tree
+            self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)  # Show tree
         else:
             self.__selected_port = None
             self.__force_connection_checkbox_var.set(False)
             self.__compatible_with_listbox.set_items([])    # Clear 'compatible with' listbox
             change_controls_state(tk.DISABLED,
                                   *buttons_to_change_state_of)
-            self.__hierarchy_tree.grid_forget()     # Hide tree
+            self.__taxonomy_tree.grid_forget()     # Hide tree
 
     def __update_tree(self) -> None:
-        """Updates every leaf component in the hierarchy treeview."""
+        """Updates every leaf component in the taxonomy treeview."""
         leaf_cmps = self.__state.model.get_components(is_leaf=True)
-        self.__hierarchy_tree.update_values(*leaf_cmps)
+        self.__taxonomy_tree.update_values(*leaf_cmps)
 
     # SubscribesToListeners
     def _subscribe_to_events(self) -> None:
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
-        pub.subscribe(self.__on_hierarchy_edited, actions.HIERARCHY_EDITED)
+        pub.subscribe(self.__on_taxonomy_edited, actions.TAXONOMY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
 
-    def __on_hierarchy_edited(self):
-        """Executed whenever the structure of the hierarchy changes."""
+    def __on_taxonomy_edited(self):
+        """Executed whenever the structure of the taxonomy changes."""
         self.__build_tree()
         self.__selected_component = None
         self.__cmp_label_var.set('')
@@ -258,10 +258,10 @@ class PortsTab(Tab,
     def _reset(self) -> None:
         self.__selected_port = None
         self.__selected_component = None
-        self.__hierarchy_tree.set_items([])
+        self.__taxonomy_tree.set_items([])
         self.__port_combobox_var.set(SELECT_PORT)
         self.__port_combobox['values'] = []
-        self.__hierarchy_tree.grid_forget()     # Hide treeview
+        self.__taxonomy_tree.grid_forget()     # Hide treeview
 
     # Class-specific
     # Ports
@@ -367,7 +367,7 @@ class PortsTab(Tab,
                 elif self.__selected_port.id_ in self.__selected_component.ports:
                     del self.__selected_component.ports[self.__selected_port.id_]
 
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __apply_to_all_children(self):
         """Executed whenever the __apply_to_all_children_button is pressed."""
@@ -380,4 +380,4 @@ class PortsTab(Tab,
             finally:
                 updated_components = self.__state.model.set_ports_amount_to_all_components_children(
                     self.__selected_component, self.__selected_port, value)
-                self.__hierarchy_tree.update_values(*updated_components)
+                self.__taxonomy_tree.update_values(*updated_components)

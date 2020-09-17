@@ -1,4 +1,4 @@
-"""Provides helper functions for conversion between hierarchy expressed as string and a hierarchy
+"""Provides helper functions for conversion between taxonomy expressed as string and a taxonomy
     represented by list of components.
 
 The aforementioned string is in form where each '\n' character means another element and '\t' means child of the element
@@ -32,24 +32,24 @@ def __extract_tabs(line: str) -> Tuple[int, str]:
     return tab_count, normalize_name(cmp_name)
 
 
-def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
-    """Converts string into hierarchy (list of components).
+def string_to_taxonomy(taxonomy_string: str) -> List[Component]:
+    """Converts string into taxonomy (list of components).
 
-    :param hierarchy_string: hierarchy represented as string
-    :return: List of components representing hierarchy.
+    :param taxonomy_string: taxonomy represented as string
+    :return: List of components representing taxonomy.
     """
-    hierarchy_string = hierarchy_string.replace(' ' * NUMBER_OF_SPACES_EQUAL_TO_TAB,
+    taxonomy_string = taxonomy_string.replace(' ' * NUMBER_OF_SPACES_EQUAL_TO_TAB,
                                                 CHILD_SYMBOL)  # make sure N spaces are converted to '\t'
-    hierarchy = []
+    taxonomy = []
     last_on_level = []
     cmp_names = []
 
-    for line in hierarchy_string.split('\n'):
+    for line in taxonomy_string.split('\n'):
         if not line or line.isspace():      # If entire line contains only spaces, ignore it
             continue
         level, component_name = __extract_tabs(line)
         if component_name in cmp_names:     # If names are not unique, raise error
-            raise BGError(f'Hierarchy contains more than one component '
+            raise BGError(f'Taxonomy contains more than one component '
                           f'named "{component_name}".')
         else:
             cmp_names.append(component_name)
@@ -66,31 +66,31 @@ def string_to_hierarchy(hierarchy_string: str) -> List[Component]:
         if level != 0:
             component.parent_id = last_on_level[level - 1]
 
-        hierarchy.append(component)
-    return hierarchy
+        taxonomy.append(component)
+    return taxonomy
 
 
-def hierarchy_to_string(hierarchy: List[Component]) -> str:
-    """Converts hierarchy object to string.
+def taxonomy_to_string(taxonomy: List[Component]) -> str:
+    """Converts taxonomy object to string.
 
-    :param hierarchy: List of components to be converted to string.
-    :return: Hierarchy's string representation.
+    :param taxonomy: List of components to be converted to string.
+    :return: Taxonomy's string representation.
     """
-    def __hierarchy_to_string(hierarchy_: List[Component], string_: str, parent_id: Optional[int]) -> str:
+    def __taxonomy_to_string(taxonomy_: List[Component], string_: str, parent_id: Optional[int]) -> str:
         """Internal function used recursively.
 
         Appends the name of a child to current string and then calls itself looking for previously appended
         child's children.
 
-        :param hierarchy_: Hierarchy list too look for components in.
+        :param taxonomy_: Taxonomy list too look for components in.
         :param string_: Current string representation.
         :param parent_id:   Id of a parent component whose children (and then their children) are to be added to string.
         :return: String after adding component's children, and then their children recursively and so forth.
         """
-        for cmp in hierarchy_:
+        for cmp in taxonomy_:
             if cmp.parent_id == parent_id:
                 string_ += cmp.level * CHILD_SYMBOL + cmp.name + NEWLINE_SYMBOL     # Add children string
                 # Recursively add children of added children
-                string_ = __hierarchy_to_string(hierarchy_, string_, cmp.id_)
+                string_ = __taxonomy_to_string(taxonomy_, string_, cmp.id_)
         return string_
-    return __hierarchy_to_string(hierarchy, '', None)
+    return __taxonomy_to_string(taxonomy, '', None)

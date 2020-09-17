@@ -25,7 +25,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         __callback: Callback function to be executed after pressing the OK button on this Window.
         __constraint: SimpleConstraint to add / create.
         __components_ids: List of component ids concerned by this constraint.
-        __selected_hierarchy_tree_item: Currently selected component in the components hierarchy view.
+        __selected_taxonomy_tree_item: Currently selected component in the components taxonomy view.
         __selected_listbox_item: Currently selected component in the selected components listview.
     """
     def __init__(self, parent_frame,
@@ -36,7 +36,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__constraint: SimpleConstraint = copy.deepcopy(constraint) if constraint is not None \
             else SimpleConstraint()
         self.__components_ids = [] if constraint is None else [*constraint.components_ids]  # Deep copy of component ids
-        self.__selected_hierarchy_tree_item: Optional[Component] = None
+        self.__selected_taxonomy_tree_item: Optional[Component] = None
         self.__selected_listbox_item: Optional[Component] = None
 
         Window.__init__(self, parent_frame, WINDOW_TITLE)
@@ -44,13 +44,13 @@ class SimpleConstraintWindow(HasCommonSetup,
 
     # HasCommonSetup
     def _create_widgets(self) -> None:
-        self.__hierarchy_tree = ScrollbarListbox(self,
+        self.__taxonomy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
-                                                 values=self.__state.model.hierarchy)
+                                                 values=self.__state.model.taxonomy)
 
         self.__mid_frame = ttk.Frame(self)
         self.__add_component_button = ttk.Button(self.__mid_frame, text='>>', command=self.__add_to_selected)
@@ -108,7 +108,7 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__cancel_button = ttk.Button(self.__right_frame, text='Cancel', command=self.destroy)
 
     def _setup_layout(self) -> None:
-        self.__hierarchy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
+        self.__taxonomy_tree.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
         self.__mid_frame.grid(row=0, column=1)
         self.__remove_component_button.grid(row=1, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
         self.__add_component_button.grid(row=2, column=0, sticky=tk.NSEW, pady=CONTROL_PAD_Y)
@@ -146,13 +146,13 @@ class SimpleConstraintWindow(HasCommonSetup,
 
         self._set_geometry()
 
-    # Hierarchy Treeview
+    # Taxonomy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
         """Executed whenever a tree item is selected (by mouse click).
 
         :param cmp_id: Id of the selected component.
         """
-        self.__selected_hierarchy_tree_item = self.__state.model.get_component(id_=cmp_id)
+        self.__selected_taxonomy_tree_item = self.__state.model.get_component(id_=cmp_id)
 
     def __on_select_listbox_component(self, cmp_id: int) -> None:
         """Executed whenever a listview item is selected (by mouse click).
@@ -162,33 +162,33 @@ class SimpleConstraintWindow(HasCommonSetup,
         self.__selected_listbox_item = self.__state.model.get_component(id_=cmp_id)
 
     def __add_to_selected(self):
-        """Adds the __selected_hierarchy_tree_item to the list of selected component ids."""
-        if self.__selected_hierarchy_tree_item:
-            if self.__selected_hierarchy_tree_item.id_ not in self.__components_ids:
-                self.__components_ids.append(self.__selected_hierarchy_tree_item.id_)
-                self.__components_listbox.add_item(self.__selected_hierarchy_tree_item)
-                self.__selected_listbox_item = self.__selected_hierarchy_tree_item
-                self.__selected_hierarchy_tree_item = None
+        """Adds the __selected_taxonomy_tree_item to the list of selected component ids."""
+        if self.__selected_taxonomy_tree_item:
+            if self.__selected_taxonomy_tree_item.id_ not in self.__components_ids:
+                self.__components_ids.append(self.__selected_taxonomy_tree_item.id_)
+                self.__components_listbox.add_item(self.__selected_taxonomy_tree_item)
+                self.__selected_listbox_item = self.__selected_taxonomy_tree_item
+                self.__selected_taxonomy_tree_item = None
 
     def __add_to_selected_recursively(self):
-        """Adds the __selected_hierarchy_tree_item and all its children to the list of selected component ids."""
-        if self.__selected_hierarchy_tree_item:
-            for c in self.__state.model.get_components_children(self.__selected_hierarchy_tree_item):
+        """Adds the __selected_taxonomy_tree_item and all its children to the list of selected component ids."""
+        if self.__selected_taxonomy_tree_item:
+            for c in self.__state.model.get_components_children(self.__selected_taxonomy_tree_item):
                 if c.id_ not in self.__components_ids:
                     self.__components_ids.append(c.id_)
                     self.__components_listbox.add_item(c, select_item=False)    # Append children
-            self.__components_ids.append(self.__selected_hierarchy_tree_item.id_)
-            self.__components_listbox.add_item(self.__selected_hierarchy_tree_item)
-            self.__selected_listbox_item = self.__selected_hierarchy_tree_item
-            self.__selected_hierarchy_tree_item = None
+            self.__components_ids.append(self.__selected_taxonomy_tree_item.id_)
+            self.__components_listbox.add_item(self.__selected_taxonomy_tree_item)
+            self.__selected_listbox_item = self.__selected_taxonomy_tree_item
+            self.__selected_taxonomy_tree_item = None
 
     def __remove_from_selected(self):
-        """Adds the __selected_hierarchy_tree_item to the list of selected component ids."""
+        """Adds the __selected_taxonomy_tree_item to the list of selected component ids."""
         if self.__selected_listbox_item:
             self.__components_ids.remove(self.__selected_listbox_item.id_)
             self.__components_listbox.remove_item_recursively(self.__selected_listbox_item)
-            self.__selected_hierarchy_tree_item = self.__selected_listbox_item
-            self.__hierarchy_tree.select_item(self.__selected_listbox_item)
+            self.__selected_taxonomy_tree_item = self.__selected_listbox_item
+            self.__taxonomy_tree.select_item(self.__selected_listbox_item)
             self.__selected_listbox_item = None
 
     def __on_has_min_changed(self, *_):

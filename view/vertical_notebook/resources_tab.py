@@ -33,7 +33,7 @@ class ResourcesTab(Tab,
 
     Attributes:
         __selected_resource: Currently selected resource in the resources listview.
-        __selected_component: Currently selected component in the components hierarchy view.
+        __selected_component: Currently selected component in the components taxonomy view.
     """
     def __init__(self, parent_notebook):
         self.__state = State()
@@ -46,7 +46,7 @@ class ResourcesTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__hierarchy_tree = ScrollbarListbox(self,
+        self.__taxonomy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -54,7 +54,7 @@ class ResourcesTab(Tab,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
                                                  columns=[Column('Produces')],
-                                                 values=self.__state.model.hierarchy)
+                                                 values=self.__state.model.taxonomy)
         self.__left_frame = ttk.Frame(self)
         # Resources combobox
         self.__resource_combobox_var = tk.StringVar(value=SELECT_RESOURCE)
@@ -89,7 +89,7 @@ class ResourcesTab(Tab,
                                                          command=self.__apply_to_all_children)
 
     def _setup_layout(self):
-        self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
 
         self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
 
@@ -115,6 +115,7 @@ class ResourcesTab(Tab,
         self.__left_frame.columnconfigure(1, weight=1)
 
         # Hide widgets
+        self.__taxonomy_tree.grid_forget()
         self.__cmp_label.grid_forget()
         self.__produces_spinbox_label.grid_forget()
         self.__produces_spinbox.grid_forget()
@@ -125,10 +126,10 @@ class ResourcesTab(Tab,
     # SubscribesToListeners
     def _subscribe_to_events(self):
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
-        pub.subscribe(self.__on_hierarchy_edited, actions.HIERARCHY_EDITED)
+        pub.subscribe(self.__on_taxonomy_edited, actions.TAXONOMY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
 
-    # HasHierarchyTree
+    # HasTaxonomyTree
     def __on_select_tree_item(self, cmp_id: int) -> None:
         """Executed whenever a tree item is selected (by mouse click).
 
@@ -162,7 +163,7 @@ class ResourcesTab(Tab,
                                                          pady=CONTROL_PAD_Y)
 
     def __extract_values(self, cmp: Component) -> Tuple[Any, ...]:
-        """Extracts the data of the component to show in the hierarchy view.
+        """Extracts the data of the component to show in the taxonomy view.
 
         :param cmp: Component from which to extract the data.
         :return: Tuple containing data about component
@@ -176,7 +177,7 @@ class ResourcesTab(Tab,
 
     def __build_tree(self) -> None:
         """Fills the tree view with components from model."""
-        self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
+        self.__taxonomy_tree.set_items(self.__state.model.taxonomy)
 
     def __on_model_loaded(self):
         """Executed whenever a model is loaded from file."""
@@ -186,8 +187,8 @@ class ResourcesTab(Tab,
         self.__resource_combobox['values'] = sorted(resources_names)
         self.__resource_combobox_var.set(SELECT_RESOURCE)
 
-    def __on_hierarchy_edited(self) -> None:
-        """Executed whenever the structure of the hierarchy changes."""
+    def __on_taxonomy_edited(self) -> None:
+        """Executed whenever the structure of the taxonomy changes."""
         self._reset()
         self.__build_tree()
 
@@ -211,7 +212,8 @@ class ResourcesTab(Tab,
         change_controls_state(tk.DISABLED,
                               self.__rename_resource_button,
                               self.__remove_resource_button)
-        self.__hierarchy_tree.set_items([])
+        self.__taxonomy_tree.set_items([])
+        self.__taxonomy_tree.grid_forget()
 
     # Class-specific
     def __on_combobox_changed(self, *_):
@@ -233,14 +235,14 @@ class ResourcesTab(Tab,
                 else:
                     self.__all_children_produce_spinbox_var.set('')
 
-            if self.__hierarchy_tree:
-                self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
-                self.__update_tree()
+            # Show the taxonomy tree
+            self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+            self.__update_tree()
 
     def __update_tree(self):
-        """Updates every leaf component in the hierarchy treeview."""
+        """Updates every leaf component in the taxonomy treeview."""
         leaf_cmps = self.__state.model.get_components(is_leaf=True)
-        self.__hierarchy_tree.update_values(*leaf_cmps)
+        self.__taxonomy_tree.update_values(*leaf_cmps)
 
     def __on_add(self):
         """Executed whenever the __add_resource_button is pressed."""
@@ -260,6 +262,9 @@ class ResourcesTab(Tab,
         change_controls_state(tk.NORMAL,
                               self.__rename_resource_button,
                               self.__remove_resource_button)
+        # Show the taxonomy tree
+        self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__update_tree()
 
     def __on_rename(self) -> None:
         """Executed whenever the __rename_resource_button is pressed."""
@@ -298,8 +303,8 @@ class ResourcesTab(Tab,
             self.__all_children_produce_spinbox_label.grid_forget()
             self.__all_children_produce_spinbox.grid_forget()
             self.__apply_to_all_children_button.grid_forget()
-            if self.__hierarchy_tree:
-                self.__hierarchy_tree.grid_forget()
+            # Hide the taxonomy tree
+            self.__taxonomy_tree.grid_forget()
 
     def __on_produced_changed(self, *_):
         """Executed whenever the __produces_spinbox value changes."""
@@ -315,7 +320,7 @@ class ResourcesTab(Tab,
                 elif self.__selected_resource.id_ in self.__selected_component.produces:
                     del self.__selected_component.produces[self.__selected_resource.id_]
 
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __apply_to_all_children(self):
         """Executed whenever the __apply_to_all_children_button is pressed."""
@@ -328,4 +333,4 @@ class ResourcesTab(Tab,
             finally:
                 updated_components = self.__state.model.set_resource_production_to_all_components_children(
                     self.__selected_component, self.__selected_resource, value)
-                self.__hierarchy_tree.update_values(updated_components)
+                self.__taxonomy_tree.update_values(updated_components)

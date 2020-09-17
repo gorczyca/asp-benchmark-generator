@@ -45,7 +45,7 @@ $ python3 main.py
 
 #### Table of Contents
 **[1. Initial window](#initial-window)**\
-**[2. Component's hierarchy](#component's-hierarchy)**\
+**[2. Component's taxonomy](#component's-taxonomy)**\
 **[3. Associations](#associations)**\
 **[4. Ports](#ports)**\
 **[5. Resources](#resources)**\
@@ -55,7 +55,7 @@ $ python3 main.py
 
 #### Initial Window
 
-#### Component's Hierarchy
+#### Component's Taxonomy
 
 #### Associations
 

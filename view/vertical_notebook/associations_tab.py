@@ -31,7 +31,7 @@ class AssociationsTab(Tab,
     """Used to set the number of information about the associations between the root component and other components.
 
     Attributes:
-        __selected_component: Currently selected component in the components hierarchy view.
+        __selected_component: Currently selected component in the components taxonomy view.
     """
     def __init__(self, parent_notebook):
         self.__state = State()
@@ -43,14 +43,14 @@ class AssociationsTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__hierarchy_tree = ScrollbarListbox(self,
+        self.__taxonomy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
                                                  extract_text=lambda x: x.name,
                                                  extract_ancestor=lambda x: '' if x.parent_id is None else x.parent_id,
                                                  extract_values=self.__extract_values,
-                                                 values=self.__state.model.hierarchy,
+                                                 values=self.__state.model.taxonomy,
                                                  columns=[Column('Has association?'),
                                                           Column('Min'),
                                                           Column('Max')])
@@ -90,7 +90,7 @@ class AssociationsTab(Tab,
                                          textvariable=self.__max_spinbox_var, font=FONT)
 
     def _setup_layout(self):
-        self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
         self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, pady=FRAME_PAD_Y, padx=FRAME_PAD_X)
         self.__cmp_label.grid(row=0, column=0, columnspan=4, sticky=tk.EW, pady=CONTROL_PAD_Y)
         self.__has_association_checkbox_label.grid(row=1, column=0, columnspan=2, sticky=tk.W, pady=CONTROL_PAD_Y)
@@ -113,11 +113,11 @@ class AssociationsTab(Tab,
 
     # SubscribesToListeners
     def _subscribe_to_events(self):
-        pub.subscribe(self.__on_hierarchy_edited, actions.HIERARCHY_EDITED)
-        pub.subscribe(self.__on_hierarchy_edited, actions.MODEL_LOADED)
+        pub.subscribe(self.__on_taxonomy_edited, actions.TAXONOMY_EDITED)
+        pub.subscribe(self.__on_taxonomy_edited, actions.MODEL_LOADED)
         pub.subscribe(self._reset, actions.RESET)
 
-    # Hierarchy Treeview
+    # Taxonomy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
         """Executed whenever a tree item is selected (by mouse click).
 
@@ -132,17 +132,17 @@ class AssociationsTab(Tab,
                 change_controls_state(tk.NORMAL,
                                       self.__has_min_checkbox,
                                       self.__has_max_checkbox)
-                if selected_cmp.association.min_count:
+                if selected_cmp.association.min_:
                     self.__has_min_checkbox_var.set(True)
-                    self.__min_spinbox_var.set(selected_cmp.association.min_count)
+                    self.__min_spinbox_var.set(selected_cmp.association.min_)
                     change_controls_state(tk.NORMAL, self.__min_spinbox)
                 else:
                     self.__has_min_checkbox_var.set(False)
                     change_controls_state(tk.DISABLED, self.__min_spinbox)
                     self.__min_spinbox_var.set('')
-                if selected_cmp.association.max_count:
+                if selected_cmp.association.max_:
                     self.__has_max_checkbox_var.set(True)
-                    self.__max_spinbox_var.set(selected_cmp.association.max_count)
+                    self.__max_spinbox_var.set(selected_cmp.association.max_)
                     change_controls_state(tk.NORMAL, self.__max_spinbox)
                 else:
                     self.__has_max_checkbox_var.set(False)
@@ -163,7 +163,7 @@ class AssociationsTab(Tab,
 
     @staticmethod
     def __extract_values(cmp: Component) -> Tuple[Any, ...]:
-        """Extracts the data of the component to show in the hierarchy view.
+        """Extracts the data of the component to show in the taxonomy view.
 
         :param cmp: Component from which to extract the data.
         :return: Tuple containing data about component
@@ -180,11 +180,11 @@ class AssociationsTab(Tab,
 
     def __build_tree(self) -> None:
         """Fills the tree view with components from model."""
-        self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
+        self.__taxonomy_tree.set_items(self.__state.model.taxonomy)
 
     # Resetable
     def _reset(self) -> None:
-        self.__hierarchy_tree.set_items([])
+        self.__taxonomy_tree.set_items([])
         self.__selected_component = None
         # Set entries to default
         self.__has_association_checkbox_var.set(False)
@@ -201,8 +201,8 @@ class AssociationsTab(Tab,
                               self.__min_spinbox,
                               self.__max_spinbox)
 
-    def __on_hierarchy_edited(self) -> None:
-        """Executed whenever the structure of the hierarchy changes."""
+    def __on_taxonomy_edited(self) -> None:
+        """Executed whenever the structure of the taxonomy changes."""
         self._reset()
         self.__build_tree()
 
@@ -227,7 +227,7 @@ class AssociationsTab(Tab,
                                       self.__max_spinbox,
                                       self.__min_spinbox)
                 self.__selected_component.association = None
-            self.__hierarchy_tree.update_values(self.__selected_component)
+            self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __on_has_min_changed(self, *_):
         """Executed whenever the __has_min_checkbox is toggled"""
@@ -284,7 +284,7 @@ class AssociationsTab(Tab,
             except tk.TclError:
                 self.__selected_component.association.min_ = None
             finally:
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __on_max_changed(self, *_):
         """Executed whenever the __max_spinbox_var value changes."""
@@ -299,4 +299,4 @@ class AssociationsTab(Tab,
             except tk.TclError:
                 self.__selected_component.association.max_ = None
             finally:
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)

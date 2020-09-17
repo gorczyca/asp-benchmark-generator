@@ -17,7 +17,7 @@ class Model:
 
     Attributes:
         root_name: Name of the root component.
-        hierarchy:  Hierarchy of components - tree structure, implemented as a list of components,
+        taxonomy:  Taxonomy of components - tree structure, implemented as a list of components,
             each of them having a pointer to the parent component (or None if there is no parent).
         resources:  List of resources.
         ports: List of ports.
@@ -26,13 +26,13 @@ class Model:
     """
     def __init__(self,
                  root_name: str = None,
-                 hierarchy: List[Component] = None,
+                 taxonomy: List[Component] = None,
                  resources: List[Resource] = None,
                  ports: List[Port] = None,
                  simple_constraints: List[SimpleConstraint] = None,
                  complex_constraints: List[ComplexConstraint] = None):
         self.root_name: str = root_name
-        self.hierarchy: List[Component] = hierarchy if hierarchy is not None else []
+        self.taxonomy: List[Component] = taxonomy if taxonomy is not None else []
         self.resources: List[Resource] = resources if resources is not None else []
         self.ports: List[Port] = ports if ports is not None else []
         self.simple_constraints: List[SimpleConstraint] = simple_constraints if simple_constraints is not None else []
@@ -40,17 +40,17 @@ class Model:
 
     def clear(self):
         """Clears out all Model's attributes and sets the new root name."""
-        self.hierarchy = []
-        self.resources = []
-        self.ports = []
-        self.simple_constraints = []
-        self.complex_constraints = []
+        self.taxonomy.clear()
+        self.resources.clear()
+        self.ports.clear()
+        self.simple_constraints.clear()
+        self.complex_constraints.clear()
 
     @classmethod
     def from_json(cls, json_string):
         """Necessary to create an instance from JSON."""
         data = json.loads(json_string)
-        data['hierarchy'] = deserialize_list(Component, data['hierarchy'])
+        data['taxonomy'] = deserialize_list(Component, data['taxonomy'])
         data['resources'] = deserialize_list(Resource, data['resources'])  # Convert dictionary to object
         data['ports'] = deserialize_list(Port, data['ports'])
         data['simple_constraints'] = deserialize_list(SimpleConstraint, data['simple_constraints'])
@@ -65,26 +65,26 @@ class Model:
         """
         root_name = normalize_name(root_name)
         if root_name in self.get_all_components_names():
-            raise BGError(f'Component with name: "{root_name}" already exists in the hierarchy.')
+            raise BGError(f'Component with name: "{root_name}" already exists in the taxonomy.')
         self.root_name = root_name
 
-    # Hierarchy
-    def set_hierarchy(self, hierarchy: List[Component]) -> None:
-        """Sets the model component's hierarchy. Then updates each component's information.
+    # Taxonomy
+    def set_taxonomy(self, taxonomy: List[Component]) -> None:
+        """Sets the model component's taxonomy. Then updates each component's information.
 
-        :param hierarchy: List of components representing the hierarchy.
+        :param taxonomy: List of components representing the taxonomy.
         """
-        self.hierarchy = hierarchy
-        self.__update_hierarchy()
+        self.taxonomy = taxonomy
+        self.__update_taxonomy()
 
-    def __update_hierarchy(self) -> None:
-        """Traverses through hierarchy and sets the default properties of "leaf" and "non-leaf" components.
-        Used when hierarchy is changed.
+    def __update_taxonomy(self) -> None:
+        """Traverses through taxonomy and sets the default properties of "leaf" and "non-leaf" components.
+        Used when taxonomy is changed.
         """
-        parents_ids = [cmp.parent_id for cmp in self.hierarchy if cmp.parent_id is not None]
+        parents_ids = [cmp.parent_id for cmp in self.taxonomy if cmp.parent_id is not None]
         parents_ids = set(parents_ids)
 
-        for cmp in self.hierarchy:
+        for cmp in self.taxonomy:
             if cmp.id_ not in parents_ids:
                 # Cmp is a leaf
                 cmp.is_leaf = True
@@ -100,31 +100,58 @@ class Model:
                 cmp.ports = {}
 
     def add_component(self, cmp: Component) -> Component:
-        """Creates and adds new component to hierarchy.
+        """Creates and adds new component to taxonomy.
 
-        :param cmp: Component to add to hierarchy.
+        :param cmp: Component to add to taxonomy.
         :return: Added component.
         """
         cmp.name = normalize_name(cmp.name)
         if cmp.name in self.get_all_components_names():
-            raise BGError(f'Component with name: "{cmp.name}" already exists in the hierarchy.')
+            raise BGError(f'Component with name: "{cmp.name}" already exists in the taxonomy.')
         elif cmp.name == self.root_name:
             raise BGError(f'Component cannot have same name as the root component.')
-        self.hierarchy.append(cmp)
-        self.__update_hierarchy()
+        self.taxonomy.append(cmp)
+        self.__update_taxonomy()
         return cmp
 
-    def remove_component_recursively(self, cmp: Component) -> List[Component]:
+    def remove_component_recursively(self, cmp: Component) -> Tuple[List[Component], List[Any]]:
         """Removes the component recursively (the component itself, its children, the children's children etc.).
 
         :param cmp: Component to remove.
-        :return: List of components removed from the hierarchy.
+        :return: Tuple of the form (list of components removed from the taxonomy,
+                                    list of constraints removed from model [because of removing of the component])
         """
         cmp_children = self.get_components_children(cmp)
         cmps_to_remove = [cmp, *cmp_children]
-        self.hierarchy = [cmp for cmp in self.hierarchy if cmp not in cmps_to_remove]
-        self.__update_hierarchy()
-        return cmps_to_remove
+        self.taxonomy = [cmp for cmp in self.taxonomy if cmp not in cmps_to_remove]
+        self.__update_taxonomy()
+        removed_ctrs = [ctr for cmp in cmps_to_remove for ctr in self.__remove_components_constraints(cmp)]
+        return cmps_to_remove, removed_ctrs
+
+    def __remove_components_constraints(self, cmp: Component) -> List[Any]:
+        """Removes component from model. Looks for references of the removed component in the constraints
+        and removes this constraints from the model as well.
+
+        :param cmp: Component to remove.
+        :return: List of constraints removed that contained component.
+        """
+        simple_ctr_to_remove = []
+        for sc in self.simple_constraints:
+            if cmp.id_ in sc.components_ids:
+                simple_ctr_to_remove.append(sc)
+
+        complex_ctr_to_remove = []
+        for cc in self.complex_constraints:
+            for ctr in [*cc.antecedent, *cc.consequent]:
+                if cmp.id_ in ctr.components_ids:
+                    complex_ctr_to_remove.append(cc)
+                    break
+
+        # Remove simple constraints
+        self.simple_constraints = [sc for sc in self.simple_constraints if sc not in simple_ctr_to_remove]
+        # Remove complex constraints
+        self.complex_constraints = [cc for cc in self.complex_constraints if cc not in complex_ctr_to_remove]
+        return simple_ctr_to_remove + complex_ctr_to_remove
 
     def get_components_children(self, cmp: Component, **kwargs) -> List[Component]:
         """Returns the list of component's children (obtained recursively).
@@ -139,7 +166,7 @@ class Model:
             :param cmp_: Component, to create the children's list of.
             :param children_: List of child components.
             """
-            for c in self.hierarchy:
+            for c in self.taxonomy:
                 if c.parent_id == cmp_.id_:
                     if matches(c, **kwargs):
                         children_.append(c)
@@ -149,19 +176,22 @@ class Model:
         __get_components_children(cmp, children)
         return children
 
-    def remove_component_preserve_children(self, cmp: Component) -> None:
-        """Removes the component from hierarchy, but preserves its children.
+    def remove_component_preserve_children(self, cmp: Component) -> Tuple[Component, List[Any]]:
+        """Removes the component from taxonomy, but preserves its children.
 
         The children of the removed component are placed on their ancestor's place; Their parent_id attribute is set
         to their actual parent's parent_id attribute.
 
         :param cmp: Component to remove.
+        :return: Tuple of the form (component removed from the taxonomy,
+                                    list of constraints removed from model [because of removing of the component])
         """
-        for c in self.hierarchy:
+        for c in self.taxonomy:
             if c.parent_id == cmp.id_:
                 c.parent_id = cmp.parent_id
-        self.hierarchy.remove(cmp)
-        self.__update_hierarchy()
+        self.taxonomy.remove(cmp)
+        self.__update_taxonomy()
+        return cmp, self.__remove_components_constraints(cmp)
 
     def get_component(self, **kwargs) -> Component:
         """Returns the first component whose attributes match the kwargs.
@@ -169,7 +199,7 @@ class Model:
         :param kwargs: Desired attributes of a component.
         :return: Component.
         """
-        return next((cmp for cmp in self.hierarchy if matches(cmp, **kwargs)), None)
+        return next((cmp for cmp in self.taxonomy if matches(cmp, **kwargs)), None)
 
     def get_components(self, **kwargs) -> List[Component]:
         """Returns a list of components with attributes that match the kwargs.
@@ -177,7 +207,7 @@ class Model:
         :param kwargs: Desired attributes of a components.
         :return: List of components.
         """
-        return [c for c in self.hierarchy if matches(c, **kwargs)]
+        return [c for c in self.taxonomy if matches(c, **kwargs)]
 
     def get_components_by_ids(self, ids: List[int]) -> List[Component]:
         """Returns a list of components that have their ids among given ids list.
@@ -185,7 +215,7 @@ class Model:
         :param ids: List of ids of components to return.
         :return: List of components.
         """
-        return [c for c in self.hierarchy if c.id_ in ids]
+        return [c for c in self.taxonomy if c.id_ in ids]
 
     def rename_component(self, cmp: Component, new_name: str) -> Component:
         """Changes name of a specified component.
@@ -196,7 +226,7 @@ class Model:
         """
         new_name = normalize_name(new_name)
         if new_name in self.get_all_components_names() and cmp.name != new_name:    # Allow changing name for the same
-            raise BGError(f'Component with name: "{new_name}" already exists in the hierarchy.')
+            raise BGError(f'Component with name: "{new_name}" already exists in the taxonomy.')
         cmp.name = new_name
         return cmp
 
@@ -205,7 +235,7 @@ class Model:
 
         :return: List of all components names.
         """
-        return [c.name for c in self.hierarchy]
+        return [c.name for c in self.taxonomy]
 
     def set_components_leaf_children_properties(self, cmp: Component, **kwargs):
         """Sets the attributes of the leaf children of cmp to those specified in kwargs.
@@ -273,7 +303,7 @@ class Model:
         new_name = normalize_name(new_name)
         res_names = self.get_all_resources_names()
         if new_name in res_names and res.name != new_name:  # Allow changing name for the same
-            raise BGError(f'Resource with name: "{new_name}" already exists in the hierarchy.')
+            raise BGError(f'Resource with name: "{new_name}" already exists in the taxonomy.')
         res.name = new_name
         return res
 
@@ -283,7 +313,7 @@ class Model:
         :param res: Resource to be removed from self.
         :return: Removed Resource.
         """
-        for c in self.hierarchy:
+        for c in self.taxonomy:
             if res.id_ in c.produces:
                 del c.produces[res.id_]  # Remove information about production of this resource from components
 
@@ -353,7 +383,7 @@ class Model:
         :param prt: Port to be removed from self.
         :return: Removed Port.
         """
-        for c in self.hierarchy:
+        for c in self.taxonomy:
             if prt.id_ in c.ports:
                 del c.ports[prt.id_]  # Remove information about ports from components
 
@@ -497,7 +527,7 @@ class Model:
         return ctr
 
     def get_constraint_index(self, ctr: Any) -> int:
-        """ Returns the index of a constraint in the list created as a union of sorted list of simple constraint
+        """Returns the index of a constraint in the list created as a union of sorted list of simple constraint
             and sorted list of complex constraints.
 
         :param ctr: SimpleConstraint or ComplexConstraint
@@ -506,6 +536,11 @@ class Model:
         sorted_ctrs_names = sorted([p.name for p in self.simple_constraints]) + \
                             sorted([p.name for p in self.complex_constraints])
         return sorted_ctrs_names.index(ctr.name)
+
+    def remove_all_constraints(self) -> None:
+        """Removes all constraints from model."""
+        self.simple_constraints.clear()
+        self.complex_constraints.clear()
 
 
 

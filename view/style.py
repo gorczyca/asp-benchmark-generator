@@ -10,6 +10,7 @@ THEME_NAME = 'theme'
 ACTIVE_COLOR = '#dF4F1F'
 HOVER_COLOR = '#d1d7f0'
 FONT_TYPE = 'Arial'
+CODE_FONT_TYPE = 'Courier'
 SMALL_FONT_SIZE = 10
 FONT_SIZE = 13
 BIG_FONT_SIZE = 18
@@ -18,6 +19,11 @@ SMALL_FONT = (FONT_TYPE, SMALL_FONT_SIZE)
 
 FONT = (FONT_TYPE, FONT_SIZE)
 FONT_BOLD = (FONT_TYPE, FONT_SIZE, 'bold')
+FONT_ITALIC = (FONT_TYPE, FONT_SIZE, 'italic')
+FONT_UNDERLINE = (FONT_TYPE, FONT_SIZE, 'underline')
+HEADER_FONT = (FONT_TYPE, BIG_FONT_SIZE, 'bold')
+TITLE_FONT = (FONT_TYPE, BIG_FONT_SIZE, 'bold', 'underline')
+CODE_FONT = (CODE_FONT_TYPE, FONT_SIZE)
 
 WINDOW_WIDTH_RATIO = 0.75
 WINDOW_HEIGHT_RATIO = 0.75
@@ -33,7 +39,6 @@ BACKGROUND_COLOR_SECONDARY = '#8c98c6'
 BACKGROUND_COLOR_3RD = '#ffffff'
 
 ADDITIONAL_COLOR_PRIMARY = '#0A3D62'
-ADDITIONAL_COLOR_SECONDARY = '#0A3D62'
 
 FONT_COLOR_PRIMARY = '#2c3e50'
 FONT_COLOR_SECONDARY = '#f5f6fa'
@@ -62,7 +67,12 @@ class CustomTheme(ttk.Style):
                                                'expand': [('selected', [1, 1, 1, 0])],
                                                'foreground': [('selected', FONT_COLOR_SECONDARY)],
                                                }},
-            'Main.TNotebook': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
+            'Help.TNotebook.Tab': {'configure': {
+                                                 'padding': [5, 5],
+                                                 'background': BACKGROUND_COLOR_PRIMARY,
+                                                 'focuscolor': BACKGROUND_COLOR_PRIMARY
+                                                 }},    # remove ugly border
+            'TNotebook': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
             'Main.TNotebook.Tab': {'configure': {'width': 10,
                                                  'padding': [5, 5],
                                                  'background': BACKGROUND_COLOR_PRIMARY,
@@ -70,12 +80,15 @@ class CustomTheme(ttk.Style):
                                                  }},    # remove ugly border
             'Treeview': {'configure': {'background': BACKGROUND_COLOR_PRIMARY,
                                        'fieldbackground': BACKGROUND_COLOR_3RD}},
-            'Treeview.Heading': {'configure': {'background': ADDITIONAL_COLOR_SECONDARY,
+            'Treeview.Heading': {'configure': {'background': ADDITIONAL_COLOR_PRIMARY,
                                                'foreground': FONT_COLOR_SECONDARY}},
             'Custom.Treeview': {'configure': {'highlightthickness': 0, 'bd': 0, 'font': ('Arial', 11),
                                               'background': BACKGROUND_COLOR_PRIMARY}},
             'Custom.Treeview.Heading': {'configure': {'font': ('Arial', 13, 'bold')}},
             'TLabel': {'configure': {'background': BACKGROUND_COLOR_PRIMARY}},
+            'Link.TLabel': {'configure': {'foreground': 'blue',
+                                          'font': FONT_UNDERLINE,
+                                            }},
             'TButton': {'configure': {'padding': [30, 0, 30, 0], 'relief': tk.SOLID,
                                       'background': BACKGROUND_COLOR_PRIMARY,
                                       'focuscolor': BACKGROUND_COLOR_PRIMARY },   # Remove ugly border

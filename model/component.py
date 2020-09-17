@@ -6,7 +6,7 @@ from model import Association
 
 
 class Component:
-    """Represents components in the component hierarchy.
+    """Represents components in the component taxonomy.
 
     Attributes:
         name: Name

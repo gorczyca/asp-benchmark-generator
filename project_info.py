@@ -6,6 +6,6 @@
 PROJECT_NAME = 'BenchmarkGenerator'
 PROJECT_DESCRIPTION = "Benchmark generator of configuration's problem ASP encodings"
 PROJECT_VERSION = '0.1'
+PROJECT_WEBSITE = 'https://github.com/gorczyca/asp-benchmark-generator'
 AUTHOR = 'Piotr Gorczyca'
 AUTHOR_EMAIL = 'gorczycapj@gmail.com'
-GITHUB_PAGE = 'https://github.com/gorczyca/asp-benchmark-generator'

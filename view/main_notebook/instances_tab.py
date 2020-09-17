@@ -35,7 +35,7 @@ class InstancesTab(Tab,
     """Used to set the number of instances of components.
 
     Attributes:
-        __selected_component: Currently selected component in the components hierarchy view.
+        __selected_component: Currently selected component in the components taxonomy view.
     """
     def __init__(self,
                  parent_notebook: ttk.Notebook):
@@ -49,7 +49,7 @@ class InstancesTab(Tab,
 
     # HasCommonSetup
     def _create_widgets(self):
-        self.__hierarchy_tree = ScrollbarListbox(self,
+        self.__taxonomy_tree = ScrollbarListbox(self,
                                                  on_select_callback=self.__on_select_tree_item,
                                                  heading=TREEVIEW_HEADING,
                                                  extract_id=lambda x: x.id_,
@@ -60,7 +60,7 @@ class InstancesTab(Tab,
                                                           Column('Min'),
                                                           Column('Max'),
                                                           Column('Symmetry breaking?')],
-                                                 values=self.__state.model.hierarchy)
+                                                 values=self.__state.model.taxonomy)
 
         self.__left_frame = ttk.Frame(self)
 
@@ -115,7 +115,7 @@ class InstancesTab(Tab,
                                                                command=self.__apply_count_to_all_children)
 
     def _setup_layout(self):
-        self.__hierarchy_tree.grid(row=0, column=1, sticky=tk.NSEW)
+        self.__taxonomy_tree.grid(row=0, column=1, sticky=tk.NSEW)
         self.__left_frame.grid(row=0, column=0, sticky=tk.NSEW, padx=FRAME_PAD_X, pady=FRAME_PAD_Y)
 
         self.__global_symmetry_breaking_frame.grid(row=0, column=0, columnspan=4, sticky=tk.NSEW)
@@ -163,12 +163,12 @@ class InstancesTab(Tab,
     # SubscribesToListeners
     def _subscribe_to_events(self):
         pub.subscribe(self.__on_model_loaded, actions.MODEL_LOADED)
-        pub.subscribe(self.__build_tree, actions.HIERARCHY_EDITED)
+        pub.subscribe(self.__build_tree, actions.TAXONOMY_EDITED)
         pub.subscribe(self._reset, actions.RESET)
 
     @staticmethod
     def __extract_values(cmp: Component) -> Tuple[Any, ...]:
-        """Extracts the data of the component to show in the hierarchy view.
+        """Extracts the data of the component to show in the taxonomy view.
 
         :param cmp: Component from which to extract the data.
         :return: Tuple containing data about component
@@ -185,9 +185,9 @@ class InstancesTab(Tab,
 
     def __build_tree(self) -> None:
         """Fills the tree view with components from model."""
-        self.__hierarchy_tree.set_items(self.__state.model.hierarchy)
+        self.__taxonomy_tree.set_items(self.__state.model.taxonomy)
 
-    # Hierarchy Treeview
+    # Taxonomy Treeview
     def __on_select_tree_item(self, cmp_id: int) -> None:
         """Executed whenever a tree item is selected (by mouse click).
         
@@ -246,13 +246,13 @@ class InstancesTab(Tab,
         self.__symm_breaking_checkbox_var.set(False)
         self.__global_symmetry_breaking_checkbox_var.set(False)
         # Clear the tree
-        self.__hierarchy_tree.set_items([])
+        self.__taxonomy_tree.set_items([])
 
     def __on_symmetry_breaking_toggled(self, *_) -> None:
         """Executed whenever the __symmetry_breaking_checkbox is toggled"""
         if self.__selected_component and self.__selected_component.is_leaf:
             self.__selected_component.symmetry_breaking = self.__symm_breaking_checkbox_var.get()
-            self.__hierarchy_tree.update_values(self.__selected_component)
+            self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __on_count_changed(self, *_) -> None:
         """Executed whenever the __exact_minimum_spinbox value changes."""
@@ -282,7 +282,7 @@ class InstancesTab(Tab,
                 self.__selected_component.count = None  # Reset both
                 self.__selected_component.min_count = None
             finally:
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __apply_count_to_all_children(self) -> None:
         """Executed whenever the __apply_count_to_all_children_button is pressed."""
@@ -313,7 +313,7 @@ class InstancesTab(Tab,
                                                                                               count=None,
                                                                                               min_count=min_count,
                                                                                               max_count=max_count)
-            self.__hierarchy_tree.update_values(*updated_cmps)
+            self.__taxonomy_tree.update_values(*updated_cmps)
 
     def __apply_symmetry_breaking_to_all_children(self):
         """Executed whenever the __apply_symmetry_breaking_to_all_children_button is pressed."""
@@ -326,7 +326,7 @@ class InstancesTab(Tab,
             finally:
                 updated_cmps = self.__state.model.set_components_leaf_children_properties(self.__selected_component,
                                                                                           symmetry_breaking=symm_breaking)
-                self.__hierarchy_tree.update_values(*updated_cmps)
+                self.__taxonomy_tree.update_values(*updated_cmps)
 
     def __on_exact_value_radiobutton_changed(self, *_):
         """Executed whenever the __exact_value_radiobutton's value changes."""
@@ -351,7 +351,7 @@ class InstancesTab(Tab,
 
             if self.__selected_component.is_leaf:
                 self.__selected_component.exact = exact_value
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __on_max_changed(self, *_):
         """Executed whenever the __max_spinbox value changes."""
@@ -370,13 +370,13 @@ class InstancesTab(Tab,
             except tk.TclError:
                 pass
             finally:
-                self.__hierarchy_tree.update_values(self.__selected_component)
+                self.__taxonomy_tree.update_values(self.__selected_component)
 
     def __apply_symmetry_breaking_for_all_components(self):
         """Executed whenever the __apply_global_symmetry_breaking_button is pressed."""
-        if self.__hierarchy_tree:
+        if self.__taxonomy_tree:
             symm_breaking = self.__global_symmetry_breaking_checkbox_var.get()
             updated_cmps = self.__state.model.set_all_leaf_components_properties(symmetry_breaking=symm_breaking)
-            self.__hierarchy_tree.update_values(*updated_cmps)
+            self.__taxonomy_tree.update_values(*updated_cmps)
 
 

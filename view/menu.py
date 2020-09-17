@@ -12,6 +12,7 @@ from state import State
 from view.ask_string_window import AskStringWindow
 from view.generate_and_solve_window import GenerateAndSolveWindow
 from view.generate_window import GenerateWindow
+from view.help_window import HelpWindow
 from view.solve_window import SolveWindow
 from view.style import BACKGROUND_COLOR_PRIMARY
 
@@ -41,13 +42,9 @@ class Menu(tk.Menu):
         edit_menu = tk.Menu(tearoff=0, bg=BACKGROUND_COLOR_PRIMARY)
         edit_menu.add_command(label='Change root name', command=self.__on_change_root_name)
 
-        help_menu = tk.Menu(tearoff=0, bg=BACKGROUND_COLOR_PRIMARY)
-        about_menu = tk.Menu(tearoff=0, bg=BACKGROUND_COLOR_PRIMARY)
-
         self.add_cascade(label='File', menu=file_menu)
         self.add_cascade(label='Edit', menu=edit_menu)
-        self.add_cascade(label='Help', menu=help_menu)
-        self.add_cascade(label='About', menu=about_menu)
+        self.add_cascade(label='Help', command=self.__help)
         self.add_cascade(label='Run', menu=run_menu)
 
         parent_frame.config(menu=self)
@@ -125,3 +122,9 @@ class Menu(tk.Menu):
         file_name = extract_file_name(file.name)
         Settings.get_settings().add_recently_opened_project(self.__state.model.root_name, file.name)
         pub.sendMessage(actions.MODEL_SAVED, file_name=file_name)
+
+    def __help(self):
+        HelpWindow(self.__parent_frame)
+
+    def __about(self):
+        pass

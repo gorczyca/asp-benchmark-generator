@@ -1,4 +1,4 @@
-from .hierarchy_tab import HierarchyTab
+from .taxonomy_tab import TaxonomyTab
 from .associations_tab import AssociationsTab
 from .ports_tab import PortsTab
 from .resources_tab import ResourcesTab
@@ -6,4 +6,4 @@ from .constraints_tab import ConstraintsTab
 from .simple_constraint_window import SimpleConstraintWindow
 from .complex_constraint_window import ComplexConstraintWindow
 from .select_ports_window import SelectPortsWindow
-from .create_hierarchy_window import CreateHierarchyWindow
+from .create_taxonomy_window import CreateTaxonomyWindow

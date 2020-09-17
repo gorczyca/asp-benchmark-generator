@@ -9,7 +9,7 @@ from file_operations import extract_file_name
 from view.menu import Menu
 from view.abstract import HasCommonSetup, SubscribesToEvents
 from view.main_notebook import EncodingTab, InstancesTab
-from view.vertical_notebook import HierarchyTab, AssociationsTab, \
+from view.vertical_notebook import TaxonomyTab, AssociationsTab, \
     PortsTab, ResourcesTab, ConstraintsTab
 
 
@@ -45,7 +45,7 @@ class View(ttk.Frame,
 
         self.__vertical_notebook = ttk.Notebook(self.__encoding_frame, style='Vertical.TNotebook')
 
-        self.__hierarchy_tab = HierarchyTab(self.__vertical_notebook)
+        self.__taxonomy_tab = TaxonomyTab(self.__vertical_notebook)
         self.__associations_tab = AssociationsTab(self.__vertical_notebook)
         self.__ports_tab = PortsTab(self.__vertical_notebook)
         self.__resources_tab = ResourcesTab(self.__vertical_notebook)
