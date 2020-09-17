@@ -1,3 +1,4 @@
+![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/gorczyca/asp-benchmark-generator?include_prereleases)
 # Benchmark generator
 
 ##### A GUI tool for generation of configuration problem's encodings in ASP.
