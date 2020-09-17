@@ -6,7 +6,7 @@
  - Python 3.7 with tkinter _(the standard GUI library for Python)_
  - [PyPubSub](https://pypi.org/project/PyPubSub/ "PyPubSub on PyPI") >= 4.0.3
  - [clingo](https://anaconda.org/potassco/clingo "Clingo on anaconda") >= 5.4.0
-
+ - _(optional)_ [PyInstaller](https://pypi.org/project/pyinstaller/) >= 4.0 _(to create an exectuable file)_
 ### Setup 
 Setup requires using packages from both: PyPI (PyPubSub) and Anaconda (Clingo).\
 Example (replace ENVIRONMENT_NAME with the desired environment name):
@@ -39,5 +39,16 @@ on the active environment. When both pypubsub and clingo appear on the list, we 
 ### Running
 Execute the [asp_benchmark_generator.py](asp_benchmark_generator.py) script, eg:
 ```sh
-$ python3 asp_benchmark_generator.py
+(ENVIRONMENT_NAME) > python3 asp_benchmark_generator.py
 ```
+
+### (Optional) Creating an executable file
+Install PyInstaller
+```sh
+(ENVIRONMENT_NAME) > pip install PyPubSub
+```
+Run PyInstaller against the main script ([asp_benchmark_generator.py](asp_benchmark_generator.py))
+```sh
+(ENVIRONMENT_NAME) > pyinstaller asp_benchmark_generator.py --onefile --noconsole
+```
+This will generate the executable in a subdirectory called **dist**.
