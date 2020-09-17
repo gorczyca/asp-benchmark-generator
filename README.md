@@ -39,38 +39,5 @@ on the active environment. When both pypubsub and clingo appear on the list, we 
 ### Running
 Execute the [asp_benchmark_generator.py](asp_benchmark_generator.py) script, eg:
 ```sh
-$ python3 main.py
+$ python3 asp_benchmark_generator.py
 ```
-##Usage
-
-#### Table of Contents
-**[1. Initial window](#initial-window)**\
-**[2. Component's taxonomy](#component's-taxonomy)**\
-**[3. Associations](#associations)**\
-**[4. Ports](#ports)**\
-**[5. Resources](#resources)**\
-**[6. Constraints](#constraints)**\
-**[7. Generation](#generation)**\
-**[8. Solving](#solving)**
-
-#### Initial Window
-
-#### Component's Taxonomy
-
-#### Associations
-
-#### Ports
-
-#### Resources 
-
-#### Constraints
-
-#### Generation
-
-#### Solving
-
-
-
-
-
-
