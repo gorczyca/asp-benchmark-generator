@@ -196,7 +196,9 @@ class InstancesTab(Tab,
         selected_cmp: Component = self.__state.model.get_component(id_=cmp_id)
         self.__selected_component = selected_cmp
         self.__cmp_label_var.set(trim_string(selected_cmp.name, length=LABEL_LENGTH))
-        self.__exact_value_radiobutton_var.set(selected_cmp.exact)
+
+        radiobutton_val = selected_cmp.exact if selected_cmp.exact is not None else True
+        self.__exact_value_radiobutton_var.set(radiobutton_val)
         # Enable symmetry breaking checkbox & spinbox
         change_controls_state(tk.NORMAL,
                               self.__exact_minimum_spinbox,

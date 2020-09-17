@@ -211,8 +211,8 @@ def __generate_associations_code(model: Model) -> str:
             associations_code += f'{PAN_SYMBOL}("{c.name}").\n'
             associations_code += f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") :- ' \
                                  f'{model.root_name}({CMP_VARIABLE}1), {c.name}({CMP_VARIABLE}2).\n'
-            min_ = '' if not c.association.min_ else c.association.min_
-            max_ = '' if not c.association.max_ else c.association.max_
+            min_ = '' if c.association.min_ is None else c.association.min_
+            max_ = '' if c.association.max_ is None else c.association.max_
             associations_code += f'{min_} {{ {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") : ' \
                                  f'{PPA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}2, "{c.name}") }} {max_} :- ' \
                                  f'{IN_SYMBOL}({CMP_VARIABLE}1), {model.root_name}({CMP_VARIABLE}1).\n'
@@ -338,13 +338,13 @@ def __generate_simple_constraint_distinct_partial_code(ctr: SimpleConstraint, mo
     components_count = len(components)
     for i, cmp in enumerate(components):
         var_no = i + 2
-        ctr_code += f'\t{cmp.name} : {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}), {cmp.name}({var_no})'
+        ctr_code += f'\t{cmp.name} : {PA_SYMBOL}({CMP_VARIABLE}1, {CMP_VARIABLE}{var_no}, {UNKNOWN_VARIABLE}), {cmp.name}({CMP_VARIABLE}{var_no})'
         if i == components_count-1:
             ctr_code += '\n'    # Do not put the ';' sign after last part
         else:
             ctr_code += ';\n'
-    min_ = '' if not ctr.min_ else ctr.min_
-    max_ = '' if not ctr.max_ else ctr.max_
+    min_ = '' if ctr.min_ is None else ctr.min_
+    max_ = '' if ctr.max_ is None else ctr.max_
     # C1 is always reserved for the root component
     ctr_code = f'{min_} {COUNT_DIRECTIVE} {{\n{ctr_code}}} {max_}'
     return ctr_code
@@ -368,8 +368,8 @@ def __generate_simple_constraint_partial_code(ctr: SimpleConstraint, model: Mode
             ctr_code += '\n'  # Do not put the ';' sign after last part
         else:
             ctr_code += ';\n'
-    min_ = '' if not ctr.min_ else ctr.min_
-    max_ = '' if not ctr.max_ else ctr.max_
+    min_ = '' if ctr.min_ is None else ctr.min_
+    max_ = '' if ctr.max_ is None else ctr.max_
     # C1 is always reserved for the root component
     ctr_code = f'{min_} {{\n{ctr_code}}} {max_}'
     return ctr_code

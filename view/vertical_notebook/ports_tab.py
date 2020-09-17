@@ -343,7 +343,7 @@ class PortsTab(Tab,
         :param ports: New list of ports compatible with __selected_port.
         """
         if self.__selected_port:
-            ports.sort(key=lambda x: x.root_name)
+            ports.sort(key=lambda x: x.name)
             self.__compatible_with_listbox.set_items(ports)
             self.__state.model.update_ports_compatibility(self.__selected_port, ports)
 

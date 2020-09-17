@@ -185,6 +185,7 @@ To add a simple constraint press the <b>Add simple constraint</b> button (from t
 To edit a complex constraint, select a complex constraint that you want to edit (from the <b>Constraints</b> list on the left-hand side), then press the <b>Edit</b> button (from the right panel). You will be presented with the <b>Complex constraint window</b>.
 
 <color>Complex constraint window</color>
+
 <b>1. Condition</b>
 To <b>add a part of condition</b> press the <b>Add</b> button (located in the left-bottom of the window, under the <b>Condition</b> list). You  will be presented with <b>Simple constraint window</b> which is used to create the part of the complex constraint's condition's part.
 	- To <b>edit a part of condition</b>, select the part of condition that you want to edit (from the <b>Condition</b> list), then press the <b>Edit</b> button (located under the list you selected the part of condition from). You  will be presented with <b>Simple constraint window</b> which is used to edit the part of the complex constraint's condition's part.
@@ -240,7 +241,8 @@ To set the symmetry breaking for all component types, tick the <b>Symmetry break
 <tab>Generation and solving</tab>
 <title>Generation and solving</title>
 
-<h>Generation</h>
+<h>Generation</h
+>
 
 To generate the output ASP program file select the <b>Run</b> command from the top menu bar, then select <b>Generate</b>. You will be presented with the <b>Generate window</b> where you can select the output file path for the generated ASP program and set the predicates symbol for which you wish to generate the <b>#show</b> directive.
 

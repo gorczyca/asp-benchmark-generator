@@ -333,4 +333,4 @@ class ResourcesTab(Tab,
             finally:
                 updated_components = self.__state.model.set_resource_production_to_all_components_children(
                     self.__selected_component, self.__selected_resource, value)
-                self.__taxonomy_tree.update_values(updated_components)
+                self.__taxonomy_tree.update_values(*updated_components)
