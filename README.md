@@ -2,12 +2,18 @@
 
 ##### A GUI tool for generation of configuration problem's encodings in ASP.
 
+A comprehensive guide on how to use the program can be found in the **Releases**. 
+So can be the executables for Windows and Linux. For other OS, please refer to the **Setup** section.
+
+
 ### Requirements
  - Python 3.7 with tkinter _(the standard GUI library for Python)_
  - [PyPubSub](https://pypi.org/project/PyPubSub/ "PyPubSub on PyPI") >= 4.0.3
  - [clingo](https://anaconda.org/potassco/clingo "Clingo on anaconda") >= 5.4.0
  - _(optional)_ [PyInstaller](https://pypi.org/project/pyinstaller/) >= 4.0 _(to create an exectuable file)_
+ 
 ### Setup 
+
 Setup requires using packages from both: PyPI (PyPubSub) and Anaconda (Clingo).\
 Example (replace ENVIRONMENT_NAME with the desired environment name):
 1. Create new conda environment with Python 3.7 (using Anaconda Prompt):
