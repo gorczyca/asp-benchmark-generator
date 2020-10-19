@@ -2,17 +2,17 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Callable
 
-from file_operations import load_from_file, open_project
+from misc.file_operations import load_from_file, open_project
 from model import Model
-from settings import Settings
-from state import State
+from misc.settings import Settings
+from misc.state import State
 from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.solve_window import SolveWindow
 from view.style import CONTROL_PAD_Y, FRAME_PAD_X, FRAME_PAD_Y
 from view.abstract import HasCommonSetup, Window
-from file_operations import extract_file_name
-from project_info import PROJECT_NAME, PROJECT_DESCRIPTION, PROJECT_VERSION
+from misc.file_operations import extract_file_name
+from misc.project_info import PROJECT_NAME, PROJECT_DESCRIPTION, PROJECT_VERSION
 
 WINDOW_TITLE = 'Welcome to the Benchmark Generator'
 

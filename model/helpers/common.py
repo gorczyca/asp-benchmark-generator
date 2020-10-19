@@ -3,7 +3,7 @@
 from typing import Any
 import re
 
-from exceptions import BGError
+from misc.exceptions import BGError
 import code_generator
 
 SPACE_REPLACEMENT = '_'

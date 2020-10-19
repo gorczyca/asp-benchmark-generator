@@ -4,11 +4,10 @@ from typing import TextIO
 
 from pubsub import pub
 
-import actions
-from file_operations import JSON_EXTENSION, extract_file_name, open_project, JSON_FILE_TYPE, ALL_FILES_TYPE
-import json_converter
-from settings import Settings
-from state import State
+from misc.file_operations import JSON_EXTENSION, extract_file_name, open_project, JSON_FILE_TYPE, ALL_FILES_TYPE
+from misc import json_converter, actions
+from misc.settings import Settings
+from misc.state import State
 from view.ask_string_window import AskStringWindow
 from view.generate_and_solve_window import GenerateAndSolveWindow
 from view.generate_window import GenerateWindow

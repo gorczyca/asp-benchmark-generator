@@ -5,12 +5,12 @@ from typing import Tuple, Any, Optional
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from model import Component, Association
-from state import State
+from misc.state import State
 from view.tree_view_column import Column
 from view.scrollbars_listbox import ScrollbarListbox
-from view.abstract import Tab, HasCommonSetup, SubscribesToEvents, Resetable, Resetable
+from view.abstract import Tab, HasCommonSetup, SubscribesToEvents, Resetable
 from view.common import change_controls_state, trim_string
 from view.style import FONT
 

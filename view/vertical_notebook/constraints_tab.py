@@ -4,9 +4,9 @@ from typing import Optional, Any
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from model import SimpleConstraint
-from state import State
+from misc.state import State
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Resetable, SubscribesToEvents, Tab

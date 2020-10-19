@@ -4,8 +4,8 @@ from typing import Optional
 
 from pubsub import pub
 
-import actions
-from file_operations import extract_file_name
+from misc import actions
+from misc.file_operations import extract_file_name
 from view.menu import Menu
 from view.abstract import HasCommonSetup, SubscribesToEvents
 from view.main_notebook import EncodingTab, InstancesTab

@@ -4,11 +4,11 @@ from tkinter import ttk, messagebox
 import tkinter as tk
 from typing import Optional, Callable
 
-from exceptions import BGError
-from file_operations import CSV_EXTENSION, solve
-from settings import Settings
+from misc.exceptions import BGError
+from misc.file_operations import CSV_EXTENSION, solve
+from misc.settings import Settings
 from solver import InstanceRepresentation
-from state import State
+from misc.state import State
 from view.browse_file_path_frame import BrowseFilePathFrame
 from view.abstract import HasCommonSetup, Window
 from view.common import get_target_file_location, change_controls_state

@@ -7,9 +7,9 @@ from typing import Any, Tuple, Optional
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from model import Component
-from state import State
+from misc.state import State
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Tab, SubscribesToEvents, Resetable

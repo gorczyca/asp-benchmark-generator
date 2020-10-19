@@ -5,9 +5,9 @@ from typing import Optional
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from model import Component
-from state import State
+from misc.state import State
 from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.abstract import HasCommonSetup, SubscribesToEvents, Resetable, Tab

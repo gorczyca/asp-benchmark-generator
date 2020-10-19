@@ -7,7 +7,7 @@ above.
 
 from typing import List, Tuple, Optional
 
-from exceptions import BGError
+from misc.exceptions import BGError
 from model import Component
 from model.helpers.common import normalize_name
 

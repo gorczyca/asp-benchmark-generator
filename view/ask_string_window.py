@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Any, Callable
 
-from exceptions import BGError
+from misc.exceptions import BGError
 from view.abstract import Window, HasCommonSetup
 from view.style import CONTROL_PAD_Y, CONTROL_PAD_X, FRAME_PAD_Y, FRAME_PAD_X
 

@@ -5,9 +5,9 @@ from tkinter import ttk
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from model import Port, Component
-from state import State
+from misc.state import State
 from view.ask_string_window import AskStringWindow
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column

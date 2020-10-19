@@ -1,0 +1,10 @@
+# run: conda env create --file environment.yml
+name: genenv
+channels:
+  - potassco
+dependencies:
+  - python=3.7
+  - clingo
+  - pip
+  - pip:
+    - PyPubSub

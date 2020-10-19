@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from model import Port
-from state import State
+from misc.state import State
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Window

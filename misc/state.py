@@ -2,7 +2,6 @@
 
 from typing import Optional, TextIO
 
-from settings import Settings
 from model import Model
 
 

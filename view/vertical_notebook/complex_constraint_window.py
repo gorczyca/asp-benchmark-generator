@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple, Callable, Any
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from exceptions import BGError
+from misc.exceptions import BGError
 from model import ComplexConstraint, SimpleConstraint
 from view.scrollbars_listbox import ScrollbarListbox
 from view.abstract import HasCommonSetup, Window

@@ -44,7 +44,7 @@ That should do it. To make sure packages have been installed in correct environm
 on the active environment. When both pypubsub and clingo appear on the list, we should be good to go.
    
 ### Running
-Execute the [asp_benchmark_generator.py](asp_benchmark_generator.py) script, eg:
+Execute the [asp_benchmark_generator.py](main.py) script, eg:
 ```sh
 (ENVIRONMENT_NAME) > python3 asp_benchmark_generator.py
 ```
@@ -54,7 +54,7 @@ Install PyInstaller
 ```sh
 (ENVIRONMENT_NAME) > pip install PyPubSub
 ```
-Run PyInstaller against the main script ([asp_benchmark_generator.py](asp_benchmark_generator.py))
+Run PyInstaller against the main script ([asp_benchmark_generator.py](main.py))
 ```sh
 (ENVIRONMENT_NAME) > pyinstaller asp_benchmark_generator.py --onefile --noconsole
 ```

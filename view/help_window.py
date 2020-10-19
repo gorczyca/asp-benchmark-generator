@@ -4,7 +4,7 @@ from tkinter import ttk
 import webbrowser
 
 from help_ import parse_text
-from project_info import PROJECT_WEBSITE
+from misc.project_info import PROJECT_WEBSITE
 from view.abstract import HasCommonSetup, Window
 from view.style import FRAME_PAD_Y, FRAME_PAD_X, FONT, FONT_BOLD, FONT_ITALIC, FONT_UNDERLINE, HEADER_FONT, \
     ADDITIONAL_COLOR_PRIMARY, CODE_FONT, TITLE_FONT

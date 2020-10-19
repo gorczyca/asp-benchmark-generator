@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional, Dict
 
-from json_converter import deserialize_dict
+from misc.json_converter import deserialize_dict
 from model import Association
 
 

@@ -8,13 +8,13 @@ from threading import Event
 
 from pubsub import pub
 
-import actions
+from misc import actions
 from code_generator import generate_code
-from exceptions import BGError
+from misc.exceptions import BGError
 from model import Model
-from settings import Settings
+from misc.settings import Settings
 from solver import Solver, InstanceRepresentation
-from state import State
+from misc.state import State
 
 JSON_EXTENSION = '.json'
 LP_EXTENSION = '.lp'

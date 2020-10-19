@@ -4,9 +4,9 @@ from typing import Optional, Callable
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from exceptions import BGError
+from misc.exceptions import BGError
 from model import Component, SimpleConstraint
-from state import State
+from misc.state import State
 from view.scrollbars_listbox import ScrollbarListbox
 from view.tree_view_column import Column
 from view.abstract import HasCommonSetup, Window

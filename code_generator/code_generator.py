@@ -3,7 +3,7 @@
 from typing import List, Tuple, Dict
 
 from model import Model, Component, Port, SimpleConstraint
-from project_info import PROJECT_WEBSITE, PROJECT_VERSION, AUTHOR_EMAIL
+from misc.project_info import PROJECT_WEBSITE, PROJECT_VERSION, AUTHOR_EMAIL
 
 DEFAULT_NEGATION_OPERATOR = 'not'
 COUNT_DIRECTIVE = '#count'

@@ -2,7 +2,7 @@ import re
 import os
 from typing import Tuple, List, Dict
 
-HELP_INPUT_FILE_PATH = '../help_text'
+HELP_INPUT_FILE_PATH = '../misc/help_text'
 
 STRING_IN_TAGS_RE = r'<[a-zA-Z]\w*>(.*?)</[a-zA-Z]\w*>'
 TAG_RE = r'</?[a-zA-Z]\w*>'

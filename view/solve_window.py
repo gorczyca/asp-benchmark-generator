@@ -1,10 +1,10 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from exceptions import BGError
-from file_operations import LP_EXTENSION
-from settings import Settings
-from state import State
+from misc.exceptions import BGError
+from misc.file_operations import LP_EXTENSION
+from misc.settings import Settings
+from misc.state import State
 from view.browse_file_path_frame import BrowseFilePathFrame
 from view.solve_frame import SolveFrame
 from view.abstract import HasCommonSetup, Window

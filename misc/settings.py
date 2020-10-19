@@ -8,10 +8,10 @@ import os
 import copy
 
 from code_generator import SYMBOLS, CN_SYMBOL, IN_SYMBOL, INSTANCES_FACTS
-from json_converter import get_json_string
+from misc.json_converter import get_json_string
 from solver import InstanceRepresentation
 
-CONFIGURATION_FILE_NAME = './.settings.json'
+CONFIGURATION_FILE_NAME = '../.settings.json'
 MAX_RECENTLY_OPENED_PROJECTS_COUNT = 15
 
 

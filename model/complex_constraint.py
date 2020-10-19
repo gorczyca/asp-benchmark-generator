@@ -1,7 +1,7 @@
 import uuid
 from typing import Optional, List
 
-from json_converter import deserialize_list
+from misc.json_converter import deserialize_list
 from model import SimpleConstraint
 
 

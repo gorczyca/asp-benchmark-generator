@@ -1,9 +1,9 @@
 from typing import List, Tuple, Any
 import json
 
-from json_converter import deserialize_list
+from misc.json_converter import deserialize_list
 from model.helpers import normalize_name, matches
-from exceptions import BGError
+from misc.exceptions import BGError
 
 from model.simple_constraint import SimpleConstraint
 from model.component import Component

@@ -1,17 +1,14 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from pubsub import pub
-
-import actions
-from exceptions import BGError
+from misc.exceptions import BGError
 from model.helpers import string_converter
-from state import State
+from misc.state import State
 from view.abstract import HasCommonSetup, Window
 from view.style import FONT_BOLD, FRAME_PAD_Y, FRAME_PAD_X
 
 WINDOW_TITLE = 'Edit taxonomy'
-LABEL_TEXT = 'Input taxonomy of view.\n("Tab" means subcomponent of component above.)'
+LABEL_TEXT = 'Input taxonomy of component types.\n("Tab" means subcomponent of component above.)'
 
 
 def select_all_text(event):
@@ -23,9 +20,6 @@ def select_all_text(event):
 
 class CreateTaxonomyWindow(HasCommonSetup,
                            Window):
-    """
-
-    """
     def __init__(self, parent_frame, callback):
         self.__callback = callback
         self.__state = State()
