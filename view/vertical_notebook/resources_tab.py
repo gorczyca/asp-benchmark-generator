@@ -257,7 +257,7 @@ class ResourcesTab(Tab,
         self.__state.model.add_resource(res)
         self.__selected_resource = res
         self.__resource_combobox['values'] = sorted(self.__state.model.get_all_resources_names())
-        self.__resource_combobox_var.set(name)
+        self.__resource_combobox_var.set(res.name)
         # Enable buttons
         change_controls_state(tk.NORMAL,
                               self.__rename_resource_button,
