@@ -20,7 +20,7 @@ NOTEPAD_TOP_PADY_Y = 20
 TAB_TAG = 'tab'
 TAB_RE = r'<tab>(.*?)</tab>'
 
-HELP_INPUT_FILE_PATH = './help_text'
+HELP_INPUT_FILE_PATH = './help_/help_text'
 
 
 class HelpWindow(HasCommonSetup,
