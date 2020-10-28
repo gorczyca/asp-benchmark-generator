@@ -21,6 +21,6 @@ Please refer to [asp_benchmark_generator-1.0-guide.pdf](asp_benchmark_generator-
     ```
 4. Execute the [main.py](main.py) script, eg:
     ```sh
-    (genenv) D:\Path\to\cloned\repo> python3 main.py
+    (genenv) D:\Path\to\cloned\repo> python main.py
     ```
    
