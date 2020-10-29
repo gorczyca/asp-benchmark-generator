@@ -22,7 +22,8 @@ def normalize_name(name: str) -> str:
     if name in code_generator.KEYWORDS:
         raise BGError(f'{name} is a keyword.')
     if not re.match(VALID_NAME_REGEX, name):
-        raise BGError(f'{name} is an invalid name.\nYou may only use alphanumeric symbols and "_".')
+        raise BGError(f'{name} is an invalid name.\nYou may only use alphanumeric symbols and "_" '
+                      f'and the first character must be a letter.')
     return name
 
 
