@@ -1,0 +1,1397 @@
+{
+    "complex_constraints": [
+        {
+            "antecedent": [
+                {
+                    "components_ids": [
+                        309799597757982162138080199018753832940,
+                        79294702942647225224644129002001344136,
+                        108744342920983092674062596482758802863
+                    ],
+                    "description": "\n",
+                    "distinct": false,
+                    "id_": 87758012654007532490907130142553970263,
+                    "max_": null,
+                    "min_": 1,
+                    "name": "certain_games"
+                }
+            ],
+            "antecedent_all": true,
+            "consequent": [
+                {
+                    "components_ids": [
+                        248049477219231585996133846104355712914
+                    ],
+                    "description": "\n",
+                    "distinct": false,
+                    "id_": 66075714381383018775955645826475085764,
+                    "max_": null,
+                    "min_": 1,
+                    "name": "windows_os"
+                }
+            ],
+            "consequent_all": true,
+            "description": "Fifa, Tekken GTA only compatible with WIN OS\n",
+            "id_": 43731527352127469963718929166723527376,
+            "name": "games_compatibility"
+        },
+        {
+            "antecedent": [
+                {
+                    "components_ids": [
+                        21580652229401630607649979010459396212
+                    ],
+                    "description": "at least 3 ram units\n",
+                    "distinct": false,
+                    "id_": 52487622731444284436985436272926797655,
+                    "max_": null,
+                    "min_": 3,
+                    "name": "many_ram_units"
+                }
+            ],
+            "antecedent_all": true,
+            "consequent": [
+                {
+                    "components_ids": [
+                        306465488729068976392823168130612434656
+                    ],
+                    "description": "\n",
+                    "distinct": false,
+                    "id_": 19488017415444282384406442968110136443,
+                    "max_": null,
+                    "min_": 1,
+                    "name": "powerful_psu"
+                },
+                {
+                    "components_ids": [
+                        86185890582667671032608017081205397065,
+                        177593375767492284939393140252650482369
+                    ],
+                    "description": "\n",
+                    "distinct": false,
+                    "id_": 275808696909098286465431878932174895527,
+                    "max_": null,
+                    "min_": 1,
+                    "name": "energy_saving_cpu"
+                }
+            ],
+            "consequent_all": false,
+            "description": "if 3 or more RAM units THEN either a specific powerful PSU (750W) OR energy saving low-efficiency CPU (intel i3 or intel celeron)\n",
+            "id_": 26730595121927904914301948876138547316,
+            "name": "complex_constraint"
+        }
+    ],
+    "ports": [
+        {
+            "compatible_with": [
+                74209571461714024200394208690739662139,
+                86122026858393590863391125108570395548
+            ],
+            "force_connection": true,
+            "id_": 72517433603813857010290496860612357681,
+            "name": "nvidia_port"
+        },
+        {
+            "compatible_with": [
+                86122026858393590863391125108570395548,
+                280572821977675584991212900056924149116
+            ],
+            "force_connection": true,
+            "id_": 330119585657655668324054989921021424354,
+            "name": "amd_port"
+        },
+        {
+            "compatible_with": [
+                72517433603813857010290496860612357681
+            ],
+            "force_connection": false,
+            "id_": 74209571461714024200394208690739662139,
+            "name": "msi_ace_gpu_port"
+        },
+        {
+            "compatible_with": [
+                330119585657655668324054989921021424354,
+                72517433603813857010290496860612357681
+            ],
+            "force_connection": false,
+            "id_": 86122026858393590863391125108570395548,
+            "name": "msi_tomahawk_gpu_port"
+        },
+        {
+            "compatible_with": [
+                330119585657655668324054989921021424354
+            ],
+            "force_connection": false,
+            "id_": 280572821977675584991212900056924149116,
+            "name": "asus_prime_gpu_port"
+        }
+    ],
+    "resources": [
+        {
+            "id_": 332827262564176953833255339691875049807,
+            "name": "disk_space"
+        }
+    ],
+    "root_name": "pc",
+    "simple_constraints": [
+        {
+            "components_ids": [
+                108744342920983092674062596482758802863
+            ],
+            "description": "\n",
+            "distinct": false,
+            "id_": 208223940933572930163477144375213652206,
+            "max_": null,
+            "min_": 1,
+            "name": "fifa_20_installed"
+        },
+        {
+            "components_ids": [
+                87356781852605320422544190858758129011,
+                255473249646158904039886302685745864455,
+                276677740780889871775306794398095914875,
+                134771331093832534943379561273668346421,
+                71848201204155216221814993520809671080,
+                330661927089397348201885928556976049214,
+                218693119033026804574478521035445954970,
+                52806514278129405985208025251541212313,
+                235516534294679693676670841873584812262,
+                230494542264243036848647446146519670902,
+                87048823036955871690473550133640267467,
+                163098351547842351895657665426829901066,
+                296769952093980242818231027892257877373,
+                201015780517110311678744058507745081606,
+                91862014654584306664708465225257120919,
+                73228283608733790569991213108318399432,
+                319008223251848799837711559994252968487,
+                161335994634037683456126125219883539709,
+                269245618327022624611394203243584119505,
+                103697163414705256578156747258384340573,
+                270888412746970292294426281939976656599,
+                67760093226290581572423856070241427414
+            ],
+            "description": "3-4 different RAM unit types\n",
+            "distinct": true,
+            "id_": 79636128284023797476450646911842777441,
+            "max_": 4,
+            "min_": 3,
+            "name": "many_different_ram_units"
+        }
+    ],
+    "taxonomy": [
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 275304674775879781546293696958042903880,
+            "is_leaf": false,
+            "level": 0,
+            "max_count": null,
+            "min_count": null,
+            "name": "device",
+            "parent_id": null,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": {
+                "max_": 1,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 178290749875111410591521835112045587161,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "motherboard",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 51085250868501668361869632808072344148,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "msi_ace",
+            "parent_id": 178290749875111410591521835112045587161,
+            "ports": {
+                "74209571461714024200394208690739662139": 2
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 134226261876797286579697845502753137546,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "msi_tomahawk",
+            "parent_id": 178290749875111410591521835112045587161,
+            "ports": {
+                "86122026858393590863391125108570395548": 2
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 320664573464062196683705045895182030504,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "asus_prime",
+            "parent_id": 178290749875111410591521835112045587161,
+            "ports": {
+                "280572821977675584991212900056924149116": 1
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": 1,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 144628516201779327697022572707214222251,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "cpu",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 324916552781998023641650028804274304595,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_cpu",
+            "parent_id": 144628516201779327697022572707214222251,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 38332960391360185462501247224868272774,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_core_i9",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 212579437016575016770650298135016830911,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_core_i7",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 80297389407270804026586770502431014846,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_core_i5",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 177593375767492284939393140252650482369,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_core_i3",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 86185890582667671032608017081205397065,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_celeron",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 213420257070951446421518022559438239507,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "intel_pentium",
+            "parent_id": 324916552781998023641650028804274304595,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 308979683833490263986421045109318080113,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "amd_cpu",
+            "parent_id": 144628516201779327697022572707214222251,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 283857035427831710218967958571097608365,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "amd_ryzen",
+            "parent_id": 308979683833490263986421045109318080113,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": 2,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 139799434927673735616649347234680585464,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "gpu",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 305116900079957617509986876165254000783,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "nvidia_gpu",
+            "parent_id": 139799434927673735616649347234680585464,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 162905866852947727878890511541081903505,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "nvidia_titan_rtx",
+            "parent_id": 305116900079957617509986876165254000783,
+            "ports": {
+                "72517433603813857010290496860612357681": 1
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 81848404659531429599579094155786446835,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "nvidia_geforce_rtx",
+            "parent_id": 305116900079957617509986876165254000783,
+            "ports": {
+                "72517433603813857010290496860612357681": 1
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 18078786125549588465059757842650111243,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "amd_gpu",
+            "parent_id": 139799434927673735616649347234680585464,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 280319889170274216310951580388850371572,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "amd_msi_radeon",
+            "parent_id": 18078786125549588465059757842650111243,
+            "ports": {
+                "330119585657655668324054989921021424354": 1
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 23739037735342763519996871520450134061,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "amd_sapphire_radeon",
+            "parent_id": 18078786125549588465059757842650111243,
+            "ports": {
+                "330119585657655668324054989921021424354": 1
+            },
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": 1,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 222513108824779120064393339036146168105,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "psu",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 306465488729068976392823168130612434656,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "corsair_750w",
+            "parent_id": 222513108824779120064393339036146168105,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 216528251529586342356800398048881363967,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "corsair_700w",
+            "parent_id": 222513108824779120064393339036146168105,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 92657830872403185038719573907125412888,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "silentium_600w",
+            "parent_id": 222513108824779120064393339036146168105,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 160355219899575483892533225193521637256,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "silentium_650w",
+            "parent_id": 222513108824779120064393339036146168105,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": 4,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 21580652229401630607649979010459396212,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "ram",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 87356781852605320422544190858758129011,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_2666",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 255473249646158904039886302685745864455,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_2400",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 276677740780889871775306794398095914875,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_2133",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 134771331093832534943379561273668346421,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_2800",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 71848201204155216221814993520809671080,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3000",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 330661927089397348201885928556976049214,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3200",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 218693119033026804574478521035445954970,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3466",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 52806514278129405985208025251541212313,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4000",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 235516534294679693676670841873584812262,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4133",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 230494542264243036848647446146519670902,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4500",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 87048823036955871690473550133640267467,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4400",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 163098351547842351895657665426829901066,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4300",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 296769952093980242818231027892257877373,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4266",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 201015780517110311678744058507745081606,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_4200",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 91862014654584306664708465225257120919,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3866",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 73228283608733790569991213108318399432,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3733",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 319008223251848799837711559994252968487,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3600",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 161335994634037683456126125219883539709,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3400",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 269245618327022624611394203243584119505,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3333",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 103697163414705256578156747258384340573,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3300",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 270888412746970292294426281939976656599,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_3066",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 67760093226290581572423856070241427414,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ddr4_2933",
+            "parent_id": 21580652229401630607649979010459396212,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": 6,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 37798927146750408485737436833961655639,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "rom",
+            "parent_id": 275304674775879781546293696958042903880,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 54987723732111024385265089991834950373,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "hdd",
+            "parent_id": 37798927146750408485737436833961655639,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 169758795190717040895353309006300807326,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "toshiba_p300_2tb",
+            "parent_id": 54987723732111024385265089991834950373,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": 2000
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 56630581594059404511020548787553106321,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "wd_red_6tb",
+            "parent_id": 54987723732111024385265089991834950373,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": 6000
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 235016284340798525590552222527304851534,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "wd_purple_2tb",
+            "parent_id": 54987723732111024385265089991834950373,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": 2000
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 209037782283264672834254484747614920098,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "ssd",
+            "parent_id": 37798927146750408485737436833961655639,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 241439116077366125471563029388518347166,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "kingston_240gb",
+            "parent_id": 209037782283264672834254484747614920098,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": 240
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 10,
+            "exact": true,
+            "id_": 225739194185306028779550087685275142756,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "samsung_120gb",
+            "parent_id": 209037782283264672834254484747614920098,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": 120
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 165857219689315778460846028711061077084,
+            "is_leaf": false,
+            "level": 0,
+            "max_count": null,
+            "min_count": null,
+            "name": "software",
+            "parent_id": null,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": {
+                "max_": 1,
+                "min_": 1
+            },
+            "count": null,
+            "exact": null,
+            "id_": 267833656972231870694011937678046312547,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "os",
+            "parent_id": 165857219689315778460846028711061077084,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 248049477219231585996133846104355712914,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "windows",
+            "parent_id": 267833656972231870694011937678046312547,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 128889038865396039633395111430580481349,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "windows_10_home_32",
+            "parent_id": 248049477219231585996133846104355712914,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -40
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 224600213119463380715714597866934010996,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "windows_10_home_64",
+            "parent_id": 248049477219231585996133846104355712914,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -40
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 161656604101287501306176108837067703880,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "windows_10_pro_64",
+            "parent_id": 248049477219231585996133846104355712914,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -40
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 132020771213937944191241340701822956603,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "windows_7_32_bit",
+            "parent_id": 248049477219231585996133846104355712914,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -40
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": null,
+            "exact": null,
+            "id_": 321793242807189609277793669198375628480,
+            "is_leaf": false,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "linux",
+            "parent_id": 267833656972231870694011937678046312547,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 319415527630855138921759106300484344775,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "ubuntu_18",
+            "parent_id": 321793242807189609277793669198375628480,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -25
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 270885429707312995554111969587735815840,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "mint",
+            "parent_id": 321793242807189609277793669198375628480,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -25
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 250953581316956662096396737922943601598,
+            "is_leaf": true,
+            "level": 3,
+            "max_count": null,
+            "min_count": null,
+            "name": "red_hat",
+            "parent_id": 321793242807189609277793669198375628480,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -25
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": {
+                "max_": null,
+                "min_": 0
+            },
+            "count": null,
+            "exact": null,
+            "id_": 39034481434348588981933474371794423767,
+            "is_leaf": false,
+            "level": 1,
+            "max_count": null,
+            "min_count": null,
+            "name": "game",
+            "parent_id": 165857219689315778460846028711061077084,
+            "ports": {},
+            "produces": {},
+            "symmetry_breaking": null
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 272247220076023793466985505868612729074,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "the_sims",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -10
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 156648433958307487843967842184585445613,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "minecraft",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -1
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 144789261272183676319388658616138664440,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "fortnite",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -20
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 309799597757982162138080199018753832940,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "tekken_7",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -60
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 79294702942647225224644129002001344136,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "gta_5",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -72
+            },
+            "symmetry_breaking": true
+        },
+        {
+            "association": null,
+            "count": 1,
+            "exact": true,
+            "id_": 108744342920983092674062596482758802863,
+            "is_leaf": true,
+            "level": 2,
+            "max_count": null,
+            "min_count": null,
+            "name": "fifa_20",
+            "parent_id": 39034481434348588981933474371794423767,
+            "ports": {},
+            "produces": {
+                "332827262564176953833255339691875049807": -50
+            },
+            "symmetry_breaking": true
+        }
+    ]
+}
