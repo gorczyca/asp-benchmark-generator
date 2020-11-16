@@ -5,6 +5,8 @@
 
 Please refer to [asp_benchmark_generator-1.0-guide.pdf](asp_benchmark_generator-1.0-guide.pdf) for a comprehensive guide on how to use the program.
 
+A video tutorial can be found here: https://www.youtube.com/watch?v=Qh9Nyp1ObAQ
+
 ### Requirements
  - **Anaconda package manager**
 ### Setup 
