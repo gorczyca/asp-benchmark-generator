@@ -41,9 +41,12 @@ class Menu(tk.Menu):
         edit_menu = tk.Menu(tearoff=0, bg=BACKGROUND_COLOR_PRIMARY)
         edit_menu.add_command(label='Change root name', command=self.__on_change_root_name)
 
+        help_menu = tk.Menu(tearoff=0, bg=BACKGROUND_COLOR_PRIMARY)
+        help_menu.add_command(label='Help...', command=self.__help)
+
         self.add_cascade(label='File', menu=file_menu)
         self.add_cascade(label='Edit', menu=edit_menu)
-        self.add_cascade(label='Help', command=self.__help)
+        self.add_cascade(label='Help', menu=help_menu)
         self.add_cascade(label='Run', menu=run_menu)
 
         parent_frame.config(menu=self)
